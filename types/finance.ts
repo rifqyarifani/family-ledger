@@ -1,0 +1,87 @@
+export type TransactionType = "income" | "expense" | "transfer";
+
+export type Transaction = {
+  id: string;
+  title: string;
+  type: TransactionType;
+  amount: number;
+  category: string;
+  categoryId?: string;
+  memberId: string;
+  memberName?: string;
+  accountId: string;
+  accountName?: string;
+  transferAccountId?: string;
+  transferAccountName?: string;
+  date: string;
+  note?: string;
+};
+
+export type Budget = {
+  id: string;
+  category: string;
+  limit: number;
+  month: string;
+};
+
+export type FamilyMember = {
+  id: string;
+  name: string;
+  role: string;
+  email?: string;
+  note?: string;
+};
+
+export type Account = {
+  id: string;
+  name: string;
+  type: "cash" | "bank" | "credit" | "savings";
+  openingBalance: number;
+};
+
+export type Category = {
+  id: string;
+  name: string;
+  type: TransactionType;
+  color?: string;
+};
+
+export type SavingsGoal = {
+  id: string;
+  name: string;
+  targetAmount: number;
+  savedAmount: number;
+  dueDate: string;
+};
+
+export type SavingsGoalAccountOption = {
+  name: string;
+  savedAmount: number;
+};
+
+export type Settings = {
+  householdName: string;
+  profileFirstName: string;
+  profileLastName: string;
+  profileEmail: string;
+  profilePlan: "Family" | "Premium";
+  currency: "IDR";
+  monthlyCycleDay: number;
+  themePreference: "system" | "light";
+};
+
+export type LedgerData = {
+  transactions: Transaction[];
+  budgets: Budget[];
+  familyMembers: FamilyMember[];
+  accounts: Account[];
+  savingsGoals: SavingsGoal[];
+  settings: Settings;
+};
+
+export type LocalUser = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  pin: string;
+};
