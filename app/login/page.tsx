@@ -14,7 +14,7 @@ export default async function LoginPage({
   return (
     <main className="min-h-screen bg-[#e8ebe6]">
       <section className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-5 sm:px-6 lg:px-8">
-        <header className=" flex items-center justify-between gap-4 rounded-3xl border border-[#cfd5ca] bg-white/80 px-4 py-3 shadow-soft backdrop-blur">
+        <header className="sticky top-5 z-20 flex items-center justify-between gap-4 rounded-3xl border border-[#cfd5ca] bg-white/80 px-4 py-3 shadow-soft backdrop-blur">
           <Link href="/" className="flex items-center gap-3">
             <div className="rounded-2xl bg-[#0e0f0c] p-2 text-[#9fe870]">
               <PiggyBank className="h-5 w-5" aria-hidden="true" />
