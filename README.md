@@ -89,5 +89,3 @@ npm run start
 - Dark theme implementation.
 - Shared validation and formatting helpers for all financial forms.
 - Optional real-time household collaboration with Supabase Realtime.
-# family-ledger
-# family-ledger
