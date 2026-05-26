@@ -8,6 +8,8 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import {
+  Check,
+  Copy,
   Home,
   UserRound,
   X,
@@ -64,6 +66,7 @@ export function SettingsDialog({
     themePreference: "system",
   });
   const [message, setMessage] = useState("");
+  const [copiedCode, setCopiedCode] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -78,7 +81,8 @@ export function SettingsDialog({
       themePreference: "system",
     });
     setMessage("");
-  }, [open, profile, householdName, monthlyCycleDay]);
+    setCopiedCode(false);
+  }, [open, profile, householdName, householdCode, monthlyCycleDay]);
 
   if (!open) {
     return null;
@@ -116,6 +120,20 @@ export function SettingsDialog({
     }
 
     setMessage("Choose a settings section to update.");
+  }
+
+  async function copyHouseholdCode() {
+    if (!householdCode) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(householdCode);
+      setCopiedCode(true);
+      window.setTimeout(() => setCopiedCode(false), 1800);
+    } catch {
+      setMessage("Could not copy the household code.");
+    }
   }
 
   return (
@@ -250,37 +268,62 @@ export function SettingsDialog({
               ) : null}
 
               {activeSection === "household" ? (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Household code">
-                    <Input value={householdCode} readOnly />
-                  </Field>
-                  <Field label="Household name">
-                    <Input
-                      value={formValues.householdName}
-                      onChange={(event) =>
-                        setFormValues((current) => ({
-                          ...current,
-                          householdName: event.target.value,
-                        }))
-                      }
-                      required
-                    />
-                  </Field>
-                  <Field label="Monthly cycle day">
-                    <Input
-                      type="number"
-                      min="1"
-                      max="31"
-                      value={formValues.monthlyCycleDay}
-                      onChange={(event) =>
-                        setFormValues((current) => ({
-                          ...current,
-                          monthlyCycleDay: Number(event.target.value),
-                        }))
-                      }
-                      required
-                    />
-                  </Field>
+                <div className="grid gap-4">
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-slate-700">
+                          Household code
+                        </p>
+                        <p className="mt-2 font-mono text-lg font-semibold tracking-wide text-slate-950">
+                          {householdCode || "Code not available"}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={copyHouseholdCode}
+                        disabled={!householdCode}
+                        className="w-full sm:w-auto"
+                      >
+                        {copiedCode ? (
+                          <Check className="h-4 w-4" aria-hidden="true" />
+                        ) : (
+                          <Copy className="h-4 w-4" aria-hidden="true" />
+                        )}
+                        {copiedCode ? "Copied" : "Copy code"}
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label="Household name">
+                      <Input
+                        value={formValues.householdName}
+                        onChange={(event) =>
+                          setFormValues((current) => ({
+                            ...current,
+                            householdName: event.target.value,
+                          }))
+                        }
+                        required
+                      />
+                    </Field>
+                    <Field label="Monthly cycle day">
+                      <Input
+                        type="number"
+                        min="1"
+                        max="31"
+                        value={formValues.monthlyCycleDay}
+                        onChange={(event) =>
+                          setFormValues((current) => ({
+                            ...current,
+                            monthlyCycleDay: Number(event.target.value),
+                          }))
+                        }
+                        required
+                      />
+                    </Field>
+                  </div>
                 </div>
               ) : null}
 

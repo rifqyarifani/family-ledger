@@ -11,7 +11,7 @@ Authentication uses Supabase Auth with `/login`, `/signup`, and protected `/app`
 - Dashboard with Supabase-backed total balance, monthly income, monthly expenses, savings rate, cashflow trend, spending breakdown, and recent transactions.
 - Public landing page with Supabase Auth login and local-development signup that does not send confirmation emails.
 - First-login household onboarding where users can create a household or join an existing household by code.
-- Persistent short household invite codes shown after onboarding and in Settings > Household.
+- Persistent short household invite codes shown after onboarding and in Settings > Household, with one-click copy.
 - Protected dashboard routes under `/app`.
 - Transactions page loaded from Supabase with add, edit, delete, transfers between accounts, default member selection from the logged-in user, search, and filters for date range, type, category, member, and account.
 - Categories page loaded from Supabase with add, edit, and delete actions for income and expense categories.
