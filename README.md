@@ -36,6 +36,10 @@ Authentication uses Supabase Auth with `/login`, `/signup`, and protected `/app`
 - Supabase Auth helpers for browser, server, middleware session refresh, and household onboarding
 - Server Actions for Supabase-backed mutations
 
+## Design Direction
+
+UI work should follow [DESIGN.md](/Users/rifqyarifani/Documents/FamilyLedger/DESIGN.md). The shared components use its Wise-inspired palette: near-black ink, lime primary actions, sage-tinted surfaces, rounded cards, and compact fintech dashboard typography.
+
 ## Supabase Setup
 
 1. Create a Supabase project.

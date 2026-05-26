@@ -63,7 +63,7 @@ function AuthenticatedApp({
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#e8ebe6]">
       <div className="fixed inset-y-0 left-0 z-40 hidden w-56 md:block">
         <Sidebar />
       </div>

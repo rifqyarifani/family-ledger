@@ -32,9 +32,9 @@ export function Header({
   const roleLabel = householdRole === "owner" ? "Owner" : "Member";
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white/90 px-4 backdrop-blur md:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[#cfd5ca] bg-white/90 px-4 backdrop-blur md:px-6">
       <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-slate-950">{householdName}</p>
+        <p className="truncate text-sm font-semibold text-[#0e0f0c]">{householdName}</p>
       </div>
       <div className="flex items-center gap-2">
         <Button variant="secondary" size="icon" onClick={onMenuClick} className="md:hidden" aria-label="Open navigation">

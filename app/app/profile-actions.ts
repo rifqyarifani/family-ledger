@@ -38,10 +38,8 @@ export async function updateProfileAction(input: {
 
 export async function updateHouseholdSettingsAction(input: {
   householdName: string;
-  monthlyCycleDay: number;
 }): Promise<ProfileActionState> {
   const householdName = input.householdName.trim();
-  const monthlyCycleDay = Math.min(Math.max(Number(input.monthlyCycleDay), 1), 31);
 
   if (!householdName || householdName.length > 80) {
     return { ok: false, message: "Household name must be 1-80 characters." };
@@ -61,8 +59,7 @@ export async function updateHouseholdSettingsAction(input: {
   const { error } = await supabase
     .from("households")
     .update({
-      name: householdName,
-      monthly_cycle_day: monthlyCycleDay
+      name: householdName
     })
     .eq("id", household.id);
 

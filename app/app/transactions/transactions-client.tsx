@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { ChevronDown, Plus, SlidersHorizontal } from "lucide-react";
 import {
   createTransactionAction,
   deleteTransactionAction,
@@ -37,6 +37,7 @@ export function TransactionsClient({
   const transactionDialog = useCrudDialog<Transaction>();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     search: "",
     type: "all",
@@ -58,6 +59,17 @@ export function TransactionsClient({
       ).sort(),
     [categories]
   );
+
+  const activeFilterCount = useMemo(() => {
+    return [
+      filters.search,
+      filters.type !== "all",
+      filters.category !== "all",
+      filters.memberId !== "all",
+      filters.accountId !== "all",
+      filters.startDate || filters.endDate
+    ].filter(Boolean).length;
+  }, [filters]);
 
   const filteredTransactions = useMemo(() => {
     return transactions
@@ -116,95 +128,106 @@ export function TransactionsClient({
       {error ? <p className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
 
       <Card className="mb-6">
-        <CardHeader title="Filters" />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Field label="Date">
-            <DateRangePicker
-              startDate={filters.startDate}
-              endDate={filters.endDate}
-              onChange={({ startDate, endDate }) =>
-                setFilters((current) => ({ ...current, startDate, endDate }))
-              }
-            />
-          </Field>
-          <div className="sm:col-span-1 lg:col-span-2">
-            <Field label="Search">
-              <Input
-                placeholder="Groceries, salary, note..."
-                value={filters.search}
-                onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))}
+        <CardHeader
+          title={`Filters${activeFilterCount ? ` (${activeFilterCount})` : ""}`}
+          action={
+            <Button variant="secondary" onClick={() => setShowFilters((current) => !current)}>
+              <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+              {showFilters ? "Hide filters" : "Show filters"}
+              <ChevronDown className={`h-4 w-4 transition ${showFilters ? "rotate-180" : ""}`} aria-hidden="true" />
+            </Button>
+          }
+        />
+        {showFilters ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Field label="Date">
+              <DateRangePicker
+                startDate={filters.startDate}
+                endDate={filters.endDate}
+                onChange={({ startDate, endDate }) =>
+                  setFilters((current) => ({ ...current, startDate, endDate }))
+                }
               />
             </Field>
-          </div>
-          <Field label="Family member">
-            <Select
-              value={filters.memberId}
-              onChange={(event) => setFilters((current) => ({ ...current, memberId: event.target.value }))}
-            >
-              <option value="all">All members</option>
-              {familyMembers.map((member) => (
-                <option key={member.id} value={member.id}>
-                  {member.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Account">
-            <Select
-              value={filters.accountId}
-              onChange={(event) => setFilters((current) => ({ ...current, accountId: event.target.value }))}
-            >
-              <option value="all">All accounts</option>
-              {accounts.map((account) => (
-                <option key={account.id} value={account.id}>
-                  {account.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Type">
-            <Select value={filters.type} onChange={(event) => setFilters((current) => ({ ...current, type: event.target.value }))}>
-              <option value="all">All types</option>
-              <option value="income">Income</option>
-              <option value="expense">Expense</option>
-              <option value="transfer">Transfer</option>
-            </Select>
-          </Field>
-          <Field label="Category">
-            <Select
-              value={filters.category}
-              onChange={(event) => setFilters((current) => ({ ...current, category: event.target.value }))}
-            >
-              <option value="all">All categories</option>
-              {categoryNames.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <div className="sm:col-span-2 lg:col-span-1">
-            <div className="flex h-full items-end">
-              <Button
-                variant="secondary"
-                className="w-full"
-                onClick={() =>
-                  setFilters({
-                    search: "",
-                    type: "all",
-                    category: "all",
-                    memberId: "all",
-                    accountId: "all",
-                    startDate: "",
-                    endDate: ""
-                  })
-                }
+            <div className="sm:col-span-1 lg:col-span-2">
+              <Field label="Search">
+                <Input
+                  placeholder="Groceries, salary, note..."
+                  value={filters.search}
+                  onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))}
+                />
+              </Field>
+            </div>
+            <Field label="Family member">
+              <Select
+                value={filters.memberId}
+                onChange={(event) => setFilters((current) => ({ ...current, memberId: event.target.value }))}
               >
-                Reset filters
-              </Button>
+                <option value="all">All members</option>
+                {familyMembers.map((member) => (
+                  <option key={member.id} value={member.id}>
+                    {member.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Account">
+              <Select
+                value={filters.accountId}
+                onChange={(event) => setFilters((current) => ({ ...current, accountId: event.target.value }))}
+              >
+                <option value="all">All accounts</option>
+                {accounts.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Type">
+              <Select value={filters.type} onChange={(event) => setFilters((current) => ({ ...current, type: event.target.value }))}>
+                <option value="all">All types</option>
+                <option value="income">Income</option>
+                <option value="expense">Expense</option>
+                <option value="transfer">Transfer</option>
+              </Select>
+            </Field>
+            <Field label="Category">
+              <Select
+                value={filters.category}
+                onChange={(event) => setFilters((current) => ({ ...current, category: event.target.value }))}
+              >
+                <option value="all">All categories</option>
+                {categoryNames.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <div className="sm:col-span-2 lg:col-span-1">
+              <div className="flex h-full items-end">
+                <Button
+                  variant="secondary"
+                  className="w-full"
+                  onClick={() =>
+                    setFilters({
+                      search: "",
+                      type: "all",
+                      category: "all",
+                      memberId: "all",
+                      accountId: "all",
+                      startDate: "",
+                      endDate: ""
+                    })
+                  }
+                >
+                  Reset filters
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
+        ) : null}
       </Card>
 
       <Card>

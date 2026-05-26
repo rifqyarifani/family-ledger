@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useRef,
   useState,
   useTransition,
   type FormEvent,
@@ -68,6 +69,7 @@ export function SettingsDialog({
   const [message, setMessage] = useState("");
   const [copiedCode, setCopiedCode] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const householdCodeRef = useRef<HTMLParagraphElement>(null);
 
   useEffect(() => {
     setFormValues({
@@ -109,7 +111,6 @@ export function SettingsDialog({
       startTransition(async () => {
         const result = await updateHouseholdSettingsAction({
           householdName: formValues.householdName,
-          monthlyCycleDay: formValues.monthlyCycleDay,
         });
         setMessage(result.message);
         if (result.ok) {
@@ -129,11 +130,23 @@ export function SettingsDialog({
 
     try {
       await navigator.clipboard.writeText(householdCode);
-      setCopiedCode(true);
-      window.setTimeout(() => setCopiedCode(false), 1800);
     } catch {
-      setMessage("Could not copy the household code.");
+      const selection = window.getSelection();
+      const range = document.createRange();
+
+      if (householdCodeRef.current && selection) {
+        range.selectNodeContents(householdCodeRef.current);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+
+      setMessage("Code selected. Press Command+C or Ctrl+C to copy.");
+      return;
     }
+
+    setCopiedCode(true);
+    setMessage("");
+    window.setTimeout(() => setCopiedCode(false), 1800);
   }
 
   return (
@@ -275,7 +288,7 @@ export function SettingsDialog({
                         <p className="text-sm font-medium text-slate-700">
                           Household code
                         </p>
-                        <p className="mt-2 font-mono text-lg font-semibold tracking-wide text-slate-950">
+                        <p ref={householdCodeRef} className="mt-2 select-all font-mono text-lg font-semibold tracking-wide text-slate-950">
                           {householdCode || "Code not available"}
                         </p>
                       </div>
@@ -303,21 +316,6 @@ export function SettingsDialog({
                           setFormValues((current) => ({
                             ...current,
                             householdName: event.target.value,
-                          }))
-                        }
-                        required
-                      />
-                    </Field>
-                    <Field label="Monthly cycle day">
-                      <Input
-                        type="number"
-                        min="1"
-                        max="31"
-                        value={formValues.monthlyCycleDay}
-                        onChange={(event) =>
-                          setFormValues((current) => ({
-                            ...current,
-                            monthlyCycleDay: Number(event.target.value),
                           }))
                         }
                         required
