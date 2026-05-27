@@ -1,28 +1,14 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { BarChart3, Landmark, TrendingDown, TrendingUp, Users } from "lucide-react";
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis
-} from "recharts";
 import { Card, CardHeader } from "@/components/card";
 import { ChartCard } from "@/components/chart-card";
 import { EmptyState } from "@/components/empty-state";
 import { Select } from "@/components/form-field";
 import { PageIntro } from "@/components/page-intro";
 import { StatCard } from "@/components/stat-card";
-import { chartColors } from "@/constants/finance";
 import {
   calculateTotalExpense,
   calculateTotalIncome,
@@ -35,6 +21,30 @@ import {
   groupTransactionsByMonth
 } from "@/lib/finance";
 import type { Transaction } from "@/types/finance";
+
+const MonthlyIncomeExpenseChart = dynamic(
+  () => import("@/app/app/reports/report-charts").then((module) => module.MonthlyIncomeExpenseChart),
+  { ssr: false, loading: () => <ChartLoading /> }
+);
+
+const NetCashflowTrendChart = dynamic(
+  () => import("@/app/app/reports/report-charts").then((module) => module.NetCashflowTrendChart),
+  { ssr: false, loading: () => <ChartLoading /> }
+);
+
+const SpendingByCategoryChart = dynamic(
+  () => import("@/app/app/reports/report-charts").then((module) => module.SpendingByCategoryChart),
+  { ssr: false, loading: () => <ChartLoading /> }
+);
+
+const ExpenseByMemberChart = dynamic(
+  () => import("@/app/app/reports/report-charts").then((module) => module.ExpenseByMemberChart),
+  { ssr: false, loading: () => <ChartLoading /> }
+);
+
+function ChartLoading() {
+  return <div className="h-full min-h-48 rounded-lg bg-slate-50" />;
+}
 
 export function ReportsClient({ transactions }: { transactions: Transaction[] }) {
   const monthOptions = useMemo(() => getMonthOptions(transactions), [transactions]);
@@ -92,21 +102,7 @@ export function ReportsClient({ transactions }: { transactions: Transaction[] })
       <div className="mt-6 grid gap-6 xl:grid-cols-2">
         <ChartCard title="Monthly Income vs Expense">
           {monthlyData.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis
-                  dataKey="month"
-                  stroke="#64748b"
-                  fontSize={12}
-                  tickFormatter={(value: string) => formatMonthKey(value)}
-                />
-                <YAxis stroke="#64748b" fontSize={12} tickFormatter={(value: number) => `${value / 1000000}m`} />
-                <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                <Bar dataKey="income" fill="#16a34a" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="expense" fill="#dc2626" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <MonthlyIncomeExpenseChart data={monthlyData} />
           ) : (
             <EmptyState title="No monthly data" message="Add transactions to compare income and expenses by month." />
           )}
@@ -114,20 +110,7 @@ export function ReportsClient({ transactions }: { transactions: Transaction[] })
 
         <ChartCard title="Net Cashflow Trend">
           {monthlyData.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis
-                  dataKey="month"
-                  stroke="#64748b"
-                  fontSize={12}
-                  tickFormatter={(value: string) => formatMonthKey(value)}
-                />
-                <YAxis stroke="#64748b" fontSize={12} tickFormatter={(value: number) => `${value / 1000000}m`} />
-                <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                <Area type="monotone" dataKey="savings" stroke="#2563eb" fill="#dbeafe" strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
+            <NetCashflowTrendChart data={monthlyData} />
           ) : (
             <EmptyState title="No cashflow trend" message="Net cashflow appears after income or expense transactions exist." />
           )}
@@ -137,32 +120,7 @@ export function ReportsClient({ transactions }: { transactions: Transaction[] })
       <div className="mt-6 grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
         <ChartCard title="Spending by Category">
           {spending.length > 0 ? (
-            <div className="flex h-full flex-col">
-              <div className="min-h-0 flex-1">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-                    <Pie data={spending} dataKey="amount" nameKey="category" outerRadius={82}>
-                      {spending.map((entry, index) => (
-                        <Cell key={entry.category} fill={chartColors[index % chartColors.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="mt-3 grid grid-cols-1 gap-2 border-t border-slate-100 pt-3 sm:grid-cols-2">
-                {spending.map((item, index) => (
-                  <div key={item.category} className="flex items-center gap-2 text-sm">
-                    <span
-                      className="h-2.5 w-2.5 shrink-0 rounded-full"
-                      style={{ backgroundColor: chartColors[index % chartColors.length] }}
-                      aria-hidden="true"
-                    />
-                    <span className="truncate text-slate-600">{item.category}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <SpendingByCategoryChart data={spending} />
           ) : (
             <EmptyState title="No category spend" message="Add expense transactions for this month to populate the chart." />
           )}
@@ -188,15 +146,7 @@ export function ReportsClient({ transactions }: { transactions: Transaction[] })
       <div className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <ChartCard title="Expense by Member">
           {spendingByMember.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={spendingByMember} layout="vertical" margin={{ left: 16 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis type="number" stroke="#64748b" fontSize={12} tickFormatter={(value: number) => `${value / 1000000}m`} />
-                <YAxis type="category" dataKey="member" stroke="#64748b" fontSize={12} width={90} />
-                <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                <Bar dataKey="amount" fill="#0f172a" radius={[0, 6, 6, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <ExpenseByMemberChart data={spendingByMember} />
           ) : (
             <EmptyState title="No member spending" message="Expense by member appears after expenses are recorded for this month." />
           )}

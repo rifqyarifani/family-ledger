@@ -55,11 +55,13 @@ function handleBlockedNumberKeys(event: KeyboardEvent<HTMLInputElement>) {
 export function BudgetForm({
   budget,
   expenseCategories,
+  defaultMonth,
   onSubmit,
   onCancel
 }: {
   budget?: Budget;
   expenseCategories: string[];
+  defaultMonth?: string;
   onSubmit: (budget: Budget) => void | Promise<void>;
   onCancel: () => void;
 }) {
@@ -71,7 +73,7 @@ export function BudgetForm({
   const [limit, setLimit] = useState(
     budget ? formatInputAmount(budget.limit) : "0"
   );
-  const [month, setMonth] = useState(budget?.month ?? getCurrentMonthKey());
+  const [month, setMonth] = useState(budget?.month ?? defaultMonth ?? getCurrentMonthKey());
   const [error, setError] = useState("");
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {

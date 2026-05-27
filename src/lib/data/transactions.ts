@@ -1,5 +1,10 @@
 import { createClient } from "@/src/lib/supabase/server";
-import type { Transaction, TransactionType } from "@/types/finance";
+import type {
+  FamilyMemberTransactionTotals,
+  Transaction,
+  TransactionMonthMetric,
+  TransactionType
+} from "@/types/finance";
 
 type TransactionRow = {
   id: string;
@@ -24,6 +29,28 @@ type TransactionRow = {
   transfer_account: {
     name: string;
   } | null;
+};
+
+type TransactionMetricRow = {
+  id: string;
+  type: TransactionType;
+  amount: number | string;
+  transaction_date: string;
+};
+
+type ReportTransactionRow = TransactionMetricRow & {
+  categories: {
+    name: string;
+  } | null;
+  household_members: {
+    display_name: string;
+  } | null;
+};
+
+type MemberTotalRow = {
+  type: TransactionType;
+  amount: number | string;
+  member_id: string | null;
 };
 
 export type TransactionInput = {
@@ -54,6 +81,29 @@ function mapTransaction(row: TransactionRow): Transaction {
     transferAccountName: row.transfer_account?.name ?? undefined,
     date: row.transaction_date,
     note: row.note ?? undefined
+  };
+}
+
+function mapTransactionMetric(row: TransactionMetricRow): TransactionMonthMetric {
+  return {
+    id: row.id,
+    type: row.type,
+    amount: Number(row.amount),
+    date: row.transaction_date
+  };
+}
+
+function mapReportTransaction(row: ReportTransactionRow): Transaction {
+  return {
+    id: row.id,
+    title: "",
+    type: row.type,
+    amount: Number(row.amount),
+    category: row.type === "transfer" ? "Transfer" : row.categories?.name ?? "Uncategorized",
+    memberId: "",
+    memberName: row.household_members?.display_name ?? undefined,
+    accountId: "",
+    date: row.transaction_date
   };
 }
 
@@ -183,6 +233,159 @@ export async function getTransactions(householdId: string) {
       `
     )
     .eq("household_id", householdId)
+    .order("transaction_date", { ascending: false })
+    .order("created_at", { ascending: false })
+    .returns<TransactionRow[]>();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).map(mapTransaction);
+}
+
+export async function getRecentTransactions(householdId: string, limit = 5) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("transactions")
+    .select(
+      `
+        id,
+        title,
+        type,
+        amount,
+        category_id,
+        member_id,
+        account_id,
+        transfer_account_id,
+        transaction_date,
+        note,
+        categories(name),
+        household_members(display_name),
+        accounts!transactions_account_id_fkey(name),
+        transfer_account:accounts!transactions_transfer_account_id_fkey(name)
+      `
+    )
+    .eq("household_id", householdId)
+    .order("transaction_date", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(limit)
+    .returns<TransactionRow[]>();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).map(mapTransaction);
+}
+
+export async function getTransactionMonthMetrics(householdId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("transactions")
+    .select("id, type, amount, transaction_date")
+    .eq("household_id", householdId)
+    .order("transaction_date", { ascending: true })
+    .returns<TransactionMetricRow[]>();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).map(mapTransactionMetric);
+}
+
+export async function getReportTransactions(householdId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("transactions")
+    .select(
+      `
+        id,
+        type,
+        amount,
+        transaction_date,
+        categories(name),
+        household_members(display_name)
+      `
+    )
+    .eq("household_id", householdId)
+    .order("transaction_date", { ascending: false })
+    .returns<ReportTransactionRow[]>();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).map(mapReportTransaction);
+}
+
+export async function getFamilyMemberTransactionTotals(householdId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("transactions")
+    .select("type, amount, member_id")
+    .eq("household_id", householdId)
+    .returns<MemberTotalRow[]>();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).reduce<FamilyMemberTransactionTotals>((totals, transaction) => {
+    if (!transaction.member_id || transaction.type === "transfer") {
+      return totals;
+    }
+
+    const current = totals[transaction.member_id] ?? { income: 0, expense: 0 };
+
+    if (transaction.type === "income") {
+      current.income += Number(transaction.amount);
+    }
+
+    if (transaction.type === "expense") {
+      current.expense += Number(transaction.amount);
+    }
+
+    totals[transaction.member_id] = current;
+    return totals;
+  }, {});
+}
+
+export async function getTransactionsForMonth(householdId: string, month: string) {
+  const [year, monthNumber] = month.split("-").map(Number);
+
+  if (!year || !monthNumber) {
+    throw new Error("Choose a valid month.");
+  }
+
+  const startDate = `${year}-${String(monthNumber).padStart(2, "0")}-01`;
+  const nextMonthDate = new Date(year, monthNumber, 1);
+  const endDate = `${nextMonthDate.getFullYear()}-${String(nextMonthDate.getMonth() + 1).padStart(2, "0")}-01`;
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("transactions")
+    .select(
+      `
+        id,
+        title,
+        type,
+        amount,
+        category_id,
+        member_id,
+        account_id,
+        transfer_account_id,
+        transaction_date,
+        note,
+        categories(name),
+        household_members(display_name),
+        accounts!transactions_account_id_fkey(name),
+        transfer_account:accounts!transactions_transfer_account_id_fkey(name)
+      `
+    )
+    .eq("household_id", householdId)
+    .gte("transaction_date", startDate)
+    .lt("transaction_date", endDate)
     .order("transaction_date", { ascending: false })
     .order("created_at", { ascending: false })
     .returns<TransactionRow[]>();

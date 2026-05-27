@@ -1,4 +1,4 @@
-import type { Account, Budget, Transaction } from "@/types/finance";
+import type { Account, Budget, Transaction, TransactionMonthMetric } from "@/types/finance";
 
 export function formatCurrency(amount: number) {
   return new Intl.NumberFormat("id-ID", {
@@ -34,7 +34,7 @@ export function formatMonthKey(value: string) {
   }).format(date);
 }
 
-export function getTransactionMonth(transaction: Transaction) {
+export function getTransactionMonth(transaction: Pick<Transaction, "date">) {
   return transaction.date.slice(0, 7);
 }
 
@@ -99,7 +99,7 @@ export function groupTransactionsByMember(transactions: Transaction[]) {
   );
 }
 
-export function groupTransactionsByMonth(transactions: Transaction[]) {
+export function groupTransactionsByMonth(transactions: TransactionMonthMetric[]) {
   const grouped = new Map<string, { month: string; income: number; expense: number; savings: number }>();
 
   transactions.forEach((transaction) => {

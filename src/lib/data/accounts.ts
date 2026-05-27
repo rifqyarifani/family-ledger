@@ -1,11 +1,18 @@
 import { createClient } from "@/src/lib/supabase/server";
-import type { Account } from "@/types/finance";
+import type { Account, AccountBalanceMap, TransactionType } from "@/types/finance";
 
 type AccountRow = {
   id: string;
   name: string;
   type: Account["type"];
   opening_balance: number | string;
+};
+
+type AccountMovementRow = {
+  type: TransactionType;
+  amount: number | string;
+  account_id: string;
+  transfer_account_id: string | null;
 };
 
 export type AccountInput = {
@@ -37,6 +44,50 @@ export async function getAccounts(householdId: string) {
   }
 
   return (data ?? []).map(mapAccount);
+}
+
+export async function getAccountBalanceMap(householdId: string, accounts: Account[]) {
+  const balances = accounts.reduce<AccountBalanceMap>((current, account) => {
+    current[account.id] = account.openingBalance;
+    return current;
+  }, {});
+
+  if (accounts.length === 0) {
+    return balances;
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("transactions")
+    .select("type, amount, account_id, transfer_account_id")
+    .eq("household_id", householdId)
+    .returns<AccountMovementRow[]>();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  for (const transaction of data ?? []) {
+    const amount = Number(transaction.amount);
+
+    if (transaction.type === "income") {
+      balances[transaction.account_id] = (balances[transaction.account_id] ?? 0) + amount;
+    }
+
+    if (transaction.type === "expense") {
+      balances[transaction.account_id] = (balances[transaction.account_id] ?? 0) - amount;
+    }
+
+    if (transaction.type === "transfer") {
+      balances[transaction.account_id] = (balances[transaction.account_id] ?? 0) - amount;
+
+      if (transaction.transfer_account_id) {
+        balances[transaction.transfer_account_id] = (balances[transaction.transfer_account_id] ?? 0) + amount;
+      }
+    }
+  }
+
+  return balances;
 }
 
 export async function createAccount(householdId: string, account: AccountInput) {

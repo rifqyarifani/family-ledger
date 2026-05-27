@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, Plus, SlidersHorizontal } from "lucide-react";
 import {
@@ -38,6 +38,7 @@ export function TransactionsClient({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(50);
   const [filters, setFilters] = useState({
     search: "",
     type: "all",
@@ -98,6 +99,12 @@ export function TransactionsClient({
       })
       .sort((a, b) => b.date.localeCompare(a.date));
   }, [filters, transactions]);
+
+  const visibleTransactions = filteredTransactions.slice(0, visibleCount);
+
+  useEffect(() => {
+    setVisibleCount(50);
+  }, [filters]);
 
   function runAction(action: () => Promise<void>, onSuccess?: () => void) {
     setError("");
@@ -231,14 +238,27 @@ export function TransactionsClient({
       </Card>
 
       <Card>
-        <CardHeader title="All Transactions" description={`${filteredTransactions.length} records shown`} />
+        <CardHeader
+          title="All Transactions"
+          description={`${visibleTransactions.length} of ${filteredTransactions.length} records shown`}
+        />
         <TransactionTable
-          transactions={filteredTransactions}
+          transactions={visibleTransactions}
           members={familyMembers}
           accounts={accounts}
           onEdit={transactionDialog.openEdit}
           onDelete={transactionDialog.setDeletingItem}
         />
+        {visibleTransactions.length < filteredTransactions.length ? (
+          <div className="mt-4 flex justify-center">
+            <Button
+              variant="secondary"
+              onClick={() => setVisibleCount((current) => current + 50)}
+            >
+              Show more
+            </Button>
+          </div>
+        ) : null}
       </Card>
 
       <Modal

@@ -39,6 +39,18 @@ export type Account = {
   openingBalance: number;
 };
 
+export type AccountBalanceMap = Record<string, number>;
+
+export type FamilyMemberTransactionTotals = Record<
+  string,
+  {
+    income: number;
+    expense: number;
+  }
+>;
+
+export type TransactionMonthMetric = Pick<Transaction, "id" | "type" | "amount" | "date">;
+
 export type Category = {
   id: string;
   name: string;

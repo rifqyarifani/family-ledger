@@ -1,8 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { calculateAccountBalance } from "@/lib/finance";
-import { getAccounts } from "@/src/lib/data/accounts";
+import { getAccountBalanceMap, getAccounts } from "@/src/lib/data/accounts";
 import {
   createSavingsGoal,
   deleteSavingsGoal,
@@ -11,7 +10,6 @@ import {
   type SavingsGoalInput
 } from "@/src/lib/data/savings-goals";
 import { getActiveHousehold } from "@/src/lib/data/households";
-import { getTransactions } from "@/src/lib/data/transactions";
 import type { SavingsGoal } from "@/types/finance";
 
 function normalizeGoalName(value: string) {
@@ -33,11 +31,11 @@ async function validateSavingsGoal(householdId: string, goal: SavingsGoal, curre
     throw new Error("Due date is required.");
   }
 
-  const [accounts, transactions, goals] = await Promise.all([
+  const [accounts, goals] = await Promise.all([
     getAccounts(householdId),
-    getTransactions(householdId),
     getSavingsGoals(householdId)
   ]);
+  const accountBalances = await getAccountBalanceMap(householdId, accounts);
   const linkedAccount = accounts.find(
     (account) => account.type === "savings" && normalizeGoalName(account.name) === normalizeGoalName(name)
   );
@@ -59,7 +57,7 @@ async function validateSavingsGoal(householdId: string, goal: SavingsGoal, curre
   return {
     name: linkedAccount.name,
     targetAmount: goal.targetAmount,
-    savedAmount: Math.max(0, calculateAccountBalance(linkedAccount, transactions)),
+    savedAmount: Math.max(0, accountBalances[linkedAccount.id] ?? linkedAccount.openingBalance),
     dueDate: goal.dueDate
   };
 }

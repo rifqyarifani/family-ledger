@@ -17,8 +17,8 @@ import { Modal } from "@/components/modal";
 import { PageIntro } from "@/components/page-intro";
 import { ResourceActions } from "@/components/resource-actions";
 import { useCrudDialog } from "@/hooks/use-crud-dialog";
-import { calculateTotalExpense, calculateTotalIncome, formatCurrency } from "@/lib/finance";
-import type { FamilyMember, Transaction } from "@/types/finance";
+import { formatCurrency } from "@/lib/finance";
+import type { FamilyMember, FamilyMemberTransactionTotals } from "@/types/finance";
 
 function formatRole(role: string) {
   return role.charAt(0).toUpperCase() + role.slice(1);
@@ -26,10 +26,10 @@ function formatRole(role: string) {
 
 export function FamilyClient({
   familyMembers,
-  transactions
+  transactionTotals
 }: {
   familyMembers: FamilyMember[];
-  transactions: Transaction[];
+  transactionTotals: FamilyMemberTransactionTotals;
 }) {
   const router = useRouter();
   const memberDialog = useCrudDialog<FamilyMember>();
@@ -66,9 +66,7 @@ export function FamilyClient({
       {familyMembers.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {familyMembers.map((member) => {
-            const memberTransactions = transactions.filter((transaction) => transaction.memberId === member.id);
-            const income = calculateTotalIncome(memberTransactions);
-            const expense = calculateTotalExpense(memberTransactions);
+            const totals = transactionTotals[member.id] ?? { income: 0, expense: 0 };
 
             return (
               <Card key={member.id}>
@@ -94,11 +92,11 @@ export function FamilyClient({
                 <div className="mt-5 grid grid-cols-2 gap-3">
                   <div className="rounded-lg bg-emerald-50 p-3">
                     <p className="text-xs text-emerald-700">Contribution</p>
-                    <p className="mt-1 text-sm font-semibold text-emerald-950">{formatCurrency(income)}</p>
+                    <p className="mt-1 text-sm font-semibold text-emerald-950">{formatCurrency(totals.income)}</p>
                   </div>
                   <div className="rounded-lg bg-red-50 p-3">
                     <p className="text-xs text-red-700">Spending</p>
-                    <p className="mt-1 text-sm font-semibold text-red-950">{formatCurrency(expense)}</p>
+                    <p className="mt-1 text-sm font-semibold text-red-950">{formatCurrency(totals.expense)}</p>
                   </div>
                 </div>
               </Card>

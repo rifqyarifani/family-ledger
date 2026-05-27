@@ -1,6 +1,6 @@
 import { createClient } from "@/src/lib/supabase/server";
-import { createAdminClient } from "@/src/lib/supabase/admin";
 import { generateHouseholdCode } from "@/src/lib/household-code";
+import { createAdminClient } from "@/src/lib/supabase/admin";
 
 export type ActiveHousehold = {
   id: string;
@@ -20,13 +20,20 @@ type HouseholdMemberRow = {
   } | null;
 };
 
-async function ensureHouseholdInviteCode(householdId: string, currentCode: string | null | undefined) {
+function canUseAdminClient() {
+  return Boolean((process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL) && process.env.SUPABASE_SERVICE_ROLE_KEY);
+}
+
+async function ensureHouseholdInviteCode(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  householdId: string,
+  currentCode: string | null | undefined
+) {
   if (currentCode) {
     return currentCode;
   }
 
-  const admin = createAdminClient();
-  const { data: existingHousehold, error: existingError } = await admin
+  const { data: existingHousehold, error: existingError } = await supabase
     .from("households")
     .select("invite_code")
     .eq("id", householdId)
@@ -39,6 +46,12 @@ async function ensureHouseholdInviteCode(householdId: string, currentCode: strin
   if (existingHousehold?.invite_code) {
     return existingHousehold.invite_code;
   }
+
+  if (!canUseAdminClient()) {
+    return "";
+  }
+
+  const admin = createAdminClient();
 
   for (let attempt = 0; attempt < 8; attempt += 1) {
     const inviteCode = generateHouseholdCode();
@@ -89,7 +102,7 @@ export async function getActiveHousehold(): Promise<ActiveHousehold | null> {
     return null;
   }
 
-  const inviteCode = await ensureHouseholdInviteCode(data.household_id, data.households?.invite_code);
+  const inviteCode = await ensureHouseholdInviteCode(supabase, data.household_id, data.households?.invite_code);
 
   return {
     id: data.household_id,

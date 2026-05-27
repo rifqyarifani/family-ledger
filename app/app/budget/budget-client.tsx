@@ -13,6 +13,7 @@ import { BudgetForm } from "@/components/budget-form";
 import { Button } from "@/components/button";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { EmptyState } from "@/components/empty-state";
+import { MonthPicker } from "@/components/month-picker";
 import { Modal } from "@/components/modal";
 import { PageIntro } from "@/components/page-intro";
 import { useCrudDialog } from "@/hooks/use-crud-dialog";
@@ -21,11 +22,13 @@ import type { Budget, Transaction } from "@/types/finance";
 export function BudgetClient({
   budgets,
   transactions,
-  expenseCategories
+  expenseCategories,
+  selectedMonth
 }: {
   budgets: Budget[];
   transactions: Transaction[];
   expenseCategories: string[];
+  selectedMonth: string;
 }) {
   const router = useRouter();
   const budgetDialog = useCrudDialog<Budget>();
@@ -46,15 +49,24 @@ export function BudgetClient({
     });
   }
 
+  function changeMonth(month: string) {
+    router.replace(`/app/budget?month=${month}`);
+  }
+
   return (
     <>
       <PageIntro
         title="Budget"
         action={
-          <Button onClick={budgetDialog.openCreate} disabled={isPending || !hasExpenseCategories}>
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            Add budget
-          </Button>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="w-full sm:w-48">
+              <MonthPicker value={selectedMonth} onChange={changeMonth} />
+            </div>
+            <Button onClick={budgetDialog.openCreate} disabled={isPending || !hasExpenseCategories}>
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              Add budget
+            </Button>
+          </div>
         }
       />
 
@@ -77,7 +89,7 @@ export function BudgetClient({
           title={hasExpenseCategories ? "No budgets yet" : "No expense categories"}
           message={
             hasExpenseCategories
-              ? "Create monthly limits for your expense categories."
+              ? "Create monthly limits for your expense categories in the selected month."
               : "Create expense categories before adding monthly budgets."
           }
           action={
@@ -93,6 +105,7 @@ export function BudgetClient({
           key={budgetDialog.editingItem?.id ?? (budgetDialog.isFormOpen ? "new-budget" : "closed-budget")}
           budget={budgetDialog.editingItem}
           expenseCategories={expenseCategories}
+          defaultMonth={selectedMonth}
           onCancel={budgetDialog.closeForm}
           onSubmit={(budget) =>
             runAction(

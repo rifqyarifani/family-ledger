@@ -1,11 +1,9 @@
 import { GoalsClient } from "@/app/app/goals/goals-client";
 import { EmptyState } from "@/components/empty-state";
-import { calculateAccountBalance } from "@/lib/finance";
-import { getAccounts } from "@/src/lib/data/accounts";
+import { getAccountBalanceMap, getAccounts } from "@/src/lib/data/accounts";
 import { getActiveHousehold } from "@/src/lib/data/households";
 import { getSavingsGoals } from "@/src/lib/data/savings-goals";
-import { getTransactions } from "@/src/lib/data/transactions";
-import type { Account, SavingsGoal, SavingsGoalAccountOption, Transaction } from "@/types/finance";
+import type { Account, AccountBalanceMap, SavingsGoal, SavingsGoalAccountOption } from "@/types/finance";
 
 function normalizeLinkName(value: string) {
   return value.trim().toLowerCase();
@@ -14,11 +12,11 @@ function normalizeLinkName(value: string) {
 function applySavingsAccountTracking({
   goals,
   accounts,
-  transactions
+  accountBalances
 }: {
   goals: SavingsGoal[];
   accounts: Account[];
-  transactions: Transaction[];
+  accountBalances: AccountBalanceMap;
 }) {
   const savingsAccounts = accounts.filter((account) => account.type === "savings");
 
@@ -31,17 +29,17 @@ function applySavingsAccountTracking({
 
     return {
       ...goal,
-      savedAmount: Math.max(0, calculateAccountBalance(linkedAccount, transactions))
+      savedAmount: Math.max(0, accountBalances[linkedAccount.id] ?? linkedAccount.openingBalance)
     };
   });
 }
 
-function getSavingsAccountOptions(accounts: Account[], transactions: Transaction[]): SavingsGoalAccountOption[] {
+function getSavingsAccountOptions(accounts: Account[], accountBalances: AccountBalanceMap): SavingsGoalAccountOption[] {
   return accounts
     .filter((account) => account.type === "savings")
     .map((account) => ({
       name: account.name,
-      savedAmount: Math.max(0, calculateAccountBalance(account, transactions))
+      savedAmount: Math.max(0, accountBalances[account.id] ?? account.openingBalance)
     }));
 }
 
@@ -52,20 +50,20 @@ export default async function GoalsPage() {
     return <EmptyState title="No household found" message="Create a household before managing savings goals." />;
   }
 
-  const [savingsGoals, accounts, transactions] = await Promise.all([
+  const [savingsGoals, accounts] = await Promise.all([
     getSavingsGoals(household.id),
-    getAccounts(household.id),
-    getTransactions(household.id)
+    getAccounts(household.id)
   ]);
+  const accountBalances = await getAccountBalanceMap(household.id, accounts);
 
   return (
     <GoalsClient
       savingsGoals={applySavingsAccountTracking({
         goals: savingsGoals,
         accounts,
-        transactions
+        accountBalances
       })}
-      savingsAccountOptions={getSavingsAccountOptions(accounts, transactions)}
+      savingsAccountOptions={getSavingsAccountOptions(accounts, accountBalances)}
     />
   );
 }

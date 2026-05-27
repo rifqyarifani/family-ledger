@@ -18,15 +18,15 @@ import { Modal } from "@/components/modal";
 import { PageIntro } from "@/components/page-intro";
 import { ResourceActions } from "@/components/resource-actions";
 import { useCrudDialog } from "@/hooks/use-crud-dialog";
-import { calculateAccountBalance, formatCurrency } from "@/lib/finance";
-import type { Account, Transaction } from "@/types/finance";
+import { formatCurrency } from "@/lib/finance";
+import type { Account, AccountBalanceMap } from "@/types/finance";
 
 export function AccountsClient({
   accounts,
-  transactions,
+  accountBalances,
 }: {
   accounts: Account[];
-  transactions: Transaction[];
+  accountBalances: AccountBalanceMap;
 }) {
   const router = useRouter();
   const accountDialog = useCrudDialog<Account>();
@@ -96,9 +96,7 @@ export function AccountsClient({
               </div>
               <div className="mt-6">
                 <p className="text-2xl font-semibold text-slate-950">
-                  {formatCurrency(
-                    calculateAccountBalance(account, transactions),
-                  )}
+                  {formatCurrency(accountBalances[account.id] ?? account.openingBalance)}
                 </p>
               </div>
             </Card>

@@ -1,18 +1,7 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { ArrowDownRight, ArrowUpRight, PiggyBank, Wallet } from "lucide-react";
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  Cell,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis
-} from "recharts";
 import { Card, CardHeader } from "@/components/card";
 import { ChartCard } from "@/components/chart-card";
 import { EmptyState } from "@/components/empty-state";
@@ -21,42 +10,68 @@ import { BudgetCard } from "@/components/budget-card";
 import { Progress } from "@/components/progress";
 import { StatCard } from "@/components/stat-card";
 import { TransactionTable } from "@/components/transaction-table";
-import { chartColors } from "@/constants/finance";
 import {
-  calculateBalance,
   calculateSavingsRate,
   calculateTotalExpense,
   calculateTotalIncome,
-  filterTransactionsByMonth,
   formatCurrency,
   getCurrentMonthKey,
   groupTransactionsByCategory,
   groupTransactionsByMonth
 } from "@/lib/finance";
-import type { Account, Budget, FamilyMember, SavingsGoal, Transaction } from "@/types/finance";
+import type {
+  Account,
+  AccountBalanceMap,
+  Budget,
+  FamilyMember,
+  SavingsGoal,
+  Transaction,
+  TransactionMonthMetric
+} from "@/types/finance";
+
+const CashflowTrendChart = dynamic(
+  () => import("@/app/app/dashboard-charts").then((module) => module.CashflowTrendChart),
+  { ssr: false, loading: () => <ChartLoading /> }
+);
+
+const SpendingBreakdownChart = dynamic(
+  () => import("@/app/app/dashboard-charts").then((module) => module.SpendingBreakdownChart),
+  { ssr: false, loading: () => <ChartLoading /> }
+);
+
+function ChartLoading() {
+  return <div className="h-full min-h-48 rounded-lg bg-slate-50" />;
+}
 
 export function DashboardClient({
-  transactions,
+  monthlyTransactions,
+  cashflowTransactions,
+  recentTransactions,
   accounts,
+  accountBalances,
   familyMembers,
   budgets,
   savingsGoals
 }: {
-  transactions: Transaction[];
+  monthlyTransactions: Transaction[];
+  cashflowTransactions: TransactionMonthMetric[];
+  recentTransactions: Transaction[];
   accounts: Account[];
+  accountBalances: AccountBalanceMap;
   familyMembers: FamilyMember[];
   budgets: Budget[];
   savingsGoals: SavingsGoal[];
 }) {
   const month = getCurrentMonthKey();
-  const monthlyTransactions = filterTransactionsByMonth(transactions, month);
-  const totalBalance = calculateBalance(transactions, accounts);
+  const totalBalance = accounts.reduce(
+    (total, account) => total + (accountBalances[account.id] ?? account.openingBalance),
+    0
+  );
   const monthlyIncome = calculateTotalIncome(monthlyTransactions);
   const monthlyExpense = calculateTotalExpense(monthlyTransactions);
   const savingsRate = calculateSavingsRate(monthlyTransactions);
-  const cashflow = groupTransactionsByMonth(transactions);
+  const cashflow = groupTransactionsByMonth(cashflowTransactions);
   const spending = groupTransactionsByCategory(monthlyTransactions);
-  const recentTransactions = [...transactions].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
   const currentBudgets = budgets.filter((budget) => budget.month === month).slice(0, 2);
   const monthlySavingGoal = savingsGoals[0];
   const monthlySavingGoalProgress = monthlySavingGoal
@@ -95,49 +110,14 @@ export function DashboardClient({
       <div className="mt-6 grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
         <ChartCard title="Cashflow Trend">
           {cashflow.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={cashflow}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
-                <YAxis stroke="#64748b" fontSize={12} tickFormatter={(value: number) => `${value / 1000000}m`} />
-                <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                <Area type="monotone" dataKey="income" stroke="#16a34a" fill="#dcfce7" strokeWidth={2} />
-                <Area type="monotone" dataKey="expense" stroke="#dc2626" fill="#fee2e2" strokeWidth={2} />
-                <Area type="monotone" dataKey="savings" stroke="#2563eb" fill="#dbeafe" strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
+            <CashflowTrendChart data={cashflow} />
           ) : (
             <EmptyState title="No cashflow yet" message="Add income or expense transactions to build the monthly trend." />
           )}
         </ChartCard>
         <ChartCard title="Spending Breakdown">
           {spending.length > 0 ? (
-            <div className="flex h-full flex-col">
-              <div className="min-h-0 flex-1">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-                    <Pie data={spending} dataKey="amount" nameKey="category" innerRadius={52} outerRadius={82} paddingAngle={4}>
-                      {spending.map((entry, index) => (
-                        <Cell key={entry.category} fill={chartColors[index % chartColors.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="mt-3 grid grid-cols-1 gap-2 border-t border-slate-100 pt-3 sm:grid-cols-2">
-                {spending.map((item, index) => (
-                  <div key={item.category} className="flex min-w-0 items-center gap-2 text-xs">
-                    <span
-                      className="h-2.5 w-2.5 shrink-0 rounded-full"
-                      style={{ backgroundColor: chartColors[index % chartColors.length] }}
-                      aria-hidden="true"
-                    />
-                    <span className="truncate text-slate-600">{item.category}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <SpendingBreakdownChart data={spending} />
           ) : (
             <EmptyState title="No spending yet" message="Expense categories will appear after you add transactions this month." />
           )}
@@ -150,7 +130,7 @@ export function DashboardClient({
           {currentBudgets.length > 0 ? (
             <div className="grid gap-4">
               {currentBudgets.map((budget) => (
-                <BudgetCard key={budget.id} budget={budget} transactions={transactions} />
+                <BudgetCard key={budget.id} budget={budget} transactions={monthlyTransactions} />
               ))}
             </div>
           ) : (
