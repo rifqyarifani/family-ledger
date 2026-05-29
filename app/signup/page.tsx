@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { PiggyBank } from "lucide-react";
-import { signup } from "@/app/actions/auth";
+import { signup } from "@/app/actions/signup";
 import { Button } from "@/components/button";
 import { Field, Input } from "@/components/form-field";
+import { PublicHeader } from "@/components/public-header";
 
 function getSignupErrorMessage(error?: string) {
   if (!error) {
@@ -25,56 +25,30 @@ export default async function SignupPage({
   const errorMessage = getSignupErrorMessage(params.error);
 
   return (
-    <main className="min-h-screen bg-[#e8ebe6]">
+    <main className="min-h-screen bg-surface">
       <section className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-5 sm:px-6 lg:px-8">
-        <header className="sticky top-5 z-20 flex items-center justify-between gap-4 rounded-3xl border border-[#cfd5ca] bg-white/80 px-4 py-3 shadow-soft backdrop-blur">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="rounded-2xl bg-[#0e0f0c] p-2 text-[#9fe870]">
-              <PiggyBank className="h-5 w-5" aria-hidden="true" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-[#0e0f0c]">
-                FamilyLedger
-              </p>
-              <p className="text-xs text-[#454745]">Household finance</p>
-            </div>
-          </Link>
-          <div className="flex items-center gap-2">
-            <Link
-              href="/login"
-              className="inline-flex h-10 items-center justify-center rounded-2xl border border-[#cfd5ca] bg-[#e8ebe6] px-4 text-sm font-semibold text-[#0e0f0c] transition hover:bg-[#e2f6d5]"
-            >
-              Log in
-            </Link>
-            <Link
-              href="/signup"
-              className="inline-flex h-10 items-center justify-center rounded-2xl bg-[#0e0f0c] px-4 text-sm font-semibold text-[#9fe870] transition hover:bg-[#163300]"
-            >
-              Sign up
-            </Link>
-          </div>
-        </header>
+        <PublicHeader />
 
         <div className="grid flex-1 items-center gap-8 py-10 lg:grid-cols-[0.95fr_1.05fr] lg:py-14">
-          <div className="rounded-[2rem] bg-[#0e0f0c] p-6 text-white shadow-soft sm:p-8">
-            <p className="mb-4 inline-flex rounded-full bg-[#e2f6d5] px-3 py-1 text-xs font-bold uppercase text-[#054d28]">
+          <div className="rounded-[2rem] bg-brand p-6 text-white shadow-soft sm:p-8">
+            <p className="mb-4 inline-flex rounded-full bg-brand-green-pale px-3 py-1 text-xs font-bold uppercase text-brand-green-dark">
               Start together
             </p>
-            <h1 className="text-5xl font-black leading-[0.95] text-[#9fe870] sm:text-6xl">
+            <h1 className="text-5xl font-black leading-[0.95] text-brand-green sm:text-6xl">
               Create your family finance workspace.
             </h1>
-            <p className="mt-6 text-base leading-7 text-[#e8ebe6]">
+            <p className="mt-6 text-base leading-7 text-surface">
               Make your account first, then create a household or join an
               existing one with a household code.
             </p>
           </div>
 
-          <section className="w-full rounded-3xl border border-[#cfd5ca] bg-white p-6 shadow-xl">
+          <section className="w-full rounded-3xl border border-surface-border bg-white p-6 shadow-xl">
             <div className="mb-6">
-              <h2 className="text-2xl font-black text-[#0e0f0c]">
+              <h2 className="text-2xl font-black text-ink">
                 Create account
               </h2>
-              <p className="text-sm text-[#454745]">
+              <p className="text-sm text-ink-secondary">
                 Household setup happens after you sign in.
               </p>
             </div>
@@ -116,11 +90,11 @@ export default async function SignupPage({
               </Button>
             </form>
 
-            <p className="mt-5 text-center text-sm text-[#454745]">
+            <p className="mt-5 text-center text-sm text-ink-secondary">
               Already have an account?{" "}
               <Link
                 href="/login"
-                className="font-semibold text-[#0e0f0c] underline-offset-4 hover:underline"
+                className="font-semibold text-ink underline-offset-4 hover:underline"
               >
                 Log in
               </Link>

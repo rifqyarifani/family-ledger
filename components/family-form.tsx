@@ -66,7 +66,7 @@ export function FamilyForm({
           ))}
         </Select>
       </Field>
-      <Field label={isEditing ? "Email" : "Email"}>
+      <Field label="Email">
         <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required={!isEditing} />
       </Field>
       <FormActions submitLabel={member ? "Save changes" : "Add member"} onCancel={onCancel} />

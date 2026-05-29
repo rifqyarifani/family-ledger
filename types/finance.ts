@@ -83,18 +83,3 @@ export type Settings = {
   themePreference: "system" | "light";
 };
 
-export type LedgerData = {
-  transactions: Transaction[];
-  budgets: Budget[];
-  familyMembers: FamilyMember[];
-  accounts: Account[];
-  savingsGoals: SavingsGoal[];
-  settings: Settings;
-};
-
-export type LocalUser = {
-  firstName: string;
-  lastName: string;
-  email: string;
-  pin: string;
-};

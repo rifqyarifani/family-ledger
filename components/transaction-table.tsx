@@ -1,5 +1,4 @@
-"use client";
-
+import { useMemo } from "react";
 import { Edit2, Trash2 } from "lucide-react";
 import { Badge } from "@/components/badge";
 import { Button } from "@/components/button";
@@ -37,10 +36,8 @@ export function TransactionTable({
   onEdit?: (transaction: Transaction) => void;
   onDelete?: (transaction: Transaction) => void;
 }) {
-  const memberById = new Map(members.map((member) => [member.id, member.name]));
-  const accountById = new Map(
-    accounts.map((account) => [account.id, account.name]),
-  );
+  const memberById = useMemo(() => new Map(members.map((member) => [member.id, member.name])), [members]);
+  const accountById = useMemo(() => new Map(accounts.map((account) => [account.id, account.name])), [accounts]);
 
   function getAccountLabel(transaction: Transaction) {
     const sourceAccount =
@@ -76,10 +73,10 @@ export function TransactionTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-[#cfd5ca]">
+    <div className="overflow-hidden rounded-2xl border border-surface-border">
       <div className="hidden overflow-x-auto md:block">
         <table className="w-full text-left text-sm">
-          <thead className="bg-[#f4f6f1] text-xs uppercase tracking-wide text-[#454745]">
+          <thead className="bg-surface-subtle text-xs uppercase tracking-wide text-ink-secondary">
             <tr>
               <th className="px-4 py-3">Transaction</th>
               <th className="px-4 py-3">Type</th>
@@ -97,11 +94,11 @@ export function TransactionTable({
             {transactions.map((transaction) => (
               <tr key={transaction.id}>
                 <td className="px-4 py-3">
-                  <p className="font-medium text-[#0e0f0c]">
+                  <p className="font-medium text-ink">
                     {transaction.title}
                   </p>
                   {transaction.note ? (
-                    <p className="mt-1 text-xs text-[#454745]">
+                    <p className="mt-1 text-xs text-ink-secondary">
                       {transaction.note}
                     </p>
                   ) : null}
@@ -111,19 +108,19 @@ export function TransactionTable({
                     {transaction.type}
                   </Badge>
                 </td>
-                <td className="px-4 py-3 text-[#454745]">
+                <td className="px-4 py-3 text-ink-secondary">
                   {transaction.category}
                 </td>
-                <td className="px-4 py-3 text-[#454745]">
+                <td className="px-4 py-3 text-ink-secondary">
                   {getMemberLabel(transaction)}
                 </td>
-                <td className="px-4 py-3 text-[#454745]">
+                <td className="px-4 py-3 text-ink-secondary">
                   {getAccountLabel(transaction)}
                 </td>
-                <td className="px-4 py-3 text-[#454745]">
+                <td className="px-4 py-3 text-ink-secondary">
                   {formatDate(transaction.date)}
                 </td>
-                <td className="px-4 py-3 text-right font-semibold text-[#0e0f0c]">
+                <td className="px-4 py-3 text-right font-semibold text-ink">
                   {getAmountPrefix(transaction.type)}
                   {formatCurrency(transaction.amount)}
                 </td>
@@ -166,14 +163,14 @@ export function TransactionTable({
           <article key={transaction.id} className="p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <h3 className="font-medium text-[#0e0f0c]">
+                <h3 className="font-medium text-ink">
                   {transaction.title}
                 </h3>
-                <p className="mt-1 text-xs text-[#454745]">
+                <p className="mt-1 text-xs text-ink-secondary">
                   {formatDate(transaction.date)} · {transaction.category}
                 </p>
               </div>
-              <p className="shrink-0 text-right font-semibold text-[#0e0f0c]">
+              <p className="shrink-0 text-right font-semibold text-ink">
                 {getAmountPrefix(transaction.type)}
                 {formatCurrency(transaction.amount)}
               </p>

@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  useCallback,
   useEffect,
   useRef,
   useState,
@@ -13,6 +12,7 @@ import { Check, Copy, Home, UserRound, X } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import { Button } from "@/components/button";
 import { Field, Input } from "@/components/form-field";
+import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { cn } from "@/lib/utils";
 import type { Settings } from "@/types/finance";
 import {
@@ -72,51 +72,7 @@ export function SettingsDialog({
   const [isPending, startTransition] = useTransition();
   const householdCodeRef = useRef<HTMLParagraphElement>(null);
 
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose();
-        return;
-      }
-
-      if (event.key === "Tab" && dialogRef.current) {
-        const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-        );
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-
-        if (event.shiftKey) {
-          if (document.activeElement === first) {
-            event.preventDefault();
-            last?.focus();
-          }
-        } else {
-          if (document.activeElement === last) {
-            event.preventDefault();
-            first?.focus();
-          }
-        }
-      }
-    },
-    [onClose],
-  );
-
-  useEffect(() => {
-    if (!open) return;
-
-    document.addEventListener("keydown", handleKeyDown);
-    const prev = document.activeElement as HTMLElement | null;
-
-    requestAnimationFrame(() => {
-      dialogRef.current?.querySelector<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')?.focus();
-    });
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      prev?.focus();
-    };
-  }, [open, handleKeyDown]);
+  useFocusTrap(dialogRef, open, onClose);
 
   useEffect(() => {
     if (!open) return;
@@ -199,17 +155,17 @@ export function SettingsDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[#0e0f0c]/50 p-3 sm:items-center sm:p-4"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-brand/50 p-3 sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-label="Settings"
     >
       <div ref={dialogRef} className="my-4 grid w-full max-w-5xl overflow-hidden rounded-[2rem] bg-white shadow-xl sm:my-0 md:grid-cols-[240px_1fr]">
-        <aside className="border-b border-[#e8ebe6] bg-[#f4f6f1] p-4 md:border-b-0 md:border-r">
+        <aside className="border-b border-surface bg-surface-subtle p-4 md:border-b-0 md:border-r">
           <div className="flex items-center justify-between gap-3 md:block">
             <div>
-              <h2 className="text-xl font-semibold text-[#0e0f0c]">Settings</h2>
-              <p className="mt-1 text-sm text-[#454745]">
+              <h2 className="text-xl font-semibold text-ink">Settings</h2>
+              <p className="mt-1 text-sm text-ink-secondary">
                 Manage your profile and workspace.
               </p>
             </div>
@@ -234,8 +190,8 @@ export function SettingsDialog({
                   className={cn(
                     "flex shrink-0 items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition md:w-full",
                     activeSection === item.id
-                      ? "bg-[#0e0f0c] text-white"
-                      : "text-[#454745] hover:bg-white hover:text-[#0e0f0c]",
+                      ? "bg-brand text-white"
+                      : "text-ink-secondary hover:bg-white hover:text-ink",
                   )}
                 >
                   <Icon className="h-4 w-4" aria-hidden="true" />
@@ -249,7 +205,7 @@ export function SettingsDialog({
         <section className="min-h-[520px] p-5 md:p-6">
           <div className="mb-5 hidden items-start justify-between gap-4 md:flex">
             <div>
-              <h3 className="text-lg font-semibold text-[#0e0f0c]">
+              <h3 className="text-lg font-semibold text-ink">
                 {
                   settingsNavItems.find((item) => item.id === activeSection)
                     ?.label
@@ -267,7 +223,7 @@ export function SettingsDialog({
           </div>
 
           {message ? (
-            <p className="mb-4 rounded-2xl border border-[#cfd5ca] bg-[#f4f6f1] p-3 text-sm text-[#454745]">
+            <p className="mb-4 rounded-2xl border border-surface-border bg-surface-subtle p-3 text-sm text-ink-secondary">
               {message}
             </p>
           ) : null}
@@ -275,18 +231,18 @@ export function SettingsDialog({
           <form onSubmit={saveSettings} className="grid gap-5">
             {activeSection === "profile" ? (
               <div className="grid gap-5">
-                <div className="flex items-center gap-4 rounded-2xl border border-[#cfd5ca] p-4">
+                <div className="flex items-center gap-4 rounded-2xl border border-surface-border p-4">
                   <Avatar
                     firstName={formValues.profileFirstName}
                     lastName={formValues.profileLastName}
                     size="lg"
                   />
                   <div>
-                    <p className="font-semibold text-[#0e0f0c]">
+                    <p className="font-semibold text-ink">
                       {formValues.profileFirstName}{" "}
                       {formValues.profileLastName}
                     </p>
-                    <p className="text-sm text-[#454745]">Family profile</p>
+                    <p className="text-sm text-ink-secondary">Family profile</p>
                   </div>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -330,15 +286,15 @@ export function SettingsDialog({
 
             {activeSection === "household" ? (
               <div className="grid gap-4">
-                <div className="rounded-2xl border border-[#cfd5ca] bg-[#f4f6f1] p-4">
+                <div className="rounded-2xl border border-surface-border bg-surface-subtle p-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <p className="text-sm font-medium text-[#454745]">
+                      <p className="text-sm font-medium text-ink-secondary">
                         Household code
                       </p>
                       <p
                         ref={householdCodeRef}
-                        className="mt-2 select-all font-mono text-lg font-semibold tracking-wide text-[#0e0f0c]"
+                        className="mt-2 select-all font-mono text-lg font-semibold tracking-wide text-ink"
                       >
                         {householdCode || "Code not available"}
                       </p>
@@ -377,7 +333,7 @@ export function SettingsDialog({
               </div>
             ) : null}
 
-            <div className="flex flex-col-reverse gap-2 border-t border-[#e8ebe6] pt-5 sm:flex-row sm:justify-end">
+            <div className="flex flex-col-reverse gap-2 border-t border-surface pt-5 sm:flex-row sm:justify-end">
               <Button variant="secondary" onClick={onClose}>
                 Cancel
               </Button>

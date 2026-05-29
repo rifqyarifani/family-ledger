@@ -63,7 +63,14 @@ function AuthenticatedApp({
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#e8ebe6]">
+    <div className="min-h-screen bg-surface">
+      <a
+        href="#main-content"
+        className="fixed left-0 top-0 z-[100] -translate-y-full bg-brand px-4 py-2 text-sm font-medium text-brand-green transition focus:translate-y-0"
+      >
+        Skip to content
+      </a>
+      <div id="sr-announcements" aria-live="polite" aria-atomic="true" className="sr-only" />
       <div className="fixed inset-y-0 left-0 z-40 hidden w-56 md:block">
         <Sidebar />
       </div>
@@ -88,7 +95,7 @@ function AuthenticatedApp({
           onOpenSettings={() => setIsSettingsOpen(true)}
           onLogout={() => setIsLogoutOpen(true)}
         />
-        <main className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6">{children}</main>
+        <main id="main-content" className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6">{children}</main>
       </div>
       <SettingsDialog
         open={isSettingsOpen}

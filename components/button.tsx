@@ -21,9 +21,9 @@ export function Button({
         size === "md" && "h-10 px-4 text-sm",
         size === "sm" && "h-8 px-3 text-xs",
         size === "icon" && "h-10 w-10 rounded-full",
-        variant === "primary" && "bg-[#9fe870] text-[#0e0f0c] hover:bg-[#cdffad]",
-        variant === "secondary" && "border border-[#cfd5ca] bg-[#e8ebe6] text-[#0e0f0c] hover:bg-[#e2f6d5]",
-        variant === "ghost" && "text-[#454745] hover:bg-[#e8ebe6] hover:text-[#0e0f0c]",
+        variant === "primary" && "bg-brand-green text-ink hover:bg-brand-green-light",
+        variant === "secondary" && "border border-surface-border bg-surface text-ink hover:bg-brand-green-pale",
+        variant === "ghost" && "text-ink-secondary hover:bg-surface hover:text-ink",
         variant === "danger" && "bg-red-600 text-white hover:bg-red-700",
         className
       )}

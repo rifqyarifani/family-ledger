@@ -1,7 +1,5 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { ArrowDownRight, ArrowUpRight, Plus, Tags } from "lucide-react";
 import {
   createCategoryAction,
@@ -17,6 +15,7 @@ import { Modal } from "@/components/modal";
 import { PageIntro } from "@/components/page-intro";
 import { ResourceActions } from "@/components/resource-actions";
 import { useCrudDialog } from "@/hooks/use-crud-dialog";
+import { useRunAction } from "@/hooks/use-run-action";
 import type { Category } from "@/types/finance";
 
 const defaultColors = {
@@ -52,8 +51,8 @@ function CategorySection({
         >
           <span style={{ color: iconColor }}>{icon}</span>
         </div>
-        <h2 className="text-sm font-semibold text-[#0e0f0c]">{title}</h2>
-        <span className="rounded-full bg-[#e8ebe6] px-2.5 py-0.5 text-xs font-medium text-[#454745]">
+        <h2 className="text-sm font-semibold text-ink">{title}</h2>
+        <span className="rounded-full bg-surface px-2.5 py-0.5 text-xs font-medium text-ink-secondary">
           {categories.length}
         </span>
       </div>
@@ -71,7 +70,7 @@ function CategorySection({
                       className="inline-block h-3 w-3 shrink-0 rounded-full"
                       style={{ backgroundColor: dotColor }}
                     />
-                    <span className="text-sm font-medium text-[#0e0f0c]">
+                    <span className="text-sm font-medium text-ink">
                       {category.name}
                     </span>
                   </div>
@@ -87,9 +86,9 @@ function CategorySection({
           })}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-[#cfd5ca] bg-[#e8ebe6] px-5 py-10 text-center">
-          <Tags className="h-8 w-8 text-[#868685]" aria-hidden="true" />
-          <p className="mt-2 text-sm text-[#454745]">{emptyMessage}</p>
+        <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-surface-border bg-surface px-5 py-10 text-center">
+          <Tags className="h-8 w-8 text-ink-muted" aria-hidden="true" />
+          <p className="mt-2 text-sm text-ink-secondary">{emptyMessage}</p>
         </div>
       )}
     </section>
@@ -97,30 +96,11 @@ function CategorySection({
 }
 
 export function CategoriesClient({ categories }: { categories: Category[] }) {
-  const router = useRouter();
   const categoryDialog = useCrudDialog<Category>();
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState("");
+  const { isPending, error, runAction } = useRunAction();
 
   const incomeCategories = categories.filter((c) => c.type === "income");
   const expenseCategories = categories.filter((c) => c.type === "expense");
-
-  function runAction(action: () => Promise<void>, onSuccess?: () => void) {
-    setError("");
-    startTransition(async () => {
-      try {
-        await action();
-        onSuccess?.();
-        router.refresh();
-      } catch (actionError) {
-        setError(
-          actionError instanceof Error
-            ? actionError.message
-            : "Something went wrong.",
-        );
-      }
-    });
-  }
 
   return (
     <>
@@ -135,7 +115,7 @@ export function CategoriesClient({ categories }: { categories: Category[] }) {
       />
 
       {error ? (
-        <p className="mb-4 rounded-2xl border border-[#cfd5ca] bg-[#e8ebe6] p-3 text-sm text-[#454745]">
+        <p className="mb-4 rounded-2xl border border-surface-border bg-surface p-3 text-sm text-ink-secondary">
           {error}
         </p>
       ) : null}

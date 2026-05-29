@@ -1,7 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useRef, useState } from "react";
 import { MoreVertical, Plus } from "lucide-react";
 import {
   createBudgetAction,
@@ -17,6 +16,7 @@ import { Modal } from "@/components/modal";
 import { PageIntro } from "@/components/page-intro";
 import { Progress } from "@/components/progress";
 import { useCrudDialog } from "@/hooks/use-crud-dialog";
+import { useRunAction } from "@/hooks/use-run-action";
 import { cn } from "@/lib/utils";
 import { formatCurrency, getBudgetUsage } from "@/lib/finance";
 import type { Budget, Transaction } from "@/types/finance";
@@ -32,44 +32,29 @@ export function BudgetClient({
   expenseCategories: string[];
   selectedMonth: string;
 }) {
-  const router = useRouter();
   const budgetDialog = useCrudDialog<Budget>();
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState("");
+  const { isPending, error, runAction } = useRunAction();
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const hasExpenseCategories = expenseCategories.length > 0;
 
-  const annotated = budgets
-    .map((budget) => ({
-      budget,
-      usage: getBudgetUsage(budget, transactions),
-    }))
-    .sort((a, b) => {
-      const pc = b.usage.percentage - a.usage.percentage;
-      return pc !== 0 ? pc : a.budget.category.localeCompare(b.budget.category);
-    });
-
-  function runAction(action: () => Promise<void>, onSuccess?: () => void) {
-    setError("");
-    startTransition(async () => {
-      try {
-        await action();
-        onSuccess?.();
-        router.refresh();
-      } catch (actionError) {
-        setError(
-          actionError instanceof Error
-            ? actionError.message
-            : "Something went wrong.",
-        );
-      }
-    });
-  }
+  const annotated = useMemo(
+    () =>
+      budgets
+        .map((budget) => ({
+          budget,
+          usage: getBudgetUsage(budget, transactions),
+        }))
+        .sort((a, b) => {
+          const pc = b.usage.percentage - a.usage.percentage;
+          return pc !== 0 ? pc : a.budget.category.localeCompare(b.budget.category);
+        }),
+    [budgets, transactions]
+  );
 
   function changeMonth(month: string) {
     setOpenMenuId(null);
-    router.replace(`/app/budget?month=${month}`);
+    window.location.href = `/app/budget?month=${month}`;
   }
 
   return (
@@ -93,14 +78,14 @@ export function BudgetClient({
       />
 
       {error ? (
-        <p className="mb-4 rounded-2xl border border-[#cfd5ca] bg-[#f4f6f1] p-3 text-sm text-[#454745]">
+        <p className="mb-4 rounded-2xl border border-surface-border bg-surface-subtle p-3 text-sm text-ink-secondary">
           {error}
         </p>
       ) : null}
 
       {annotated.length > 0 ? (
-        <div className="rounded-2xl border border-[#cfd5ca] bg-white">
-          <div className="hidden gap-3 border-b border-[#e8ebe6] bg-[#f4f6f1] px-5 py-3 text-xs font-medium uppercase tracking-wide text-[#454745] md:grid md:grid-cols-[1fr_3fr_44px_44px]">
+        <div className="rounded-2xl border border-surface-border bg-white">
+          <div className="hidden gap-3 border-b border-surface bg-surface-subtle px-5 py-3 text-xs font-medium uppercase tracking-wide text-ink-secondary md:grid md:grid-cols-[1fr_3fr_44px_44px]">
             <span>Category</span>
             <span>Progress</span>
             <span className="text-right">Used</span>
@@ -114,15 +99,15 @@ export function BudgetClient({
               return (
                 <div
                   key={budget.id}
-                  className="grid grid-cols-[1fr_3fr_44px_44px] items-center gap-3 px-5 py-3 transition hover:bg-[#f4f6f1] max-sm:flex max-sm:flex-wrap max-sm:gap-x-3 max-sm:gap-y-1"
+                  className="grid grid-cols-[1fr_3fr_44px_44px] items-center gap-3 px-5 py-3 transition hover:bg-surface-subtle max-sm:flex max-sm:flex-wrap max-sm:gap-x-3 max-sm:gap-y-1"
                 >
-                  <span className="truncate text-sm font-medium text-[#0e0f0c] max-sm:w-full">
+                  <span className="truncate text-sm font-medium text-ink max-sm:w-full">
                     {budget.category}
                   </span>
 
                   <div className="min-w-0 space-y-1">
                     <Progress value={usage.percentage} />
-                    <p className="text-xs text-[#454745]">
+                    <p className="text-xs text-ink-secondary">
                       {formatCurrency(usage.spent)} /{" "}
                       {formatCurrency(budget.limit)}
                     </p>
@@ -131,7 +116,7 @@ export function BudgetClient({
                   <span
                     className={cn(
                       "text-right text-sm font-semibold",
-                      isOver ? "text-[#a72027]" : "text-[#0e0f0c]",
+                      isOver ? "text-danger" : "text-ink",
                     )}
                   >
                     {usage.percentage}%
@@ -142,6 +127,8 @@ export function BudgetClient({
                       variant="ghost"
                       size="icon"
                       onClick={() => setOpenMenuId(menuOpen ? null : budget.id)}
+                      aria-expanded={menuOpen}
+                      aria-haspopup="true"
                       aria-label={`Actions for ${budget.category}`}
                     >
                       <MoreVertical className="h-4 w-4" aria-hidden="true" />
@@ -149,11 +136,19 @@ export function BudgetClient({
                     {menuOpen ? (
                       <div
                         ref={menuRef}
-                        className="absolute right-0 top-full z-50 mt-1 w-36 overflow-hidden rounded-xl border border-[#cfd5ca] bg-white shadow-lg"
+                        role="menu"
+                        aria-label={`Actions for ${budget.category}`}
+                        onKeyDown={(event) => {
+                          if (event.key === "Escape") {
+                            setOpenMenuId(null);
+                          }
+                        }}
+                        className="absolute right-0 top-full z-50 mt-1 w-36 overflow-hidden rounded-xl border border-surface-border bg-white shadow-lg"
                       >
                         <button
                           type="button"
-                          className="flex w-full items-center px-4 py-2 text-left text-sm text-[#0e0f0c] transition hover:bg-[#f4f6f1]"
+                          role="menuitem"
+                          className="flex w-full items-center px-4 py-2 text-left text-sm text-ink transition hover:bg-surface-subtle"
                           onClick={() => {
                             setOpenMenuId(null);
                             budgetDialog.openEdit(budget);
@@ -163,7 +158,8 @@ export function BudgetClient({
                         </button>
                         <button
                           type="button"
-                          className="flex w-full items-center px-4 py-2 text-left text-sm text-[#a72027] transition hover:bg-[#fff1f2]"
+                          role="menuitem"
+                          className="flex w-full items-center px-4 py-2 text-left text-sm text-danger transition hover:bg-danger-light"
                           onClick={() => {
                             setOpenMenuId(null);
                             budgetDialog.setDeletingItem(budget);

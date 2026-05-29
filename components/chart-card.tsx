@@ -1,5 +1,3 @@
-"use client";
-
 import type { ReactNode } from "react";
 import { Card, CardHeader } from "@/components/card";
 
@@ -7,7 +5,7 @@ export function ChartCard({
   title,
   description,
   action,
-  children
+  children,
 }: {
   title: string;
   description?: string;

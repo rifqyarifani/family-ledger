@@ -1,5 +1,3 @@
-"use client";
-
 import { Edit2, Trash2 } from "lucide-react";
 import { Button } from "@/components/button";
 import { Card } from "@/components/card";
@@ -24,8 +22,8 @@ export function BudgetCard({
     <Card>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="font-semibold text-[#0e0f0c]">{budget.category}</h3>
-          <p className="mt-1 text-sm text-[#454745]">{formatMonthKey(budget.month)}</p>
+          <h3 className="font-semibold text-ink">{budget.category}</h3>
+          <p className="mt-1 text-sm text-ink-secondary">{formatMonthKey(budget.month)}</p>
         </div>
         {onEdit || onDelete ? (
           <div className="flex gap-1">
@@ -44,13 +42,13 @@ export function BudgetCard({
       </div>
       <div className="mt-5 space-y-3">
         <div className="flex justify-between text-sm">
-          <span className="text-[#454745]">Spent</span>
-          <span className="font-medium text-[#0e0f0c]">
+          <span className="text-ink-secondary">Spent</span>
+          <span className="font-medium text-ink">
             {formatCurrency(usage.spent)} / {formatCurrency(budget.limit)}
           </span>
         </div>
         <Progress value={usage.percentage} />
-        <div className="flex justify-between text-xs text-[#454745]">
+        <div className="flex justify-between text-xs text-ink-secondary">
           <span>{usage.percentage}% used</span>
           <span>{formatCurrency(usage.remaining)} remaining</span>
         </div>

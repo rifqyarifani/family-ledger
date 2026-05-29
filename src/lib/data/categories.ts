@@ -122,4 +122,4 @@ export async function createDefaultCategories(householdId: string, userId: strin
   }
 }
 
-export { defaultCategories };
+

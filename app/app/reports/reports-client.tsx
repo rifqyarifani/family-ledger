@@ -2,7 +2,13 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
-import { BarChart3, Landmark, TrendingDown, TrendingUp, Users } from "lucide-react";
+import {
+  BarChart3,
+  Landmark,
+  TrendingDown,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 import { Card, CardHeader } from "@/components/card";
 import { ChartCard } from "@/components/chart-card";
 import { EmptyState } from "@/components/empty-state";
@@ -18,36 +24,55 @@ import {
   getMonthOptions,
   groupTransactionsByCategory,
   groupTransactionsByMember,
-  groupTransactionsByMonth
+  groupTransactionsByMonth,
 } from "@/lib/finance";
 import type { Transaction } from "@/types/finance";
 
 const MonthlyIncomeExpenseChart = dynamic(
-  () => import("@/app/app/reports/report-charts").then((module) => module.MonthlyIncomeExpenseChart),
-  { ssr: false, loading: () => <ChartLoading /> }
+  () =>
+    import("@/app/app/reports/report-charts").then(
+      (module) => module.MonthlyIncomeExpenseChart,
+    ),
+  { ssr: false, loading: () => <ChartLoading /> },
 );
 
 const NetCashflowTrendChart = dynamic(
-  () => import("@/app/app/reports/report-charts").then((module) => module.NetCashflowTrendChart),
-  { ssr: false, loading: () => <ChartLoading /> }
+  () =>
+    import("@/app/app/reports/report-charts").then(
+      (module) => module.NetCashflowTrendChart,
+    ),
+  { ssr: false, loading: () => <ChartLoading /> },
 );
 
 const SpendingByCategoryChart = dynamic(
-  () => import("@/app/app/reports/report-charts").then((module) => module.SpendingByCategoryChart),
-  { ssr: false, loading: () => <ChartLoading /> }
+  () =>
+    import("@/app/app/reports/report-charts").then(
+      (module) => module.SpendingByCategoryChart,
+    ),
+  { ssr: false, loading: () => <ChartLoading /> },
 );
 
 const ExpenseByMemberChart = dynamic(
-  () => import("@/app/app/reports/report-charts").then((module) => module.ExpenseByMemberChart),
-  { ssr: false, loading: () => <ChartLoading /> }
+  () =>
+    import("@/app/app/reports/report-charts").then(
+      (module) => module.ExpenseByMemberChart,
+    ),
+  { ssr: false, loading: () => <ChartLoading /> },
 );
 
 function ChartLoading() {
   return <div className="h-full min-h-48 rounded-lg bg-slate-50" />;
 }
 
-export function ReportsClient({ transactions }: { transactions: Transaction[] }) {
-  const monthOptions = useMemo(() => getMonthOptions(transactions), [transactions]);
+export function ReportsClient({
+  transactions,
+}: {
+  transactions: Transaction[];
+}) {
+  const monthOptions = useMemo(
+    () => getMonthOptions(transactions),
+    [transactions],
+  );
   const [selectedMonth, setSelectedMonth] = useState(monthOptions[0]);
 
   useEffect(() => {
@@ -56,21 +81,41 @@ export function ReportsClient({ transactions }: { transactions: Transaction[] })
     }
   }, [monthOptions, selectedMonth]);
 
-  const monthlyTransactions = filterTransactionsByMonth(transactions, selectedMonth);
-  const monthlyIncome = calculateTotalIncome(monthlyTransactions);
-  const monthlyExpense = calculateTotalExpense(monthlyTransactions);
-  const netCashflow = monthlyIncome - monthlyExpense;
-  const spending = groupTransactionsByCategory(monthlyTransactions);
-  const spendingByMember = groupTransactionsByMember(monthlyTransactions);
-  const topCategory = spending[0];
-  const topMember = spendingByMember[0];
-  const monthlyData = groupTransactionsByMonth(transactions);
+  const monthlyTransactions = useMemo(
+    () => filterTransactionsByMonth(transactions, selectedMonth),
+    [transactions, selectedMonth],
+  );
+  const monthlyIncome = useMemo(
+    () => calculateTotalIncome(monthlyTransactions),
+    [monthlyTransactions],
+  );
+  const monthlyExpense = useMemo(
+    () => calculateTotalExpense(monthlyTransactions),
+    [monthlyTransactions],
+  );
+  const netCashflow = useMemo(
+    () => monthlyIncome - monthlyExpense,
+    [monthlyIncome, monthlyExpense],
+  );
+  const spending = useMemo(
+    () => groupTransactionsByCategory(monthlyTransactions),
+    [monthlyTransactions],
+  );
+  const spendingByMember = useMemo(
+    () => groupTransactionsByMember(monthlyTransactions),
+    [monthlyTransactions],
+  );
+  const topCategory = useMemo(() => spending[0], [spending]);
+  const topMember = useMemo(() => spendingByMember[0], [spendingByMember]);
+  const monthlyData = useMemo(
+    () => groupTransactionsByMonth(transactions),
+    [transactions],
+  );
 
   return (
     <>
       <PageIntro
         title="Reports"
-        description="Understand monthly income, expenses, category spending, member spending, and net cashflow."
         action={
           <Select
             value={selectedMonth}
@@ -88,9 +133,21 @@ export function ReportsClient({ transactions }: { transactions: Transaction[] })
       />
 
       <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
-        <StatCard title="Monthly income" value={formatCurrency(monthlyIncome)} icon={<TrendingUp className="h-5 w-5" />} />
-        <StatCard title="Monthly expense" value={formatCurrency(monthlyExpense)} icon={<TrendingDown className="h-5 w-5" />} />
-        <StatCard title="Net cashflow" value={formatCurrency(netCashflow)} icon={<Landmark className="h-5 w-5" />} />
+        <StatCard
+          title="Monthly income"
+          value={formatCurrency(monthlyIncome)}
+          icon={<TrendingUp className="h-5 w-5" />}
+        />
+        <StatCard
+          title="Monthly expense"
+          value={formatCurrency(monthlyExpense)}
+          icon={<TrendingDown className="h-5 w-5" />}
+        />
+        <StatCard
+          title="Net cashflow"
+          value={formatCurrency(netCashflow)}
+          icon={<Landmark className="h-5 w-5" />}
+        />
         <StatCard
           title="Top expense category"
           value={topCategory?.category ?? "None"}
@@ -104,7 +161,10 @@ export function ReportsClient({ transactions }: { transactions: Transaction[] })
           {monthlyData.length > 0 ? (
             <MonthlyIncomeExpenseChart data={monthlyData} />
           ) : (
-            <EmptyState title="No monthly data" message="Add transactions to compare income and expenses by month." />
+            <EmptyState
+              title="No monthly data"
+              message="Add transactions to compare income and expenses by month."
+            />
           )}
         </ChartCard>
 
@@ -112,7 +172,10 @@ export function ReportsClient({ transactions }: { transactions: Transaction[] })
           {monthlyData.length > 0 ? (
             <NetCashflowTrendChart data={monthlyData} />
           ) : (
-            <EmptyState title="No cashflow trend" message="Net cashflow appears after income or expense transactions exist." />
+            <EmptyState
+              title="No cashflow trend"
+              message="Net cashflow appears after income or expense transactions exist."
+            />
           )}
         </ChartCard>
       </div>
@@ -122,7 +185,10 @@ export function ReportsClient({ transactions }: { transactions: Transaction[] })
           {spending.length > 0 ? (
             <SpendingByCategoryChart data={spending} />
           ) : (
-            <EmptyState title="No category spend" message="Add expense transactions for this month to populate the chart." />
+            <EmptyState
+              title="No category spend"
+              message="Add expense transactions for this month to populate the chart."
+            />
           )}
         </ChartCard>
 
@@ -131,14 +197,24 @@ export function ReportsClient({ transactions }: { transactions: Transaction[] })
           {spending.length > 0 ? (
             <div className="divide-y divide-slate-200">
               {spending.map((item) => (
-                <div key={item.category} className="flex items-center justify-between gap-4 py-3">
-                  <span className="text-sm font-medium text-slate-700">{item.category}</span>
-                  <span className="text-sm font-semibold text-slate-950">{formatCurrency(item.amount)}</span>
+                <div
+                  key={item.category}
+                  className="flex items-center justify-between gap-4 py-3"
+                >
+                  <span className="text-sm font-medium text-slate-700">
+                    {item.category}
+                  </span>
+                  <span className="text-sm font-semibold text-slate-950">
+                    {formatCurrency(item.amount)}
+                  </span>
                 </div>
               ))}
             </div>
           ) : (
-            <EmptyState title="No expenses" message="This month has no manual expense records yet." />
+            <EmptyState
+              title="No expenses"
+              message="This month has no manual expense records yet."
+            />
           )}
         </Card>
       </div>
@@ -148,7 +224,10 @@ export function ReportsClient({ transactions }: { transactions: Transaction[] })
           {spendingByMember.length > 0 ? (
             <ExpenseByMemberChart data={spendingByMember} />
           ) : (
-            <EmptyState title="No member spending" message="Expense by member appears after expenses are recorded for this month." />
+            <EmptyState
+              title="No member spending"
+              message="Expense by member appears after expenses are recorded for this month."
+            />
           )}
         </ChartCard>
 

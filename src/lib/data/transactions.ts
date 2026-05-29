@@ -210,7 +210,7 @@ async function normalizeTransactionInput(householdId: string, input: Transaction
   };
 }
 
-export async function getTransactions(householdId: string) {
+export async function getTransactions(householdId: string, limit = 100, offset = 0) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("transactions")
@@ -235,6 +235,7 @@ export async function getTransactions(householdId: string) {
     .eq("household_id", householdId)
     .order("transaction_date", { ascending: false })
     .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1)
     .returns<TransactionRow[]>();
 
   if (error) {
@@ -279,12 +280,17 @@ export async function getRecentTransactions(householdId: string, limit = 5) {
   return (data ?? []).map(mapTransaction);
 }
 
-export async function getTransactionMonthMetrics(householdId: string) {
+export async function getTransactionMonthMetrics(householdId: string, monthsBack = 12) {
   const supabase = await createClient();
+  const startDate = new Date();
+  startDate.setMonth(startDate.getMonth() - monthsBack);
+  const startDateStr = startDate.toISOString().slice(0, 10);
+
   const { data, error } = await supabase
     .from("transactions")
     .select("id, type, amount, transaction_date")
     .eq("household_id", householdId)
+    .gte("transaction_date", startDateStr)
     .order("transaction_date", { ascending: true })
     .returns<TransactionMetricRow[]>();
 
@@ -295,8 +301,12 @@ export async function getTransactionMonthMetrics(householdId: string) {
   return (data ?? []).map(mapTransactionMetric);
 }
 
-export async function getReportTransactions(householdId: string) {
+export async function getReportTransactions(householdId: string, monthsBack = 12) {
   const supabase = await createClient();
+  const startDate = new Date();
+  startDate.setMonth(startDate.getMonth() - monthsBack);
+  const startDateStr = startDate.toISOString().slice(0, 10);
+
   const { data, error } = await supabase
     .from("transactions")
     .select(
@@ -310,6 +320,7 @@ export async function getReportTransactions(householdId: string) {
       `
     )
     .eq("household_id", householdId)
+    .gte("transaction_date", startDateStr)
     .order("transaction_date", { ascending: false })
     .returns<ReportTransactionRow[]>();
 
@@ -320,12 +331,17 @@ export async function getReportTransactions(householdId: string) {
   return (data ?? []).map(mapReportTransaction);
 }
 
-export async function getFamilyMemberTransactionTotals(householdId: string) {
+export async function getFamilyMemberTransactionTotals(householdId: string, monthsBack = 12) {
   const supabase = await createClient();
+  const startDate = new Date();
+  startDate.setMonth(startDate.getMonth() - monthsBack);
+  const startDateStr = startDate.toISOString().slice(0, 10);
+
   const { data, error } = await supabase
     .from("transactions")
     .select("type, amount, member_id")
     .eq("household_id", householdId)
+    .gte("transaction_date", startDateStr)
     .returns<MemberTotalRow[]>();
 
   if (error) {

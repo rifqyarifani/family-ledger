@@ -1,55 +1,13 @@
 "use client";
 
-import { useState, type FormEvent, type KeyboardEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { Field, Input, Select } from "@/components/form-field";
 import { FormActions, FormError } from "@/components/form-actions";
+import { formatInputAmount, handleBlockedNumberKeys, parseFormattedAmount, sanitizeFormattedAmount } from "@/lib/format-utils";
 import { createId } from "@/lib/utils";
 import type { Account } from "@/types/finance";
 
 const maxAccountNameLength = 30;
-const blockedNumberKeys = new Set(["e", "E", "+", "-"]);
-
-function formatInputAmount(value: number) {
-  return new Intl.NumberFormat("id-ID", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2
-  }).format(value);
-}
-
-function parseFormattedAmount(value: string) {
-  if (!value.trim()) {
-    return Number.NaN;
-  }
-
-  const normalized = value.replace(/\./g, "").replace(",", ".");
-  return Number(normalized);
-}
-
-function sanitizeFormattedAmount(value: string) {
-  const cleaned = value.replace(/[^\d,.]/g, "");
-  const normalized = cleaned.replace(/\./g, "").replace(",", ".");
-  const [integerPartRaw, decimalPartRaw = ""] = normalized.split(".");
-  const integerPart = integerPartRaw.replace(/^0+(?=\d)/, "") || integerPartRaw || "0";
-  const decimalPart = decimalPartRaw.replace(/\./g, "").slice(0, 2);
-  const numericString = decimalPart ? `${integerPart}.${decimalPart}` : integerPart;
-  const numericValue = Number(numericString);
-
-  if (!Number.isFinite(numericValue)) {
-    return "";
-  }
-
-  const formattedInteger = new Intl.NumberFormat("id-ID", {
-    maximumFractionDigits: 0
-  }).format(Number(integerPart));
-
-  return decimalPart ? `${formattedInteger},${decimalPart}` : formattedInteger;
-}
-
-function handleBlockedNumberKeys(event: KeyboardEvent<HTMLInputElement>) {
-  if (blockedNumberKeys.has(event.key)) {
-    event.preventDefault();
-  }
-}
 
 export function AccountForm({
   account,
@@ -101,7 +59,7 @@ export function AccountForm({
           }
           required
         />
-        <p className="mt-1 text-right text-xs text-[#868685]">
+        <p className="mt-1 text-right text-xs text-ink-muted">
           {name.length}/{maxAccountNameLength}
         </p>
       </Field>

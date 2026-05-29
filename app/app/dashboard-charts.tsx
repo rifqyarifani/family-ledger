@@ -58,7 +58,7 @@ export function SpendingBreakdownChart({ data }: { data: SpendingDatum[] }) {
           </PieChart>
         </ResponsiveContainer>
       </div>
-      <div className="mt-3 grid grid-cols-1 gap-2 border-t border-[#e8ebe6] pt-3 sm:grid-cols-2">
+      <div className="mt-3 grid grid-cols-1 gap-2 border-t border-surface pt-3 sm:grid-cols-2">
         {data.map((item, index) => (
           <div key={item.category} className="flex min-w-0 items-center gap-2 text-xs">
             <span
@@ -66,7 +66,7 @@ export function SpendingBreakdownChart({ data }: { data: SpendingDatum[] }) {
               style={{ backgroundColor: chartColors[index % chartColors.length] }}
               aria-hidden="true"
             />
-            <span className="truncate text-[#454745]">{item.category}</span>
+            <span className="truncate text-ink-secondary">{item.category}</span>
           </div>
         ))}
       </div>

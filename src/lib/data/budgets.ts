@@ -50,22 +50,6 @@ function toBudgetMonthDate(month: string) {
   return `${month}-01`;
 }
 
-export async function getBudgets(householdId: string) {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("budgets")
-    .select("id, budget_month, limit_amount, categories(name)")
-    .eq("household_id", householdId)
-    .order("budget_month", { ascending: false })
-    .returns<BudgetRow[]>();
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return (data ?? []).map(mapBudget);
-}
-
 export async function getBudgetsForMonth(householdId: string, month: string) {
   const supabase = await createClient();
   const { data, error } = await supabase

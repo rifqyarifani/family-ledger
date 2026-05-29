@@ -1,22 +1,31 @@
-import type { Account, Budget, Transaction, TransactionMonthMetric } from "@/types/finance";
+import type { Budget, Transaction, TransactionMonthMetric } from "@/types/finance";
+
+const currencyFormatter = new Intl.NumberFormat("id-ID", {
+  style: "currency",
+  currency: "IDR",
+  maximumFractionDigits: 0
+});
+
+const dateFormatter = new Intl.DateTimeFormat("id-ID", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric"
+});
+
+const monthFormatter = new Intl.DateTimeFormat("id-ID", {
+  month: "short",
+  year: "numeric"
+});
 
 export function formatCurrency(amount: number) {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    maximumFractionDigits: 0
-  }).format(amount);
+  return currencyFormatter.format(amount);
 }
 
 export function formatDate(value: string) {
   const [year, month, day] = value.split("-").map(Number);
   const date = year && month && day ? new Date(year, month - 1, day) : new Date(value);
 
-  return new Intl.DateTimeFormat("id-ID", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric"
-  }).format(date);
+  return dateFormatter.format(date);
 }
 
 export function getCurrentMonthKey() {
@@ -28,13 +37,10 @@ export function formatMonthKey(value: string) {
   const [year, month] = value.split("-").map(Number);
   const date = year && month ? new Date(year, month - 1, 1) : new Date(value);
 
-  return new Intl.DateTimeFormat("id-ID", {
-    month: "short",
-    year: "numeric"
-  }).format(date);
+  return monthFormatter.format(date);
 }
 
-export function getTransactionMonth(transaction: Pick<Transaction, "date">) {
+function getTransactionMonth(transaction: Pick<Transaction, "date">) {
   return transaction.date.slice(0, 7);
 }
 
@@ -52,11 +58,6 @@ export function calculateTotalExpense(transactions: Transaction[]) {
   return transactions
     .filter((transaction) => transaction.type === "expense")
     .reduce((total, transaction) => total + transaction.amount, 0);
-}
-
-export function calculateBalance(transactions: Transaction[], accounts: Account[] = []) {
-  const openingBalance = accounts.reduce((total, account) => total + account.openingBalance, 0);
-  return openingBalance + calculateTotalIncome(transactions) - calculateTotalExpense(transactions);
 }
 
 export function calculateSavingsRate(transactions: Transaction[]) {
@@ -133,30 +134,6 @@ export function getBudgetUsage(budget: Budget, transactions: Transaction[]) {
   const percentage = budget.limit > 0 ? Math.round((spent / budget.limit) * 100) : 0;
 
   return { spent, remaining, percentage };
-}
-
-export function calculateAccountBalance(account: Account, transactions: Transaction[]) {
-  return transactions.reduce((balance, transaction) => {
-    if (transaction.type === "income" && transaction.accountId === account.id) {
-      return balance + transaction.amount;
-    }
-
-    if (transaction.type === "expense" && transaction.accountId === account.id) {
-      return balance - transaction.amount;
-    }
-
-    if (transaction.type === "transfer") {
-      if (transaction.accountId === account.id) {
-        return balance - transaction.amount;
-      }
-
-      if (transaction.transferAccountId === account.id) {
-        return balance + transaction.amount;
-      }
-    }
-
-    return balance;
-  }, account.openingBalance);
 }
 
 export function getMonthOptions(transactions: Transaction[]) {

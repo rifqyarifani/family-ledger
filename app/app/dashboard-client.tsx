@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useMemo } from "react";
 import { ArrowDownRight, ArrowUpRight, PiggyBank, Wallet } from "lucide-react";
 import { Card, CardHeader } from "@/components/card";
 import { ChartCard } from "@/components/chart-card";
@@ -17,7 +18,7 @@ import {
   formatCurrency,
   getCurrentMonthKey,
   groupTransactionsByCategory,
-  groupTransactionsByMonth
+  groupTransactionsByMonth,
 } from "@/lib/finance";
 import type {
   Account,
@@ -26,17 +27,23 @@ import type {
   FamilyMember,
   SavingsGoal,
   Transaction,
-  TransactionMonthMetric
+  TransactionMonthMetric,
 } from "@/types/finance";
 
 const CashflowTrendChart = dynamic(
-  () => import("@/app/app/dashboard-charts").then((module) => module.CashflowTrendChart),
-  { ssr: false, loading: () => <ChartLoading /> }
+  () =>
+    import("@/app/app/dashboard-charts").then(
+      (module) => module.CashflowTrendChart,
+    ),
+  { ssr: false, loading: () => <ChartLoading /> },
 );
 
 const SpendingBreakdownChart = dynamic(
-  () => import("@/app/app/dashboard-charts").then((module) => module.SpendingBreakdownChart),
-  { ssr: false, loading: () => <ChartLoading /> }
+  () =>
+    import("@/app/app/dashboard-charts").then(
+      (module) => module.SpendingBreakdownChart,
+    ),
+  { ssr: false, loading: () => <ChartLoading /> },
 );
 
 function ChartLoading() {
@@ -51,7 +58,7 @@ export function DashboardClient({
   accountBalances,
   familyMembers,
   budgets,
-  savingsGoals
+  savingsGoals,
 }: {
   monthlyTransactions: Transaction[];
   cashflowTransactions: TransactionMonthMetric[];
@@ -63,27 +70,53 @@ export function DashboardClient({
   savingsGoals: SavingsGoal[];
 }) {
   const month = getCurrentMonthKey();
-  const totalBalance = accounts.reduce(
-    (total, account) => total + (accountBalances[account.id] ?? account.openingBalance),
-    0
+  const totalBalance = useMemo(
+    () =>
+      accounts.reduce(
+        (total, account) =>
+          total + (accountBalances[account.id] ?? account.openingBalance),
+        0,
+      ),
+    [accounts, accountBalances],
   );
-  const monthlyIncome = calculateTotalIncome(monthlyTransactions);
-  const monthlyExpense = calculateTotalExpense(monthlyTransactions);
-  const savingsRate = calculateSavingsRate(monthlyTransactions);
-  const cashflow = groupTransactionsByMonth(cashflowTransactions);
-  const spending = groupTransactionsByCategory(monthlyTransactions);
-  const currentBudgets = budgets.filter((budget) => budget.month === month).slice(0, 2);
+  const monthlyIncome = useMemo(
+    () => calculateTotalIncome(monthlyTransactions),
+    [monthlyTransactions],
+  );
+  const monthlyExpense = useMemo(
+    () => calculateTotalExpense(monthlyTransactions),
+    [monthlyTransactions],
+  );
+  const savingsRate = useMemo(
+    () => calculateSavingsRate(monthlyTransactions),
+    [monthlyTransactions],
+  );
+  const cashflow = useMemo(
+    () => groupTransactionsByMonth(cashflowTransactions),
+    [cashflowTransactions],
+  );
+  const spending = useMemo(
+    () => groupTransactionsByCategory(monthlyTransactions),
+    [monthlyTransactions],
+  );
+  const currentBudgets = useMemo(
+    () => budgets.filter((budget) => budget.month === month).slice(0, 2),
+    [budgets, month],
+  );
   const monthlySavingGoal = savingsGoals[0];
   const monthlySavingGoalProgress = monthlySavingGoal
-    ? Math.min(100, Math.round((monthlySavingGoal.savedAmount / monthlySavingGoal.targetAmount) * 100))
+    ? Math.min(
+        100,
+        Math.round(
+          (monthlySavingGoal.savedAmount / monthlySavingGoal.targetAmount) *
+            100,
+        ),
+      )
     : 0;
 
   return (
     <>
-      <PageIntro
-        title="Dashboard"
-        description="A current overview of your household money, monthly flow, and recent manual records."
-      />
+      <PageIntro title="Dashboard" />
       <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
         <StatCard
           title="Total balance"
@@ -112,14 +145,20 @@ export function DashboardClient({
           {cashflow.length > 0 ? (
             <CashflowTrendChart data={cashflow} />
           ) : (
-            <EmptyState title="No cashflow yet" message="Add income or expense transactions to build the monthly trend." />
+            <EmptyState
+              title="No cashflow yet"
+              message="Add income or expense transactions to build the monthly trend."
+            />
           )}
         </ChartCard>
         <ChartCard title="Spending Breakdown">
           {spending.length > 0 ? (
             <SpendingBreakdownChart data={spending} />
           ) : (
-            <EmptyState title="No spending yet" message="Expense categories will appear after you add transactions this month." />
+            <EmptyState
+              title="No spending yet"
+              message="Expense categories will appear after you add transactions this month."
+            />
           )}
         </ChartCard>
       </div>
@@ -130,16 +169,27 @@ export function DashboardClient({
           {currentBudgets.length > 0 ? (
             <div className="grid gap-4">
               {currentBudgets.map((budget) => (
-                <BudgetCard key={budget.id} budget={budget} transactions={monthlyTransactions} />
+                <BudgetCard
+                  key={budget.id}
+                  budget={budget}
+                  transactions={monthlyTransactions}
+                />
               ))}
             </div>
           ) : (
-            <EmptyState title="No budgets this month" message="Create budgets to track monthly category limits." />
+            <EmptyState
+              title="No budgets this month"
+              message="Create budgets to track monthly category limits."
+            />
           )}
         </Card>
         <Card>
           <CardHeader title="Recent Transactions" />
-          <TransactionTable transactions={recentTransactions} members={familyMembers} accounts={accounts} />
+          <TransactionTable
+            transactions={recentTransactions}
+            members={familyMembers}
+            accounts={accounts}
+          />
         </Card>
       </div>
 
@@ -149,17 +199,25 @@ export function DashboardClient({
           <div className="grid gap-3">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <h3 className="font-semibold text-slate-950">{monthlySavingGoal.name}</h3>
+                <h3 className="font-semibold text-slate-950">
+                  {monthlySavingGoal.name}
+                </h3>
                 <p className="mt-1 text-sm text-slate-500">
-                  {formatCurrency(monthlySavingGoal.savedAmount)} / {formatCurrency(monthlySavingGoal.targetAmount)}
+                  {formatCurrency(monthlySavingGoal.savedAmount)} /{" "}
+                  {formatCurrency(monthlySavingGoal.targetAmount)}
                 </p>
               </div>
-              <p className="text-2xl font-semibold text-slate-950">{monthlySavingGoalProgress}%</p>
+              <p className="text-2xl font-semibold text-slate-950">
+                {monthlySavingGoalProgress}%
+              </p>
             </div>
             <Progress value={monthlySavingGoalProgress} />
           </div>
         ) : (
-          <EmptyState title="No saving goal yet" message="Create a savings goal linked to a savings account to track progress." />
+          <EmptyState
+            title="No saving goal yet"
+            message="Create a savings goal linked to a savings account to track progress."
+          />
         )}
       </Card>
     </>

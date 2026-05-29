@@ -122,7 +122,6 @@ export function AccountsClient({
     <>
       <PageIntro
         title="Accounts"
-        description="Manage household cash, bank, card, and savings accounts. Balances are calculated from manual transactions."
         action={
           <Button onClick={accountDialog.openCreate} disabled={isPending}>
             <Plus className="h-4 w-4" aria-hidden="true" />
@@ -132,7 +131,7 @@ export function AccountsClient({
       />
 
       {error ? (
-        <p className="mb-4 rounded-2xl border border-[#cfd5ca] bg-[#f4f6f1] p-3 text-sm text-[#454745]">
+        <p className="mb-4 rounded-2xl border border-surface-border bg-surface-subtle p-3 text-sm text-ink-secondary">
           {error}
         </p>
       ) : null}
@@ -143,18 +142,18 @@ export function AccountsClient({
             <Card key={account.id}>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
-                  <div className="rounded-xl bg-[#f4f6f1] p-2 text-[#454745]">
+                  <div className="rounded-xl bg-surface-subtle p-2 text-ink-secondary">
                     {(() => {
                       const Icon = typeIcon[account.type];
                       return <Icon className="h-5 w-5" aria-hidden="true" />;
                     })()}
                   </div>
                   <div>
-                    <h2 className="font-semibold text-[#0e0f0c]">
+                    <h2 className="font-semibold text-ink">
                       {account.name}
                     </h2>
                     <div className="mt-1">
-                      <span className="inline-block rounded-full bg-[#e2f6d5] px-3 py-0.5 text-xs font-semibold text-[#054d28] capitalize">
+                      <span className="inline-block rounded-full bg-brand-green-pale px-3 py-0.5 text-xs font-semibold text-brand-green-dark capitalize">
                         {account.type}
                       </span>
                     </div>
@@ -168,8 +167,11 @@ export function AccountsClient({
                 />
               </div>
               <div className="mt-6">
-                <p className="text-2xl font-semibold leading-[31.2px] tracking-[-0.48px] text-[#0e0f0c]">
-                  {formatCurrency(optimisticState.balances[account.id] ?? account.openingBalance)}
+                <p className="text-2xl font-semibold leading-[31.2px] tracking-[-0.48px] text-ink">
+                  {formatCurrency(
+                    optimisticState.balances[account.id] ??
+                      account.openingBalance,
+                  )}
                 </p>
               </div>
             </Card>
@@ -218,7 +220,8 @@ export function AccountsClient({
         onConfirm={() =>
           accountDialog.deletingItem &&
           runAction(
-            () => deleteAccountAction(householdId, accountDialog.deletingItem!.id),
+            () =>
+              deleteAccountAction(householdId, accountDialog.deletingItem!.id),
             { type: "delete", id: accountDialog.deletingItem!.id },
             accountDialog.closeDelete,
           )

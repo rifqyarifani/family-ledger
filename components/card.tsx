@@ -28,9 +28,9 @@ export function CardHeader({
   return (
     <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div className="min-w-0">
-        <h2 className="text-base font-semibold text-[#0e0f0c]">{title}</h2>
+        <h2 className="text-base font-semibold text-ink">{title}</h2>
         {description ? (
-          <p className="mt-1 text-sm text-[#454745]">{description}</p>
+          <p className="mt-1 text-sm text-ink-secondary">{description}</p>
         ) : null}
       </div>
       {action ? (

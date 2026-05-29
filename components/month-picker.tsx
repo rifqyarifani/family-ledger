@@ -47,7 +47,7 @@ export function MonthPicker({
       <button
         type="button"
         className={cn(
-          "flex h-10 w-full items-center justify-between rounded-xl border border-[#cfd5ca] bg-white px-3 text-left text-sm text-[#0e0f0c] transition hover:border-[#b0b8a8]",
+          "flex h-10 w-full items-center justify-between rounded-xl border border-surface-border bg-white px-3 text-left text-sm text-ink transition hover:border-[#b0b8a8]",
           !value && "text-[#9ca390]"
         )}
         onClick={() => setIsOpen((current) => !current)}
@@ -59,12 +59,12 @@ export function MonthPicker({
       </button>
 
       {isOpen ? (
-        <div className="absolute left-0 right-0 z-50 mt-2 rounded-2xl border border-[#cfd5ca] bg-white p-3 shadow-xl sm:right-auto sm:w-80">
+        <div className="absolute left-0 right-0 z-50 mt-2 rounded-2xl border border-surface-border bg-white p-3 shadow-xl sm:right-auto sm:w-80">
           <div className="mb-3 flex items-center justify-between">
             <Button variant="ghost" size="icon" onClick={() => moveYear(-1)} aria-label="Previous year">
               <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             </Button>
-            <p className="text-sm font-semibold text-[#0e0f0c]">{visibleYear.getFullYear()}</p>
+            <p className="text-sm font-semibold text-ink">{visibleYear.getFullYear()}</p>
             <Button variant="ghost" size="icon" onClick={() => moveYear(1)} aria-label="Next year">
               <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </Button>
@@ -81,8 +81,8 @@ export function MonthPicker({
                   className={cn(
                     "rounded-lg px-3 py-3 text-sm font-medium transition",
                     isSelected
-                      ? "bg-[#0e0f0c] text-white hover:bg-[#0e0f0c]"
-                      : "bg-[#f4f6f1] text-[#454745] hover:bg-[#e8ebe6]"
+                      ? "bg-brand text-white hover:bg-brand"
+                      : "bg-surface-subtle text-ink-secondary hover:bg-surface"
                   )}
                   onClick={() => {
                     onChange(monthKey);
@@ -94,7 +94,7 @@ export function MonthPicker({
               );
             })}
           </div>
-          <div className="mt-3 flex justify-between gap-2 border-t border-[#e8ebe6] pt-3">
+          <div className="mt-3 flex justify-between gap-2 border-t border-surface pt-3">
             <Button
               variant="secondary"
               size="sm"

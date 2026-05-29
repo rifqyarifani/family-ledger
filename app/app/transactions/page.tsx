@@ -14,7 +14,7 @@ export default async function TransactionsPage() {
   }
 
   const [transactions, familyMembers, accounts, categories, currentMemberId] = await Promise.all([
-    getTransactions(household.id),
+    getTransactions(household.id, 100, 0),
     getHouseholdMembers(household.id),
     getAccounts(household.id),
     getCategories(household.id),

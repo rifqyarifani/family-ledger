@@ -10,11 +10,8 @@ import {
   type SavingsGoalInput
 } from "@/src/lib/data/savings-goals";
 import { getActiveHousehold } from "@/src/lib/data/households";
-import type { Account, SavingsGoal } from "@/types/finance";
-
-function normalizeGoalName(value: string) {
-  return value.trim().toLowerCase();
-}
+import { normalizeGoalName } from "@/lib/format-utils";
+import type { SavingsGoal } from "@/types/finance";
 
 async function validateSavingsGoal(householdId: string, goal: SavingsGoal, currentGoalId?: string): Promise<SavingsGoalInput> {
   const name = goal.name.trim();

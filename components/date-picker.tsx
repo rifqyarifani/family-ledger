@@ -51,7 +51,7 @@ export function DatePicker({
       <button
         type="button"
         className={cn(
-          "flex h-10 w-full items-center justify-between rounded-xl border border-[#cfd5ca] bg-white px-3 text-left text-sm text-[#0e0f0c] transition hover:border-[#b0b8a8]",
+          "flex h-10 w-full items-center justify-between rounded-xl border border-surface-border bg-white px-3 text-left text-sm text-ink transition hover:border-[#b0b8a8]",
           !value && "text-[#9ca390]"
         )}
         onClick={() => setIsOpen((current) => !current)}
@@ -63,12 +63,12 @@ export function DatePicker({
       </button>
 
       {isOpen ? (
-        <div className="absolute left-0 right-0 z-50 mt-2 rounded-2xl border border-[#cfd5ca] bg-white p-3 shadow-xl sm:right-auto sm:w-80">
+        <div className="absolute left-0 right-0 z-50 mt-2 rounded-2xl border border-surface-border bg-white p-3 shadow-xl sm:right-auto sm:w-80">
           <div className="mb-3 flex items-center justify-between">
             <Button variant="ghost" size="icon" onClick={() => moveMonth(-1)} aria-label="Previous month">
               <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             </Button>
-            <p className="text-sm font-semibold text-[#0e0f0c]">{monthLabel}</p>
+            <p className="text-sm font-semibold text-ink">{monthLabel}</p>
             <Button variant="ghost" size="icon" onClick={() => moveMonth(1)} aria-label="Next month">
               <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </Button>
@@ -93,9 +93,9 @@ export function DatePicker({
                   type="button"
                   className={cn(
                     "h-9 rounded-xl text-sm font-medium transition",
-                    isCurrentMonth ? "text-[#454745] hover:bg-[#f4f6f1]" : "text-[#b0b8a8] hover:bg-[#f4f6f1]",
+                    isCurrentMonth ? "text-ink-secondary hover:bg-surface-subtle" : "text-[#b0b8a8] hover:bg-surface-subtle",
                     isToday && "ring-1 ring-[#b0b8a8]",
-                    isSelected && "bg-[#0e0f0c] text-white hover:bg-[#0e0f0c]"
+                    isSelected && "bg-brand text-white hover:bg-brand"
                   )}
                   onClick={() => {
                     onChange(isoDate);
@@ -107,7 +107,7 @@ export function DatePicker({
               );
             })}
           </div>
-          <div className="mt-3 flex justify-between gap-2 border-t border-[#e8ebe6] pt-3">
+          <div className="mt-3 flex justify-between gap-2 border-t border-surface pt-3">
             <Button
               variant="secondary"
               size="sm"

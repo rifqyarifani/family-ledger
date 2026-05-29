@@ -1,7 +1,5 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { Plus, UserRound } from "lucide-react";
 import {
   createFamilyMemberAction,
@@ -17,6 +15,7 @@ import { Modal } from "@/components/modal";
 import { PageIntro } from "@/components/page-intro";
 import { ResourceActions } from "@/components/resource-actions";
 import { useCrudDialog } from "@/hooks/use-crud-dialog";
+import { useRunAction } from "@/hooks/use-run-action";
 import { formatCurrency } from "@/lib/finance";
 import type { FamilyMember, FamilyMemberTransactionTotals } from "@/types/finance";
 
@@ -31,23 +30,8 @@ export function FamilyClient({
   familyMembers: FamilyMember[];
   transactionTotals: FamilyMemberTransactionTotals;
 }) {
-  const router = useRouter();
   const memberDialog = useCrudDialog<FamilyMember>();
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState("");
-
-  function runAction(action: () => Promise<void>, onSuccess?: () => void) {
-    setError("");
-    startTransition(async () => {
-      try {
-        await action();
-        onSuccess?.();
-        router.refresh();
-      } catch (actionError) {
-        setError(actionError instanceof Error ? actionError.message : "Something went wrong.");
-      }
-    });
-  }
+  const { isPending, error, runAction } = useRunAction();
 
   return (
     <>
@@ -61,7 +45,7 @@ export function FamilyClient({
         }
       />
 
-      {error ? <p className="mb-4 rounded-2xl border border-[#cfd5ca] bg-[#e8ebe6] p-3 text-sm text-[#454745]">{error}</p> : null}
+      {error ? <p className="mb-4 rounded-2xl border border-surface-border bg-surface p-3 text-sm text-ink-secondary">{error}</p> : null}
 
       {familyMembers.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -72,12 +56,12 @@ export function FamilyClient({
               <Card key={member.id}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3">
-                    <div className="rounded-xl bg-[#e2f6d5] p-2 text-[#0e0f0c]">
+                    <div className="rounded-xl bg-brand-green-pale p-2 text-ink">
                       <UserRound className="h-5 w-5" aria-hidden="true" />
                     </div>
                     <div>
-                      <h2 className="font-semibold text-[#0e0f0c]">{member.name}</h2>
-                      <p className="text-sm text-[#454745]">{formatRole(member.role)}</p>
+                      <h2 className="font-semibold text-ink">{member.name}</h2>
+                      <p className="text-sm text-ink-secondary">{formatRole(member.role)}</p>
                     </div>
                   </div>
                   <ResourceActions
@@ -87,16 +71,16 @@ export function FamilyClient({
                     onDelete={() => memberDialog.setDeletingItem(member)}
                   />
                 </div>
-                {member.email ? <p className="mt-4 break-words text-sm text-[#454745]">{member.email}</p> : null}
-                {member.note ? <p className="mt-2 text-sm text-[#454745]">{member.note}</p> : null}
+                {member.email ? <p className="mt-4 break-words text-sm text-ink-secondary">{member.email}</p> : null}
+                {member.note ? <p className="mt-2 text-sm text-ink-secondary">{member.note}</p> : null}
                 <div className="mt-5 grid grid-cols-2 gap-3">
-                  <div className="rounded-xl bg-[#e8ebe6] p-3">
+                  <div className="rounded-xl bg-surface p-3">
                     <p className="text-xs text-[#2ead4b]">Contribution</p>
-                    <p className="mt-1 text-sm font-semibold text-[#0e0f0c]">{formatCurrency(totals.income)}</p>
+                    <p className="mt-1 text-sm font-semibold text-ink">{formatCurrency(totals.income)}</p>
                   </div>
-                  <div className="rounded-xl bg-[#e8ebe6] p-3">
+                  <div className="rounded-xl bg-surface p-3">
                     <p className="text-xs text-[#d03238]">Spending</p>
-                    <p className="mt-1 text-sm font-semibold text-[#0e0f0c]">{formatCurrency(totals.expense)}</p>
+                    <p className="mt-1 text-sm font-semibold text-ink">{formatCurrency(totals.expense)}</p>
                   </div>
                 </div>
               </Card>
