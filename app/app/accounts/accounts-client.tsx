@@ -1,15 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
-import { CreditCard, Plus } from "lucide-react";
+import { useState, useTransition, useOptimistic, useCallback } from "react";
+import { Banknote, Building, CreditCard, PiggyBank, Plus } from "lucide-react";
 import {
   createAccountAction,
   deleteAccountAction,
   updateAccountAction,
 } from "@/app/app/accounts/actions";
 import { AccountForm } from "@/components/account-form";
-import { Badge } from "@/components/badge";
+
 import { Button } from "@/components/button";
 import { Card } from "@/components/card";
 import { ConfirmDialog } from "@/components/confirm-dialog";
@@ -21,34 +21,102 @@ import { useCrudDialog } from "@/hooks/use-crud-dialog";
 import { formatCurrency } from "@/lib/finance";
 import type { Account, AccountBalanceMap } from "@/types/finance";
 
+type AccountsState = {
+  accounts: Account[];
+  balances: AccountBalanceMap;
+};
+
+type OptimisticAction =
+  | { type: "create"; account: Account }
+  | { type: "update"; account: Account }
+  | { type: "delete"; id: string };
+
 export function AccountsClient({
   accounts,
   accountBalances,
+  householdId,
 }: {
   accounts: Account[];
   accountBalances: AccountBalanceMap;
+  householdId: string;
 }) {
   const router = useRouter();
   const accountDialog = useCrudDialog<Account>();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
 
-  function runAction(action: () => Promise<void>, onSuccess?: () => void) {
-    setError("");
-    startTransition(async () => {
-      try {
-        await action();
-        onSuccess?.();
-        router.refresh();
-      } catch (actionError) {
-        setError(
-          actionError instanceof Error
-            ? actionError.message
-            : "Something went wrong.",
-        );
+  const [optimisticState, addOptimistic] = useOptimistic(
+    { accounts, balances: accountBalances },
+    (state: AccountsState, action: OptimisticAction) => {
+      switch (action.type) {
+        case "create":
+          return {
+            accounts: [...state.accounts, action.account],
+            balances: {
+              ...state.balances,
+              [action.account.id]: action.account.openingBalance,
+            },
+          };
+        case "update":
+          return {
+            accounts: state.accounts.map((a) =>
+              a.id === action.account.id ? action.account : a,
+            ),
+            balances: {
+              ...state.balances,
+              [action.account.id]: action.account.openingBalance,
+            },
+          };
+        case "delete": {
+          const remaining: AccountBalanceMap = {};
+          for (const key of Object.keys(state.balances)) {
+            if (key !== action.id) {
+              remaining[key] = state.balances[key];
+            }
+          }
+          return {
+            accounts: state.accounts.filter((a) => a.id !== action.id),
+            balances: remaining,
+          };
+        }
+        default:
+          return state;
       }
-    });
-  }
+    },
+  );
+
+  const runAction = useCallback(
+    (
+      action: () => Promise<void>,
+      optimisticAction: OptimisticAction | null,
+      onSuccess?: () => void,
+    ) => {
+      setError("");
+      startTransition(async () => {
+        if (optimisticAction) addOptimistic(optimisticAction);
+        try {
+          await action();
+          onSuccess?.();
+          router.refresh();
+        } catch (actionError) {
+          setError(
+            actionError instanceof Error
+              ? actionError.message
+              : "Something went wrong.",
+          );
+          router.refresh();
+        }
+      });
+    },
+    [addOptimistic, router],
+  );
+
+  const typeIcon: Record<Account["type"], typeof CreditCard> = {
+    cash: Banknote,
+    bank: Building,
+    credit: CreditCard,
+    savings: PiggyBank,
+  };
 
   return (
     <>
@@ -64,26 +132,31 @@ export function AccountsClient({
       />
 
       {error ? (
-        <p className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+        <p className="mb-4 rounded-2xl border border-[#cfd5ca] bg-[#f4f6f1] p-3 text-sm text-[#454745]">
           {error}
         </p>
       ) : null}
 
-      {accounts.length > 0 ? (
+      {optimisticState.accounts.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {accounts.map((account) => (
+          {optimisticState.accounts.map((account) => (
             <Card key={account.id}>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
-                  <div className="rounded-lg bg-slate-100 p-2 text-slate-600">
-                    <CreditCard className="h-5 w-5" aria-hidden="true" />
+                  <div className="rounded-xl bg-[#f4f6f1] p-2 text-[#454745]">
+                    {(() => {
+                      const Icon = typeIcon[account.type];
+                      return <Icon className="h-5 w-5" aria-hidden="true" />;
+                    })()}
                   </div>
                   <div>
-                    <h2 className="font-semibold text-slate-950">
+                    <h2 className="font-semibold text-[#0e0f0c]">
                       {account.name}
                     </h2>
-                    <div className="mt-1 capitalize">
-                      <Badge tone="blue">{account.type}</Badge>
+                    <div className="mt-1">
+                      <span className="inline-block rounded-full bg-[#e2f6d5] px-3 py-0.5 text-xs font-semibold text-[#054d28] capitalize">
+                        {account.type}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -95,8 +168,8 @@ export function AccountsClient({
                 />
               </div>
               <div className="mt-6">
-                <p className="text-2xl font-semibold text-slate-950">
-                  {formatCurrency(accountBalances[account.id] ?? account.openingBalance)}
+                <p className="text-2xl font-semibold leading-[31.2px] tracking-[-0.48px] text-[#0e0f0c]">
+                  {formatCurrency(optimisticState.balances[account.id] ?? account.openingBalance)}
                 </p>
               </div>
             </Card>
@@ -121,15 +194,19 @@ export function AccountsClient({
           }
           account={accountDialog.editingItem}
           onCancel={accountDialog.closeForm}
-          onSubmit={(account) =>
+          onSubmit={(account) => {
+            const optimisticAction: OptimisticAction = accountDialog.editingItem
+              ? { type: "update", account }
+              : { type: "create", account };
             runAction(
               () =>
                 accountDialog.editingItem
-                  ? updateAccountAction(account)
-                  : createAccountAction(account),
+                  ? updateAccountAction(householdId, account)
+                  : createAccountAction(householdId, account),
+              optimisticAction,
               accountDialog.closeForm,
-            )
-          }
+            );
+          }}
         />
       </Modal>
 
@@ -141,7 +218,8 @@ export function AccountsClient({
         onConfirm={() =>
           accountDialog.deletingItem &&
           runAction(
-            () => deleteAccountAction(accountDialog.deletingItem!.id),
+            () => deleteAccountAction(householdId, accountDialog.deletingItem!.id),
+            { type: "delete", id: accountDialog.deletingItem!.id },
             accountDialog.closeDelete,
           )
         }

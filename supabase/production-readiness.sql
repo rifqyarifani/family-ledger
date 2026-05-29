@@ -17,7 +17,7 @@ begin
     where invite_code is null or invite_code = ''
   loop
     loop
-      generated_code := 'FL-';
+      generated_code := '';
 
       for index in 1..6 loop
         generated_code := generated_code || substr(alphabet, floor(random() * length(alphabet) + 1)::integer, 1);
@@ -52,7 +52,7 @@ begin
   ) then
     alter table public.households
     add constraint households_invite_code_format_check
-    check (invite_code ~ '^FL-[A-Z2-9]{6}$');
+    check (invite_code ~ '^[A-Z2-9]{6}$');
   end if;
 end $$;
 

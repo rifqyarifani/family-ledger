@@ -97,6 +97,7 @@ function AuthenticatedApp({
         householdName={householdName}
         householdCode={householdCode}
         monthlyCycleDay={monthlyCycleDay}
+        householdRole={householdRole}
       />
       <ConfirmDialog
         open={isLogoutOpen}

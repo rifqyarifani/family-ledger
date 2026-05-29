@@ -76,10 +76,10 @@ export function TransactionTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200">
+    <div className="overflow-hidden rounded-2xl border border-[#cfd5ca]">
       <div className="hidden overflow-x-auto md:block">
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+          <thead className="bg-[#f4f6f1] text-xs uppercase tracking-wide text-[#454745]">
             <tr>
               <th className="px-4 py-3">Transaction</th>
               <th className="px-4 py-3">Type</th>
@@ -93,15 +93,15 @@ export function TransactionTable({
               )}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200 bg-white">
+          <tbody className="divide-y divide-[#cfd5ca] bg-white">
             {transactions.map((transaction) => (
               <tr key={transaction.id}>
                 <td className="px-4 py-3">
-                  <p className="font-medium text-slate-950">
+                  <p className="font-medium text-[#0e0f0c]">
                     {transaction.title}
                   </p>
                   {transaction.note ? (
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-[#454745]">
                       {transaction.note}
                     </p>
                   ) : null}
@@ -111,19 +111,19 @@ export function TransactionTable({
                     {transaction.type}
                   </Badge>
                 </td>
-                <td className="px-4 py-3 text-slate-600">
+                <td className="px-4 py-3 text-[#454745]">
                   {transaction.category}
                 </td>
-                <td className="px-4 py-3 text-slate-600">
+                <td className="px-4 py-3 text-[#454745]">
                   {getMemberLabel(transaction)}
                 </td>
-                <td className="px-4 py-3 text-slate-600">
+                <td className="px-4 py-3 text-[#454745]">
                   {getAccountLabel(transaction)}
                 </td>
-                <td className="px-4 py-3 text-slate-600">
+                <td className="px-4 py-3 text-[#454745]">
                   {formatDate(transaction.date)}
                 </td>
-                <td className="px-4 py-3 text-right font-semibold text-slate-950">
+                <td className="px-4 py-3 text-right font-semibold text-[#0e0f0c]">
                   {getAmountPrefix(transaction.type)}
                   {formatCurrency(transaction.amount)}
                 </td>
@@ -161,19 +161,19 @@ export function TransactionTable({
           </tbody>
         </table>
       </div>
-      <div className="divide-y divide-slate-200 bg-white md:hidden">
+      <div className="divide-y divide-[#cfd5ca] bg-white md:hidden">
         {transactions.map((transaction) => (
           <article key={transaction.id} className="p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <h3 className="font-medium text-slate-950">
+                <h3 className="font-medium text-[#0e0f0c]">
                   {transaction.title}
                 </h3>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-[#454745]">
                   {formatDate(transaction.date)} · {transaction.category}
                 </p>
               </div>
-              <p className="shrink-0 text-right font-semibold text-slate-950">
+              <p className="shrink-0 text-right font-semibold text-[#0e0f0c]">
                 {getAmountPrefix(transaction.type)}
                 {formatCurrency(transaction.amount)}
               </p>

@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { MoreVertical, Plus } from "lucide-react";
 import {
   createBudgetAction,
   deleteBudgetAction,
-  updateBudgetAction
+  updateBudgetAction,
 } from "@/app/app/budget/actions";
-import { BudgetCard } from "@/components/budget-card";
 import { BudgetForm } from "@/components/budget-form";
 import { Button } from "@/components/button";
 import { ConfirmDialog } from "@/components/confirm-dialog";
@@ -16,14 +15,17 @@ import { EmptyState } from "@/components/empty-state";
 import { MonthPicker } from "@/components/month-picker";
 import { Modal } from "@/components/modal";
 import { PageIntro } from "@/components/page-intro";
+import { Progress } from "@/components/progress";
 import { useCrudDialog } from "@/hooks/use-crud-dialog";
+import { cn } from "@/lib/utils";
+import { formatCurrency, getBudgetUsage } from "@/lib/finance";
 import type { Budget, Transaction } from "@/types/finance";
 
 export function BudgetClient({
   budgets,
   transactions,
   expenseCategories,
-  selectedMonth
+  selectedMonth,
 }: {
   budgets: Budget[];
   transactions: Transaction[];
@@ -34,7 +36,19 @@ export function BudgetClient({
   const budgetDialog = useCrudDialog<Budget>();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
   const hasExpenseCategories = expenseCategories.length > 0;
+
+  const annotated = budgets
+    .map((budget) => ({
+      budget,
+      usage: getBudgetUsage(budget, transactions),
+    }))
+    .sort((a, b) => {
+      const pc = b.usage.percentage - a.usage.percentage;
+      return pc !== 0 ? pc : a.budget.category.localeCompare(b.budget.category);
+    });
 
   function runAction(action: () => Promise<void>, onSuccess?: () => void) {
     setError("");
@@ -44,12 +58,17 @@ export function BudgetClient({
         onSuccess?.();
         router.refresh();
       } catch (actionError) {
-        setError(actionError instanceof Error ? actionError.message : "Something went wrong.");
+        setError(
+          actionError instanceof Error
+            ? actionError.message
+            : "Something went wrong.",
+        );
       }
     });
   }
 
   function changeMonth(month: string) {
+    setOpenMenuId(null);
     router.replace(`/app/budget?month=${month}`);
   }
 
@@ -62,7 +81,10 @@ export function BudgetClient({
             <div className="w-full sm:w-48">
               <MonthPicker value={selectedMonth} onChange={changeMonth} />
             </div>
-            <Button onClick={budgetDialog.openCreate} disabled={isPending || !hasExpenseCategories}>
+            <Button
+              onClick={budgetDialog.openCreate}
+              disabled={isPending || !hasExpenseCategories}
+            >
               <Plus className="h-4 w-4" aria-hidden="true" />
               Add budget
             </Button>
@@ -70,23 +92,98 @@ export function BudgetClient({
         }
       />
 
-      {error ? <p className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
+      {error ? (
+        <p className="mb-4 rounded-2xl border border-[#cfd5ca] bg-[#f4f6f1] p-3 text-sm text-[#454745]">
+          {error}
+        </p>
+      ) : null}
 
-      {budgets.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {budgets.map((budget) => (
-            <BudgetCard
-              key={budget.id}
-              budget={budget}
-              transactions={transactions}
-              onEdit={budgetDialog.openEdit}
-              onDelete={budgetDialog.setDeletingItem}
-            />
-          ))}
+      {annotated.length > 0 ? (
+        <div className="rounded-2xl border border-[#cfd5ca] bg-white">
+          <div className="hidden gap-3 border-b border-[#e8ebe6] bg-[#f4f6f1] px-5 py-3 text-xs font-medium uppercase tracking-wide text-[#454745] md:grid md:grid-cols-[1fr_3fr_44px_44px]">
+            <span>Category</span>
+            <span>Progress</span>
+            <span className="text-right">Used</span>
+            <span />
+          </div>
+          <div className="divide-y divide-[#e8ebe6]">
+            {annotated.map(({ budget, usage }) => {
+              const isOver = usage.percentage > 100;
+              const menuOpen = openMenuId === budget.id;
+
+              return (
+                <div
+                  key={budget.id}
+                  className="grid grid-cols-[1fr_3fr_44px_44px] items-center gap-3 px-5 py-3 transition hover:bg-[#f4f6f1] max-sm:flex max-sm:flex-wrap max-sm:gap-x-3 max-sm:gap-y-1"
+                >
+                  <span className="truncate text-sm font-medium text-[#0e0f0c] max-sm:w-full">
+                    {budget.category}
+                  </span>
+
+                  <div className="min-w-0 space-y-1">
+                    <Progress value={usage.percentage} />
+                    <p className="text-xs text-[#454745]">
+                      {formatCurrency(usage.spent)} /{" "}
+                      {formatCurrency(budget.limit)}
+                    </p>
+                  </div>
+
+                  <span
+                    className={cn(
+                      "text-right text-sm font-semibold",
+                      isOver ? "text-[#a72027]" : "text-[#0e0f0c]",
+                    )}
+                  >
+                    {usage.percentage}%
+                  </span>
+
+                  <div className="relative flex justify-end">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setOpenMenuId(menuOpen ? null : budget.id)}
+                      aria-label={`Actions for ${budget.category}`}
+                    >
+                      <MoreVertical className="h-4 w-4" aria-hidden="true" />
+                    </Button>
+                    {menuOpen ? (
+                      <div
+                        ref={menuRef}
+                        className="absolute right-0 top-full z-50 mt-1 w-36 overflow-hidden rounded-xl border border-[#cfd5ca] bg-white shadow-lg"
+                      >
+                        <button
+                          type="button"
+                          className="flex w-full items-center px-4 py-2 text-left text-sm text-[#0e0f0c] transition hover:bg-[#f4f6f1]"
+                          onClick={() => {
+                            setOpenMenuId(null);
+                            budgetDialog.openEdit(budget);
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          className="flex w-full items-center px-4 py-2 text-left text-sm text-[#a72027] transition hover:bg-[#fff1f2]"
+                          onClick={() => {
+                            setOpenMenuId(null);
+                            budgetDialog.setDeletingItem(budget);
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       ) : (
         <EmptyState
-          title={hasExpenseCategories ? "No budgets yet" : "No expense categories"}
+          title={
+            hasExpenseCategories ? "No budgets yet" : "No expense categories"
+          }
           message={
             hasExpenseCategories
               ? "Create monthly limits for your expense categories in the selected month."
@@ -100,17 +197,27 @@ export function BudgetClient({
         />
       )}
 
-      <Modal open={budgetDialog.isFormOpen} title={budgetDialog.editingItem ? "Edit budget" : "Add budget"} onClose={budgetDialog.closeForm}>
+      <Modal
+        open={budgetDialog.isFormOpen}
+        title={budgetDialog.editingItem ? "Edit budget" : "Add budget"}
+        onClose={budgetDialog.closeForm}
+      >
         <BudgetForm
-          key={budgetDialog.editingItem?.id ?? (budgetDialog.isFormOpen ? "new-budget" : "closed-budget")}
+          key={
+            budgetDialog.editingItem?.id ??
+            (budgetDialog.isFormOpen ? "new-budget" : "closed-budget")
+          }
           budget={budgetDialog.editingItem}
           expenseCategories={expenseCategories}
           defaultMonth={selectedMonth}
           onCancel={budgetDialog.closeForm}
           onSubmit={(budget) =>
             runAction(
-              () => (budgetDialog.editingItem ? updateBudgetAction(budget) : createBudgetAction(budget)),
-              budgetDialog.closeForm
+              () =>
+                budgetDialog.editingItem
+                  ? updateBudgetAction(budget)
+                  : createBudgetAction(budget),
+              budgetDialog.closeForm,
             )
           }
         />
@@ -123,7 +230,10 @@ export function BudgetClient({
         onClose={budgetDialog.closeDelete}
         onConfirm={() =>
           budgetDialog.deletingItem &&
-          runAction(() => deleteBudgetAction(budgetDialog.deletingItem!.id), budgetDialog.closeDelete)
+          runAction(
+            () => deleteBudgetAction(budgetDialog.deletingItem!.id),
+            budgetDialog.closeDelete,
+          )
         }
       />
     </>

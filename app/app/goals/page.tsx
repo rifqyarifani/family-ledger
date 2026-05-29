@@ -5,10 +5,6 @@ import { getActiveHousehold } from "@/src/lib/data/households";
 import { getSavingsGoals } from "@/src/lib/data/savings-goals";
 import type { Account, AccountBalanceMap, SavingsGoal, SavingsGoalAccountOption } from "@/types/finance";
 
-function normalizeLinkName(value: string) {
-  return value.trim().toLowerCase();
-}
-
 function applySavingsAccountTracking({
   goals,
   accounts,
@@ -18,10 +14,8 @@ function applySavingsAccountTracking({
   accounts: Account[];
   accountBalances: AccountBalanceMap;
 }) {
-  const savingsAccounts = accounts.filter((account) => account.type === "savings");
-
   return goals.map((goal) => {
-    const linkedAccount = savingsAccounts.find((account) => normalizeLinkName(account.name) === normalizeLinkName(goal.name));
+    const linkedAccount = accounts.find((account) => account.id === goal.accountId);
 
     if (!linkedAccount) {
       return goal;
@@ -29,6 +23,7 @@ function applySavingsAccountTracking({
 
     return {
       ...goal,
+      name: linkedAccount.name,
       savedAmount: Math.max(0, accountBalances[linkedAccount.id] ?? linkedAccount.openingBalance)
     };
   });

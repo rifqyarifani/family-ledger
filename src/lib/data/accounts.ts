@@ -46,7 +46,10 @@ export async function getAccounts(householdId: string) {
   return (data ?? []).map(mapAccount);
 }
 
-export async function getAccountBalanceMap(householdId: string, accounts: Account[]) {
+async function computeBalancesInJS(
+  householdId: string,
+  accounts: Account[],
+): Promise<AccountBalanceMap> {
   const balances = accounts.reduce<AccountBalanceMap>((current, account) => {
     current[account.id] = account.openingBalance;
     return current;
@@ -90,6 +93,27 @@ export async function getAccountBalanceMap(householdId: string, accounts: Accoun
   return balances;
 }
 
+export async function getAccountBalanceMap(householdId: string, accounts?: Account[]) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.rpc("get_account_balances", {
+    target_household_id: householdId,
+  });
+
+  if (!error && data) {
+    return (data as { account_id: string; balance: number }[]).reduce<AccountBalanceMap>(
+      (acc, row) => {
+        acc[row.account_id] = Number(row.balance);
+        return acc;
+      },
+      {},
+    );
+  }
+
+  const resolvedAccounts = accounts ?? (await getAccounts(householdId));
+  return computeBalancesInJS(householdId, resolvedAccounts);
+}
+
 export async function createAccount(householdId: string, account: AccountInput) {
   const supabase = await createClient();
   const {
@@ -128,9 +152,19 @@ export async function updateAccount(householdId: string, accountId: string, acco
 
 export async function deleteAccount(householdId: string, accountId: string) {
   const supabase = await createClient();
-  const { error } = await supabase.from("accounts").delete().eq("household_id", householdId).eq("id", accountId);
+  const { data, error } = await supabase
+    .from("accounts")
+    .delete()
+    .eq("household_id", householdId)
+    .eq("id", accountId)
+    .select("id")
+    .maybeSingle<{ id: string }>();
 
   if (error) {
     throw new Error(error.message);
+  }
+
+  if (!data) {
+    throw new Error("Account not found or no permission.");
   }
 }

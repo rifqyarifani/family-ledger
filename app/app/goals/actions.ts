@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getAccountBalanceMap, getAccounts } from "@/src/lib/data/accounts";
+import { getAccounts, getAccountBalanceMap } from "@/src/lib/data/accounts";
 import {
   createSavingsGoal,
   deleteSavingsGoal,
@@ -10,7 +10,7 @@ import {
   type SavingsGoalInput
 } from "@/src/lib/data/savings-goals";
 import { getActiveHousehold } from "@/src/lib/data/households";
-import type { SavingsGoal } from "@/types/finance";
+import type { Account, SavingsGoal } from "@/types/finance";
 
 function normalizeGoalName(value: string) {
   return value.trim().toLowerCase();
@@ -35,7 +35,7 @@ async function validateSavingsGoal(householdId: string, goal: SavingsGoal, curre
     getAccounts(householdId),
     getSavingsGoals(householdId)
   ]);
-  const accountBalances = await getAccountBalanceMap(householdId, accounts);
+
   const linkedAccount = accounts.find(
     (account) => account.type === "savings" && normalizeGoalName(account.name) === normalizeGoalName(name)
   );
@@ -54,11 +54,15 @@ async function validateSavingsGoal(householdId: string, goal: SavingsGoal, curre
     throw new Error("This savings account already has a savings goal.");
   }
 
+  const balances = await getAccountBalanceMap(householdId, accounts);
+  const savedAmount = Math.max(0, balances[linkedAccount.id] ?? linkedAccount.openingBalance);
+
   return {
     name: linkedAccount.name,
     targetAmount: goal.targetAmount,
-    savedAmount: Math.max(0, accountBalances[linkedAccount.id] ?? linkedAccount.openingBalance),
-    dueDate: goal.dueDate
+    savedAmount,
+    dueDate: goal.dueDate,
+    accountId: linkedAccount.id
   };
 }
 

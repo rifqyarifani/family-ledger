@@ -74,7 +74,7 @@ export default async function HouseholdOnboardingPage({
           <CardHeader title="Join household" description="Use the household code shared by an existing owner." />
           <form action={joinHouseholdAction} className="grid gap-4">
             <Field label="Household code">
-              <Input name="householdCode" placeholder="FL-ABC234" required />
+              <Input name="householdCode" placeholder="ABC234" required />
             </Field>
             <Button type="submit" variant="secondary" className="w-full">
               <LogIn className="h-4 w-4" aria-hidden="true" />

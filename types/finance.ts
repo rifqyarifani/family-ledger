@@ -64,6 +64,7 @@ export type SavingsGoal = {
   targetAmount: number;
   savedAmount: number;
   dueDate: string;
+  accountId?: string;
 };
 
 export type SavingsGoalAccountOption = {

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { createAdminClient } from "@/src/lib/supabase/admin";
 import { getActiveHousehold } from "@/src/lib/data/households";
 import { createClient } from "@/src/lib/supabase/server";
 
@@ -55,16 +56,22 @@ export async function updateHouseholdSettingsAction(input: {
     return { ok: false, message: "Only household owners can update household settings." };
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase
+  const admin = createAdminClient();
+  const { data, error } = await admin
     .from("households")
     .update({
-      name: householdName
+      name: householdName,
     })
-    .eq("id", household.id);
+    .eq("id", household.id)
+    .select("id")
+    .maybeSingle<{ id: string }>();
 
   if (error) {
     return { ok: false, message: error.message };
+  }
+
+  if (!data) {
+    return { ok: false, message: "Household not found." };
   }
 
   revalidatePath("/app", "layout");

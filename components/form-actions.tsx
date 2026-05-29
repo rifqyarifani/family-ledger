@@ -24,5 +24,5 @@ export function FormError({ message }: { message: string }) {
     return null;
   }
 
-  return <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700 sm:col-span-2">{message}</p>;
+  return <p className="rounded-2xl border border-[#cfd5ca] bg-[#f4f6f1] p-3 text-sm text-[#454745] sm:col-span-2">{message}</p>;
 }

@@ -31,7 +31,7 @@ end $$;
 create table if not exists public.households (
   id uuid primary key default gen_random_uuid(),
   name text not null check (char_length(name) between 1 and 80),
-  invite_code text not null unique check (invite_code ~ '^FL-[A-Z2-9]{6}$'),
+  invite_code text not null unique check (invite_code ~ '^[A-Z2-9]{6}$'),
   currency text not null default 'IDR' check (currency = 'IDR'),
   monthly_cycle_day integer not null default 1 check (monthly_cycle_day between 1 and 31),
   created_by uuid references auth.users(id) on delete set null,
@@ -115,6 +115,7 @@ create table if not exists public.savings_goals (
   target_amount numeric(14, 2) not null default 0 check (target_amount >= 0),
   saved_amount numeric(14, 2) not null default 0 check (saved_amount >= 0),
   due_date date,
+  account_id uuid not null references public.accounts(id) on delete cascade,
   created_by uuid references auth.users(id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -171,6 +172,34 @@ drop trigger if exists savings_goals_set_updated_at on public.savings_goals;
 create trigger savings_goals_set_updated_at
 before update on public.savings_goals
 for each row execute function public.set_updated_at();
+
+create or replace function public.get_account_balances(target_household_id uuid)
+returns table(account_id uuid, balance numeric)
+language plpgsql
+stable
+as $$
+begin
+  return query
+  select
+    a.id as account_id,
+    a.opening_balance + coalesce(sum(
+      case
+        when t.type = 'income'  and t.account_id = a.id then t.amount
+        when t.type = 'expense' and t.account_id = a.id then -t.amount
+        when t.type = 'transfer' and t.account_id = a.id then -t.amount
+        when t.type = 'transfer' and t.transfer_account_id = a.id then t.amount
+        else 0
+      end
+    ), 0) as balance
+  from accounts a
+  left join transactions t on t.household_id = a.household_id
+    and (t.account_id = a.id or t.transfer_account_id = a.id)
+  where a.household_id = target_household_id
+  group by a.id, a.opening_balance;
+end;
+$$;
+
+grant execute on function public.get_account_balances to authenticated, service_role;
 
 grant usage on schema public to authenticated, service_role;
 grant usage on type public.household_role to authenticated, service_role;

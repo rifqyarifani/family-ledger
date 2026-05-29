@@ -124,7 +124,7 @@ export function BudgetForm({
         />
       </Field>
       <div className="block">
-        <span className="text-sm font-medium text-slate-700">Month</span>
+        <span className="text-sm font-medium text-[#454745]">Month</span>
         <div className="mt-1">
           <MonthPicker value={month} onChange={setMonth} />
         </div>

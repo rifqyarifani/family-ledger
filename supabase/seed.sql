@@ -15,7 +15,7 @@ declare
   savings_category_id uuid := '40000000-0000-0000-0000-000000000003';
 begin
   insert into public.households (id, name, invite_code, currency, monthly_cycle_day, created_by)
-  values (demo_household_id, 'FamilyLedger Home', 'FL-DEMO24', 'IDR', 1, demo_user_id)
+  values (demo_household_id, 'FamilyLedger Home', 'DEMO24', 'IDR', 1, demo_user_id)
   on conflict (id) do nothing;
 
   insert into public.household_members (id, household_id, user_id, role, display_name, email, monthly_responsibility_note)
@@ -58,7 +58,7 @@ begin
   values (demo_household_id, food_category_id, '2026-05-01', 5500000, demo_user_id)
   on conflict (household_id, category_id, budget_month) do nothing;
 
-  insert into public.savings_goals (household_id, name, target_amount, saved_amount, due_date, created_by)
-  values (demo_household_id, 'Emergency Fund', 60000000, 25000000, '2026-12-31', demo_user_id)
+  insert into public.savings_goals (household_id, name, target_amount, saved_amount, due_date, account_id, created_by)
+  values (demo_household_id, 'Emergency Fund', 60000000, 25000000, '2026-12-31', emergency_account_id, demo_user_id)
   on conflict do nothing;
 end $$;

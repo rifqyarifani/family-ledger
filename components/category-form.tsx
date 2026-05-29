@@ -49,7 +49,7 @@ export function CategoryForm({
           onChange={(event) => setName(event.target.value.slice(0, maxCategoryLength))}
           required
         />
-        <p className="mt-1 text-right text-xs text-slate-400">
+        <p className="mt-1 text-right text-xs text-[#868685]">
           {name.length}/{maxCategoryLength}
         </p>
       </Field>

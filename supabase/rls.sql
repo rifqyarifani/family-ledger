@@ -150,11 +150,11 @@ to authenticated
 using (public.is_household_member(household_id))
 with check (public.is_household_member(household_id));
 
-create policy "Owners can delete accounts"
+create policy "Members can delete accounts"
 on public.accounts
 for delete
 to authenticated
-using (public.can_manage_household(household_id));
+using (public.is_household_member(household_id));
 
 create policy "Members can view categories"
 on public.categories
@@ -175,11 +175,11 @@ to authenticated
 using (public.is_household_member(household_id))
 with check (public.is_household_member(household_id));
 
-create policy "Owners can delete categories"
+create policy "Members can delete categories"
 on public.categories
 for delete
 to authenticated
-using (public.can_manage_household(household_id));
+using (public.is_household_member(household_id));
 
 create policy "Members can view transactions"
 on public.transactions
@@ -225,11 +225,11 @@ to authenticated
 using (public.is_household_member(household_id))
 with check (public.is_household_member(household_id));
 
-create policy "Owners can delete budgets"
+create policy "Members can delete budgets"
 on public.budgets
 for delete
 to authenticated
-using (public.can_manage_household(household_id));
+using (public.is_household_member(household_id));
 
 create policy "Members can view savings goals"
 on public.savings_goals
@@ -250,8 +250,8 @@ to authenticated
 using (public.is_household_member(household_id))
 with check (public.is_household_member(household_id));
 
-create policy "Owners can delete savings goals"
+create policy "Members can delete savings goals"
 on public.savings_goals
 for delete
 to authenticated
-using (public.can_manage_household(household_id));
+using (public.is_household_member(household_id));

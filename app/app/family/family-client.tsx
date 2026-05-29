@@ -61,7 +61,7 @@ export function FamilyClient({
         }
       />
 
-      {error ? <p className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
+      {error ? <p className="mb-4 rounded-2xl border border-[#cfd5ca] bg-[#e8ebe6] p-3 text-sm text-[#454745]">{error}</p> : null}
 
       {familyMembers.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -72,12 +72,12 @@ export function FamilyClient({
               <Card key={member.id}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3">
-                    <div className="rounded-lg bg-slate-100 p-2 text-slate-600">
+                    <div className="rounded-xl bg-[#e2f6d5] p-2 text-[#0e0f0c]">
                       <UserRound className="h-5 w-5" aria-hidden="true" />
                     </div>
                     <div>
-                      <h2 className="font-semibold text-slate-950">{member.name}</h2>
-                      <p className="text-sm text-slate-500">{formatRole(member.role)}</p>
+                      <h2 className="font-semibold text-[#0e0f0c]">{member.name}</h2>
+                      <p className="text-sm text-[#454745]">{formatRole(member.role)}</p>
                     </div>
                   </div>
                   <ResourceActions
@@ -87,16 +87,16 @@ export function FamilyClient({
                     onDelete={() => memberDialog.setDeletingItem(member)}
                   />
                 </div>
-                {member.email ? <p className="mt-4 break-words text-sm text-slate-500">{member.email}</p> : null}
-                {member.note ? <p className="mt-2 text-sm text-slate-600">{member.note}</p> : null}
+                {member.email ? <p className="mt-4 break-words text-sm text-[#454745]">{member.email}</p> : null}
+                {member.note ? <p className="mt-2 text-sm text-[#454745]">{member.note}</p> : null}
                 <div className="mt-5 grid grid-cols-2 gap-3">
-                  <div className="rounded-lg bg-emerald-50 p-3">
-                    <p className="text-xs text-emerald-700">Contribution</p>
-                    <p className="mt-1 text-sm font-semibold text-emerald-950">{formatCurrency(totals.income)}</p>
+                  <div className="rounded-xl bg-[#e8ebe6] p-3">
+                    <p className="text-xs text-[#2ead4b]">Contribution</p>
+                    <p className="mt-1 text-sm font-semibold text-[#0e0f0c]">{formatCurrency(totals.income)}</p>
                   </div>
-                  <div className="rounded-lg bg-red-50 p-3">
-                    <p className="text-xs text-red-700">Spending</p>
-                    <p className="mt-1 text-sm font-semibold text-red-950">{formatCurrency(totals.expense)}</p>
+                  <div className="rounded-xl bg-[#e8ebe6] p-3">
+                    <p className="text-xs text-[#d03238]">Spending</p>
+                    <p className="mt-1 text-sm font-semibold text-[#0e0f0c]">{formatCurrency(totals.expense)}</p>
                   </div>
                 </div>
               </Card>

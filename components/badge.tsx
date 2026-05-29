@@ -14,7 +14,7 @@ export function Badge({
         "inline-flex items-center rounded-full px-2 py-1 text-xs font-medium",
         tone === "slate" && "bg-[#e8ebe6] text-[#454745]",
         tone === "green" && "bg-[#e2f6d5] text-[#054d28]",
-        tone === "red" && "bg-red-50 text-red-700",
+        tone === "red" && "bg-[#320707] text-white",
         tone === "blue" && "bg-blue-50 text-blue-700"
       )}
     >

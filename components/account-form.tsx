@@ -101,7 +101,7 @@ export function AccountForm({
           }
           required
         />
-        <p className="mt-1 text-right text-xs text-slate-400">
+        <p className="mt-1 text-right text-xs text-[#868685]">
           {name.length}/{maxAccountNameLength}
         </p>
       </Field>

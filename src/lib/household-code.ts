@@ -1,24 +1,31 @@
 import { randomInt } from "node:crypto";
 
-export const householdCodeAlphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 export const householdCodeLength = 6;
 
+export const householdCodeAlphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
 export function normalizeHouseholdCode(value: string) {
-  const normalized = value.toUpperCase().replace(/[^A-Z0-9]/g, "");
-  return normalized.startsWith("FL") ? normalized.slice(2) : normalized;
+  return value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, householdCodeLength);
 }
 
 export function formatHouseholdCode(value: string) {
-  const code = normalizeHouseholdCode(value).slice(0, householdCodeLength);
-  return code ? `FL-${code}` : "";
+  return normalizeHouseholdCode(value);
 }
 
-export function generateHouseholdCode() {
-  let code = "";
+const blocklist = new Set(["BUBUR", "MAKAN", "MINUM", "MANDI", "KAKAK", "ADIK"]);
 
-  for (let index = 0; index < householdCodeLength; index += 1) {
-    code += householdCodeAlphabet[randomInt(householdCodeAlphabet.length)];
+export function generateHouseholdCode() {
+  for (let attempt = 0; attempt < 64; attempt += 1) {
+    const code = Array.from({ length: householdCodeLength }, () =>
+      householdCodeAlphabet[randomInt(householdCodeAlphabet.length)]
+    ).join("");
+
+    if (!blocklist.has(code)) {
+      return code;
+    }
   }
 
-  return `FL-${code}`;
+  return Array.from({ length: householdCodeLength }, () =>
+    householdCodeAlphabet[randomInt(householdCodeAlphabet.length)]
+  ).join("");
 }

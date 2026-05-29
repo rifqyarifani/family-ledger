@@ -9,17 +9,17 @@ import {
 
 describe("household invite codes", () => {
   it("normalizes typed codes consistently", () => {
-    assert.equal(normalizeHouseholdCode("fl-ab12cd"), "AB12CD");
-    assert.equal(formatHouseholdCode("ab12cd"), "FL-AB12CD");
-    assert.equal(formatHouseholdCode("FL AB12-CD-extra"), "FL-AB12CD");
+    assert.equal(normalizeHouseholdCode("ab12cd"), "AB12CD");
+    assert.equal(formatHouseholdCode("ab12cd"), "AB12CD");
+    assert.equal(formatHouseholdCode("AB 12-CD-extra"), "AB12CD");
   });
 
-  it("generates short prefixed codes with allowed characters only", () => {
+  it("generates 6-char codes with allowed characters only", () => {
     for (let index = 0; index < 50; index += 1) {
       const generated = generateHouseholdCode();
       const normalized = normalizeHouseholdCode(generated);
 
-      assert.match(generated, /^FL-[A-Z2-9]{6}$/);
+      assert.match(generated, /^[A-Z2-9]{6}$/);
       assert.equal(normalized.length, 6);
 
       for (const char of normalized) {

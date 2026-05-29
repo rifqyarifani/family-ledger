@@ -7,6 +7,7 @@ type SavingsGoalRow = {
   target_amount: number | string;
   saved_amount: number | string;
   due_date: string | null;
+  account_id: string;
 };
 
 export type SavingsGoalInput = {
@@ -14,6 +15,7 @@ export type SavingsGoalInput = {
   targetAmount: number;
   savedAmount: number;
   dueDate: string;
+  accountId: string;
 };
 
 function mapSavingsGoal(row: SavingsGoalRow): SavingsGoal {
@@ -22,7 +24,8 @@ function mapSavingsGoal(row: SavingsGoalRow): SavingsGoal {
     name: row.name,
     targetAmount: Number(row.target_amount),
     savedAmount: Number(row.saved_amount),
-    dueDate: row.due_date ?? ""
+    dueDate: row.due_date ?? "",
+    accountId: row.account_id
   };
 }
 
@@ -30,7 +33,7 @@ export async function getSavingsGoals(householdId: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("savings_goals")
-    .select("id, name, target_amount, saved_amount, due_date")
+    .select("id, name, target_amount, saved_amount, due_date, account_id")
     .eq("household_id", householdId)
     .order("created_at", { ascending: true })
     .returns<SavingsGoalRow[]>();
@@ -44,17 +47,13 @@ export async function getSavingsGoals(householdId: string) {
 
 export async function createSavingsGoal(householdId: string, goal: SavingsGoalInput) {
   const supabase = await createClient();
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
-
   const { error } = await supabase.from("savings_goals").insert({
     household_id: householdId,
     name: goal.name,
     target_amount: goal.targetAmount,
     saved_amount: goal.savedAmount,
     due_date: goal.dueDate,
-    created_by: user?.id ?? null
+    account_id: goal.accountId
   });
 
   if (error) {
@@ -70,7 +69,8 @@ export async function updateSavingsGoal(householdId: string, goalId: string, goa
       name: goal.name,
       target_amount: goal.targetAmount,
       saved_amount: goal.savedAmount,
-      due_date: goal.dueDate
+      due_date: goal.dueDate,
+      account_id: goal.accountId
     })
     .eq("household_id", householdId)
     .eq("id", goalId);

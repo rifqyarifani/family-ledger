@@ -133,12 +133,12 @@ export function SavingsGoalForm({
           type="text"
           value={formatInputAmount(savedAmount)}
           readOnly
-          className="bg-slate-50"
+          className="bg-[#f4f6f1]"
         />
-        <p className="mt-1 text-xs text-slate-500">Saved amount follows this account balance automatically.</p>
+        <p className="mt-1 text-xs text-[#454745]">Saved amount follows this account balance automatically.</p>
       </Field>
       <div className="block">
-        <span className="text-sm font-medium text-slate-700">Due date</span>
+        <span className="text-sm font-medium text-[#454745]">Due date</span>
         <div className="mt-1">
           <DatePicker value={dueDate} onChange={setDueDate} />
         </div>

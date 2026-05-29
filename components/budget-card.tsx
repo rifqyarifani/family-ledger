@@ -24,8 +24,8 @@ export function BudgetCard({
     <Card>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="font-semibold text-slate-950">{budget.category}</h3>
-          <p className="mt-1 text-sm text-slate-500">{formatMonthKey(budget.month)}</p>
+          <h3 className="font-semibold text-[#0e0f0c]">{budget.category}</h3>
+          <p className="mt-1 text-sm text-[#454745]">{formatMonthKey(budget.month)}</p>
         </div>
         {onEdit || onDelete ? (
           <div className="flex gap-1">
@@ -44,13 +44,13 @@ export function BudgetCard({
       </div>
       <div className="mt-5 space-y-3">
         <div className="flex justify-between text-sm">
-          <span className="text-slate-500">Spent</span>
-          <span className="font-medium text-slate-950">
+          <span className="text-[#454745]">Spent</span>
+          <span className="font-medium text-[#0e0f0c]">
             {formatCurrency(usage.spent)} / {formatCurrency(budget.limit)}
           </span>
         </div>
         <Progress value={usage.percentage} />
-        <div className="flex justify-between text-xs text-slate-500">
+        <div className="flex justify-between text-xs text-[#454745]">
           <span>{usage.percentage}% used</span>
           <span>{formatCurrency(usage.remaining)} remaining</span>
         </div>

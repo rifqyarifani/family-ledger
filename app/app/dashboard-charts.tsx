@@ -31,9 +31,9 @@ export function CashflowTrendChart({ data }: { data: CashflowDatum[] }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-        <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
-        <YAxis stroke="#64748b" fontSize={12} tickFormatter={(value: number) => `${value / 1000000}m`} />
+        <CartesianGrid strokeDasharray="3 3" stroke="#cfd5ca" />
+        <XAxis dataKey="month" stroke="#454745" fontSize={12} />
+        <YAxis stroke="#454745" fontSize={12} tickFormatter={(value: number) => `${value / 1000000}m`} />
         <Tooltip formatter={(value: number) => formatCurrency(value)} />
         <Area type="monotone" dataKey="income" stroke="#16a34a" fill="#dcfce7" strokeWidth={2} />
         <Area type="monotone" dataKey="expense" stroke="#dc2626" fill="#fee2e2" strokeWidth={2} />
@@ -58,7 +58,7 @@ export function SpendingBreakdownChart({ data }: { data: SpendingDatum[] }) {
           </PieChart>
         </ResponsiveContainer>
       </div>
-      <div className="mt-3 grid grid-cols-1 gap-2 border-t border-slate-100 pt-3 sm:grid-cols-2">
+      <div className="mt-3 grid grid-cols-1 gap-2 border-t border-[#e8ebe6] pt-3 sm:grid-cols-2">
         {data.map((item, index) => (
           <div key={item.category} className="flex min-w-0 items-center gap-2 text-xs">
             <span
@@ -66,7 +66,7 @@ export function SpendingBreakdownChart({ data }: { data: SpendingDatum[] }) {
               style={{ backgroundColor: chartColors[index % chartColors.length] }}
               aria-hidden="true"
             />
-            <span className="truncate text-slate-600">{item.category}</span>
+            <span className="truncate text-[#454745]">{item.category}</span>
           </div>
         ))}
       </div>

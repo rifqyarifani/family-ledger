@@ -7,7 +7,6 @@ import {
   updateAccount,
   type AccountInput
 } from "@/src/lib/data/accounts";
-import { getActiveHousehold } from "@/src/lib/data/households";
 import type { Account } from "@/types/finance";
 
 function validateAccount(account: Account): AccountInput {
@@ -32,32 +31,19 @@ function validateAccount(account: Account): AccountInput {
   };
 }
 
-async function requireHouseholdId() {
-  const household = await getActiveHousehold();
-
-  if (!household) {
-    throw new Error("No active household found.");
-  }
-
-  return household.id;
-}
-
-export async function createAccountAction(account: Account) {
-  const householdId = await requireHouseholdId();
+export async function createAccountAction(householdId: string, account: Account) {
   await createAccount(householdId, validateAccount(account));
   revalidatePath("/app/accounts");
   revalidatePath("/app/goals");
 }
 
-export async function updateAccountAction(account: Account) {
-  const householdId = await requireHouseholdId();
+export async function updateAccountAction(householdId: string, account: Account) {
   await updateAccount(householdId, account.id, validateAccount(account));
   revalidatePath("/app/accounts");
   revalidatePath("/app/goals");
 }
 
-export async function deleteAccountAction(accountId: string) {
-  const householdId = await requireHouseholdId();
+export async function deleteAccountAction(householdId: string, accountId: string) {
   await deleteAccount(householdId, accountId);
   revalidatePath("/app/accounts");
   revalidatePath("/app/goals");
