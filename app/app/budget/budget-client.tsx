@@ -6,6 +6,10 @@ import {
   Plus,
   ChevronLeft,
   ChevronRight,
+  PiggyBank,
+  TrendingDown,
+  TrendingUp,
+  Wallet,
   Tag,
   Utensils,
   Car,
@@ -18,7 +22,6 @@ import {
   Plane,
   Gift,
   Briefcase,
-  TrendingUp,
   DollarSign,
   ShoppingBag,
 } from "lucide-react";
@@ -35,6 +38,7 @@ import { MonthPicker } from "@/components/month-picker";
 import { Modal } from "@/components/modal";
 import { PageIntro } from "@/components/page-intro";
 import { Progress } from "@/components/progress";
+import { StatCard } from "@/components/stat-card";
 import { useCrudDialog } from "@/hooks/use-crud-dialog";
 import { useRunAction } from "@/hooks/use-run-action";
 import { cn } from "@/lib/utils";
@@ -97,6 +101,14 @@ export function BudgetClient({
     [budgets, transactions],
   );
 
+  const summary = useMemo(() => {
+    const totalBudget = annotated.reduce((sum, { budget }) => sum + budget.limit, 0);
+    const totalUsed = annotated.reduce((sum, { usage }) => sum + usage.spent, 0);
+    const remaining = totalBudget - totalUsed;
+    const percentage = totalBudget > 0 ? Math.round((totalUsed / totalBudget) * 100) : 0;
+    return { totalBudget, totalUsed, remaining, percentage };
+  }, [annotated]);
+
   function changeMonth(month: string) {
     setOpenMenuId(null);
     window.location.href = `/app/budget?month=${month}`;
@@ -153,7 +165,31 @@ export function BudgetClient({
       ) : null}
 
       {annotated.length > 0 ? (
-        <div className="grid gap-2">
+        <>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard
+              title="Total budget"
+              value={formatCurrency(summary.totalBudget)}
+              icon={<Wallet className="h-5 w-5" aria-hidden="true" />}
+            />
+            <StatCard
+              title="Total used"
+              value={formatCurrency(summary.totalUsed)}
+              icon={<TrendingUp className="h-5 w-5" aria-hidden="true" />}
+            />
+            <StatCard
+              title="Remaining"
+              value={formatCurrency(summary.remaining)}
+              icon={<TrendingDown className="h-5 w-5" aria-hidden="true" />}
+            />
+            <StatCard
+              title="Progress"
+              value={`${summary.percentage}%`}
+              icon={<PiggyBank className="h-5 w-5" aria-hidden="true" />}
+            />
+          </div>
+
+          <div className="mt-4 grid gap-2">
           {annotated.map(({ budget, usage }) => {
             const isOver = usage.percentage > 100;
             const menuOpen = openMenuId === budget.id;
@@ -256,7 +292,8 @@ export function BudgetClient({
               </div>
             );
           })}
-        </div>
+          </div>
+        </>
       ) : (
         <EmptyState
           title={
