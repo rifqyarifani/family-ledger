@@ -34,6 +34,11 @@ export function ConfirmDialog({
       aria-modal="true"
       aria-label={title}
       aria-describedby="confirm-message"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) {
+          onClose();
+        }
+      }}
     >
       <div ref={dialogRef} className="w-full max-w-md rounded-[2rem] bg-white p-6 shadow-xl">
         <div className="flex items-start gap-3">

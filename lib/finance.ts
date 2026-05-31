@@ -7,9 +7,15 @@ const currencyFormatter = new Intl.NumberFormat("id-ID", {
 });
 
 const dateFormatter = new Intl.DateTimeFormat("id-ID", {
-  day: "2-digit",
-  month: "short",
+  day: "numeric",
+  month: "long",
   year: "numeric"
+});
+
+const timeFormatter = new Intl.DateTimeFormat("id-ID", {
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false
 });
 
 const monthFormatter = new Intl.DateTimeFormat("id-ID", {
@@ -26,6 +32,20 @@ export function formatDate(value: string) {
   const date = year && month && day ? new Date(year, month - 1, day) : new Date(value);
 
   return dateFormatter.format(date);
+}
+
+export function formatTime(value: string) {
+  if (!value) return "";
+  const [hours, minutes] = value.split(":").map(Number);
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return "";
+  const date = new Date();
+  date.setHours(hours, minutes, 0, 0);
+  return timeFormatter.format(date);
+}
+
+export function getCurrentTime() {
+  const now = new Date();
+  return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 }
 
 export function getCurrentMonthKey() {

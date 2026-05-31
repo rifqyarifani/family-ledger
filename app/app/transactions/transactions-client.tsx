@@ -8,7 +8,7 @@ import {
   updateTransactionAction,
 } from "@/app/app/transactions/actions";
 import { Button } from "@/components/button";
-import { Card, CardHeader } from "@/components/card";
+import { Card } from "@/components/card";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { Field, Input, Select } from "@/components/form-field";
@@ -31,12 +31,16 @@ export function TransactionsClient({
   accounts,
   categories,
   currentMemberId,
+  categoryMap = {},
+  accountMap = {},
 }: {
   transactions: Transaction[];
   familyMembers: FamilyMember[];
   accounts: Account[];
   categories: Category[];
   currentMemberId: string | null;
+  categoryMap?: Record<string, { icon?: string; color?: string }>;
+  accountMap?: Record<string, { iconColor?: string }>;
 }) {
   const transactionDialog = useCrudDialog<Transaction>();
   const { isPending, error, runAction } = useRunAction();
@@ -138,25 +142,29 @@ export function TransactionsClient({
         </p>
       ) : null}
 
-      <Card className="mb-6">
-        <CardHeader
-          title={`Filters${activeFilterCount ? ` (${activeFilterCount})` : ""}`}
-          action={
-            <Button
-              variant="secondary"
-              onClick={() => setShowFilters((current) => !current)}
-            >
-              <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
-              {showFilters ? "Hide filters" : "Show filters"}
-              <ChevronDown
-                className={`h-4 w-4 transition ${showFilters ? "rotate-180" : ""}`}
-                aria-hidden="true"
-              />
-            </Button>
-          }
-        />
+      <Card>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h2 className="text-base font-semibold text-ink">All Transactions</h2>
+            <p className="mt-1 text-sm text-ink-secondary">
+              {visibleTransactions.length} of {filteredTransactions.length} records shown
+            </p>
+          </div>
+          <Button
+            variant="secondary"
+            onClick={() => setShowFilters((current) => !current)}
+          >
+            <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+            Filters{activeFilterCount ? ` (${activeFilterCount})` : ""}
+            <ChevronDown
+              className={`h-4 w-4 transition ${showFilters ? "rotate-180" : ""}`}
+              aria-hidden="true"
+            />
+          </Button>
+        </div>
+
         {showFilters ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Field label="Date">
               <DateRangePicker
                 startDate={filters.startDate}
@@ -273,20 +281,19 @@ export function TransactionsClient({
             </div>
           </div>
         ) : null}
-      </Card>
 
-      <Card>
-        <CardHeader
-          title="All Transactions"
-          description={`${visibleTransactions.length} of ${filteredTransactions.length} records shown`}
-        />
-        <TransactionTable
-          transactions={visibleTransactions}
-          members={familyMembers}
-          accounts={accounts}
-          onEdit={transactionDialog.openEdit}
-          onDelete={transactionDialog.setDeletingItem}
-        />
+        <div className="mt-4">
+          <TransactionTable
+            transactions={visibleTransactions}
+            members={familyMembers}
+            accounts={accounts}
+            categoryMap={categoryMap}
+            accountMap={accountMap}
+            onEdit={transactionDialog.openEdit}
+            onDelete={transactionDialog.setDeletingItem}
+          />
+        </div>
+
         {visibleTransactions.length < filteredTransactions.length ? (
           <div className="mt-4 flex justify-center">
             <Button

@@ -23,7 +23,9 @@ function validateCategory(category: Category): CategoryInput {
 
   return {
     name,
-    type: category.type
+    type: category.type,
+    color: category.color,
+    icon: category.icon
   };
 }
 

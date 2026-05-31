@@ -14,6 +14,7 @@ export type Transaction = {
   transferAccountId?: string;
   transferAccountName?: string;
   date: string;
+  time?: string;
   note?: string;
 };
 
@@ -37,6 +38,7 @@ export type Account = {
   name: string;
   type: "cash" | "bank" | "credit" | "savings";
   openingBalance: number;
+  iconColor?: string;
 };
 
 export type AccountBalanceMap = Record<string, number>;
@@ -56,6 +58,7 @@ export type Category = {
   name: string;
   type: TransactionType;
   color?: string;
+  icon?: string;
 };
 
 export type SavingsGoal = {

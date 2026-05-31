@@ -58,6 +58,7 @@ create table if not exists public.accounts (
   name text not null check (char_length(name) between 1 and 30),
   type public.account_type not null default 'bank',
   opening_balance numeric(14, 2) not null default 0,
+  icon_color text,
   created_by uuid references auth.users(id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -69,6 +70,7 @@ create table if not exists public.categories (
   name text not null check (char_length(name) between 1 and 30),
   type public.transaction_type not null,
   color text,
+  icon text,
   created_by uuid references auth.users(id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -86,6 +88,7 @@ create table if not exists public.transactions (
   account_id uuid not null references public.accounts(id) on delete restrict,
   transfer_account_id uuid references public.accounts(id) on delete restrict,
   transaction_date date not null,
+  transaction_time time,
   note text,
   created_by uuid references auth.users(id) on delete set null,
   created_at timestamptz not null default now(),

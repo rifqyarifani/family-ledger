@@ -51,6 +51,11 @@ export default async function GoalsPage() {
   ]);
   const accountBalances = await getAccountBalanceMap(household.id, accounts);
 
+  const accountMap: Record<string, { icon?: string; iconColor?: string }> = {};
+  for (const account of accounts) {
+    accountMap[account.id] = { iconColor: account.iconColor };
+  }
+
   return (
     <GoalsClient
       savingsGoals={applySavingsAccountTracking({
@@ -59,6 +64,7 @@ export default async function GoalsPage() {
         accountBalances
       })}
       savingsAccountOptions={getSavingsAccountOptions(accounts, accountBalances)}
+      accountMap={accountMap}
     />
   );
 }

@@ -27,6 +27,7 @@ type MonthlyDatum = {
 type CategoryDatum = {
   category: string;
   amount: number;
+  color?: string;
 };
 
 type MemberDatum = {
@@ -34,13 +35,20 @@ type MemberDatum = {
   amount: number;
 };
 
+function formatAxisValue(value: number) {
+  if (value === 0) return "0";
+  if (Math.abs(value) >= 1000000) return `${(value / 1000000).toFixed(1).replace(/\.0$/, "")}jt`;
+  if (Math.abs(value) >= 1000) return `${(value / 1000).toFixed(0)}rb`;
+  return `${value}`;
+}
+
 export function MonthlyIncomeExpenseChart({ data }: { data: MonthlyDatum[] }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data}>
         <CartesianGrid strokeDasharray="3 3" stroke="#cfd5ca" />
         <XAxis dataKey="month" stroke="#454745" fontSize={12} tickFormatter={(value: string) => formatMonthKey(value)} />
-        <YAxis stroke="#454745" fontSize={12} tickFormatter={(value: number) => `${value / 1000000}m`} />
+        <YAxis stroke="#454745" fontSize={12} tickFormatter={formatAxisValue} />
         <Tooltip formatter={(value: number) => formatCurrency(value)} />
         <Bar dataKey="income" fill="#16a34a" radius={[6, 6, 0, 0]} />
         <Bar dataKey="expense" fill="#dc2626" radius={[6, 6, 0, 0]} />
@@ -55,7 +63,7 @@ export function NetCashflowTrendChart({ data }: { data: MonthlyDatum[] }) {
       <AreaChart data={data}>
         <CartesianGrid strokeDasharray="3 3" stroke="#cfd5ca" />
         <XAxis dataKey="month" stroke="#454745" fontSize={12} tickFormatter={(value: string) => formatMonthKey(value)} />
-        <YAxis stroke="#454745" fontSize={12} tickFormatter={(value: number) => `${value / 1000000}m`} />
+        <YAxis stroke="#454745" fontSize={12} tickFormatter={formatAxisValue} />
         <Tooltip formatter={(value: number) => formatCurrency(value)} />
         <Area type="monotone" dataKey="savings" stroke="#9fe870" fill="#e5f7d4" strokeWidth={2} />
       </AreaChart>
@@ -64,6 +72,8 @@ export function NetCashflowTrendChart({ data }: { data: MonthlyDatum[] }) {
 }
 
 export function SpendingByCategoryChart({ data }: { data: CategoryDatum[] }) {
+  const total = data.reduce((sum, item) => sum + item.amount, 0);
+
   return (
     <div className="flex h-full flex-col">
       <div className="min-h-0 flex-1">
@@ -71,7 +81,10 @@ export function SpendingByCategoryChart({ data }: { data: CategoryDatum[] }) {
           <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
             <Pie data={data} dataKey="amount" nameKey="category" outerRadius={82}>
               {data.map((entry, index) => (
-                <Cell key={entry.category} fill={chartColors[index % chartColors.length]} />
+                <Cell
+                  key={entry.category}
+                  fill={entry.color ?? chartColors[index % chartColors.length]}
+                />
               ))}
             </Pie>
             <Tooltip formatter={(value: number) => formatCurrency(value)} />
@@ -79,16 +92,22 @@ export function SpendingByCategoryChart({ data }: { data: CategoryDatum[] }) {
         </ResponsiveContainer>
       </div>
       <div className="mt-3 grid grid-cols-1 gap-2 border-t border-surface pt-3 sm:grid-cols-2">
-        {data.map((item, index) => (
-          <div key={item.category} className="flex items-center gap-2 text-sm">
-            <span
-              className="h-2.5 w-2.5 shrink-0 rounded-full"
-              style={{ backgroundColor: chartColors[index % chartColors.length] }}
-              aria-hidden="true"
-            />
-            <span className="truncate text-ink-secondary">{item.category}</span>
-          </div>
-        ))}
+        {data.map((item, index) => {
+          const percentage = total > 0 ? Math.round((item.amount / total) * 100) : 0;
+          return (
+            <div key={item.category} className="flex items-center justify-between gap-2 text-sm">
+              <div className="flex items-center gap-2">
+                <span
+                  className="h-2.5 w-2.5 shrink-0 rounded-full"
+                  style={{ backgroundColor: item.color ?? chartColors[index % chartColors.length] }}
+                  aria-hidden="true"
+                />
+                <span className="truncate text-ink-secondary">{item.category}</span>
+              </div>
+              <span className="shrink-0 font-medium text-ink">{percentage}%</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -99,7 +118,7 @@ export function ExpenseByMemberChart({ data }: { data: MemberDatum[] }) {
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data} layout="vertical" margin={{ left: 16 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#cfd5ca" />
-        <XAxis type="number" stroke="#454745" fontSize={12} tickFormatter={(value: number) => `${value / 1000000}m`} />
+        <XAxis type="number" stroke="#454745" fontSize={12} tickFormatter={formatAxisValue} />
         <YAxis type="category" dataKey="member" stroke="#454745" fontSize={12} width={90} />
         <Tooltip formatter={(value: number) => formatCurrency(value)} />
         <Bar dataKey="amount" fill="#0f172a" radius={[0, 6, 6, 0]} />

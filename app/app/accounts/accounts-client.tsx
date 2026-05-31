@@ -1,8 +1,16 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition, useOptimistic, useCallback } from "react";
-import { Banknote, Building, CreditCard, PiggyBank, Plus } from "lucide-react";
+import {
+  Banknote,
+  Building,
+  CreditCard,
+  MoreVertical,
+  PiggyBank,
+  Plus,
+} from "lucide-react";
 import {
   createAccountAction,
   deleteAccountAction,
@@ -11,12 +19,10 @@ import {
 import { AccountForm } from "@/components/account-form";
 
 import { Button } from "@/components/button";
-import { Card } from "@/components/card";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { EmptyState } from "@/components/empty-state";
 import { Modal } from "@/components/modal";
 import { PageIntro } from "@/components/page-intro";
-import { ResourceActions } from "@/components/resource-actions";
 import { useCrudDialog } from "@/hooks/use-crud-dialog";
 import { formatCurrency } from "@/lib/finance";
 import type { Account, AccountBalanceMap } from "@/types/finance";
@@ -44,6 +50,19 @@ export function AccountsClient({
   const accountDialog = useCrudDialog<Account>();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!openMenuId) return;
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpenMenuId(null);
+      }
+    }
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [openMenuId]);
 
   const [optimisticState, addOptimistic] = useOptimistic(
     { accounts, balances: accountBalances },
@@ -137,45 +156,90 @@ export function AccountsClient({
       ) : null}
 
       {optimisticState.accounts.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {optimisticState.accounts.map((account) => (
-            <Card key={account.id}>
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-3">
-                  <div className="rounded-xl bg-surface-subtle p-2 text-ink-secondary">
-                    {(() => {
-                      const Icon = typeIcon[account.type];
-                      return <Icon className="h-5 w-5" aria-hidden="true" />;
-                    })()}
-                  </div>
-                  <div>
-                    <h2 className="font-semibold text-ink">
+        <div className="grid gap-3 sm:grid-cols-2">
+          {optimisticState.accounts.map((account) => {
+            const menuOpen = openMenuId === account.id;
+
+            return (
+              <div
+                key={account.id}
+                className="min-w-0 rounded-2xl border border-surface-border bg-white px-3 py-2 transition hover:bg-surface-subtle"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div
+                      className="shrink-0 rounded-lg p-1.5 text-white"
+                      style={{ backgroundColor: account.iconColor ?? "#64748b" }}
+                    >
+                      {(() => {
+                        const Icon = typeIcon[account.type];
+                        return <Icon className="h-4 w-4" aria-hidden="true" />;
+                      })()}
+                    </div>
+                    <h2 className="truncate text-sm font-semibold text-ink">
                       {account.name}
                     </h2>
-                    <div className="mt-1">
-                      <span className="inline-block rounded-full bg-brand-green-pale px-3 py-0.5 text-xs font-semibold text-brand-green-dark capitalize">
-                        {account.type}
-                      </span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <p className="text-sm font-bold text-ink">
+                      {formatCurrency(
+                        optimisticState.balances[account.id] ??
+                          account.openingBalance,
+                      )}
+                    </p>
+                    <div className="relative shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setOpenMenuId(menuOpen ? null : account.id)}
+                        aria-expanded={menuOpen}
+                        aria-haspopup="true"
+                        aria-label={`Actions for ${account.name}`}
+                      >
+                        <MoreVertical className="h-4 w-4" aria-hidden="true" />
+                      </Button>
+                      {menuOpen ? (
+                        <div
+                          ref={menuRef}
+                          role="menu"
+                          aria-label={`Actions for ${account.name}`}
+                          onKeyDown={(event) => {
+                            if (event.key === "Escape") {
+                              setOpenMenuId(null);
+                            }
+                          }}
+                          className="absolute right-0 top-full z-50 mt-1 w-36 overflow-hidden rounded-xl border border-surface-border bg-white shadow-lg"
+                        >
+                          <button
+                            type="button"
+                            role="menuitem"
+                            className="flex w-full items-center px-4 py-2 text-left text-sm text-ink transition hover:bg-surface-subtle"
+                            onClick={() => {
+                              setOpenMenuId(null);
+                              accountDialog.openEdit(account);
+                            }}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            role="menuitem"
+                            className="flex w-full items-center px-4 py-2 text-left text-sm text-danger transition hover:bg-danger-light"
+                            onClick={() => {
+                              setOpenMenuId(null);
+                              accountDialog.setDeletingItem(account);
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                 </div>
-                <ResourceActions
-                  editLabel={`Edit ${account.name}`}
-                  deleteLabel={`Delete ${account.name}`}
-                  onEdit={() => accountDialog.openEdit(account)}
-                  onDelete={() => accountDialog.setDeletingItem(account)}
-                />
               </div>
-              <div className="mt-6">
-                <p className="text-2xl font-semibold leading-[31.2px] tracking-[-0.48px] text-ink">
-                  {formatCurrency(
-                    optimisticState.balances[account.id] ??
-                      account.openingBalance,
-                  )}
-                </p>
-              </div>
-            </Card>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <EmptyState

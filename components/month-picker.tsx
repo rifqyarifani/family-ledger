@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/button";
 import { cn } from "@/lib/utils";
@@ -37,13 +37,29 @@ export function MonthPicker({
   const [isOpen, setIsOpen] = useState(false);
   const [visibleYear, setVisibleYear] = useState(() => fromMonthKey(value));
   const months = getYearMonths(visibleYear);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setVisibleYear(fromMonthKey(value));
+  }, [value]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [isOpen]);
 
   function moveYear(offset: number) {
     setVisibleYear((current) => new Date(current.getFullYear() + offset, 0, 1));
   }
 
   return (
-    <div className="relative">
+    <div ref={containerRef} className="relative">
       <button
         type="button"
         className={cn(

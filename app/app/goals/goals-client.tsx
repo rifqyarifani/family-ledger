@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { Flag, Plus } from "lucide-react";
+import { PiggyBank, Plus } from "lucide-react";
 import {
   createSavingsGoalAction,
   deleteSavingsGoalAction,
@@ -25,10 +25,12 @@ import type { SavingsGoal, SavingsGoalAccountOption } from "@/types/finance";
 
 export function GoalsClient({
   savingsGoals,
-  savingsAccountOptions
+  savingsAccountOptions,
+  accountMap = {}
 }: {
   savingsGoals: SavingsGoal[];
   savingsAccountOptions: SavingsGoalAccountOption[];
+  accountMap?: Record<string, { icon?: string; iconColor?: string }>;
 }) {
   const goalDialog = useCrudDialog<SavingsGoal>();
   const { isPending, error, runAction, setError } = useRunAction();
@@ -76,8 +78,11 @@ export function GoalsClient({
               <Card key={goal.id}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3">
-                    <div className="rounded-xl bg-surface-subtle p-2 text-ink-secondary">
-                      <Flag className="h-5 w-5" aria-hidden="true" />
+                    <div
+                      className="rounded-xl p-2 text-white"
+                      style={{ backgroundColor: accountMap[goal.accountId ?? ""]?.iconColor ?? "#64748b" }}
+                    >
+                      <PiggyBank className="h-5 w-5" aria-hidden="true" />
                     </div>
                     <div>
                       <h2 className="font-semibold text-ink">{goal.name}</h2>

@@ -1,19 +1,40 @@
 "use client";
 
-import { ArrowDownRight, ArrowUpRight, Plus, Tags } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  Plus,
+  Tags,
+  Tag,
+  Utensils,
+  Car,
+  Home,
+  Zap,
+  GraduationCap,
+  Tv,
+  Heart,
+  Shirt,
+  Plane,
+  Gift,
+  Briefcase,
+  TrendingUp,
+  DollarSign,
+  ShoppingBag,
+  MoreVertical,
+  Ambulance,
+} from "lucide-react";
 import {
   createCategoryAction,
   deleteCategoryAction,
   updateCategoryAction,
 } from "@/app/app/categories/actions";
 import { Button } from "@/components/button";
-import { Card } from "@/components/card";
 import { CategoryForm } from "@/components/category-form";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { EmptyState } from "@/components/empty-state";
 import { Modal } from "@/components/modal";
 import { PageIntro } from "@/components/page-intro";
-import { ResourceActions } from "@/components/resource-actions";
 import { useCrudDialog } from "@/hooks/use-crud-dialog";
 import { useRunAction } from "@/hooks/use-run-action";
 import type { Category } from "@/types/finance";
@@ -21,6 +42,28 @@ import type { Category } from "@/types/finance";
 const defaultColors = {
   income: "#2ead4b",
   expense: "#d03238",
+};
+
+const iconLookup: Record<
+  string,
+  React.ComponentType<{ className?: string }>
+> = {
+  tag: Tag,
+  utensils: Utensils,
+  car: Car,
+  home: Home,
+  zap: Zap,
+  "graduation-cap": GraduationCap,
+  tv: Tv,
+  heart: Heart,
+  shirt: Shirt,
+  plane: Plane,
+  gift: Gift,
+  briefcase: Briefcase,
+  "trending-up": TrendingUp,
+  "dollar-sign": DollarSign,
+  "shopping-bag": ShoppingBag,
+  ambulance: Ambulance,
 };
 
 function CategorySection({
@@ -31,6 +74,9 @@ function CategorySection({
   categories,
   onEdit,
   onDelete,
+  openMenuId,
+  setOpenMenuId,
+  menuRef,
   emptyMessage,
 }: {
   title: string;
@@ -40,6 +86,9 @@ function CategorySection({
   categories: Category[];
   onEdit: (category: Category) => void;
   onDelete: (category: Category) => void;
+  openMenuId: string | null;
+  setOpenMenuId: (id: string | null) => void;
+  menuRef: React.RefObject<HTMLDivElement | null>;
   emptyMessage: string;
 }) {
   return (
@@ -58,30 +107,85 @@ function CategorySection({
       </div>
 
       {categories.length > 0 ? (
-        <div className="grid gap-3">
+        <div className="grid gap-2">
           {categories.map((category) => {
-            const dotColor = category.color || (category.type === "income" ? defaultColors.income : category.type === "expense" ? defaultColors.expense : "#868685");
+            const dotColor =
+              category.color ||
+              (category.type === "income"
+                ? defaultColors.income
+                : category.type === "expense"
+                  ? defaultColors.expense
+                  : "#868685");
+            const CategoryIcon = category.icon
+              ? (iconLookup[category.icon] ?? Tag)
+              : Tag;
+            const menuOpen = openMenuId === category.id;
 
             return (
-              <Card key={category.id}>
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <span
-                      className="inline-block h-3 w-3 shrink-0 rounded-full"
-                      style={{ backgroundColor: dotColor }}
-                    />
-                    <span className="text-sm font-medium text-ink">
-                      {category.name}
-                    </span>
+              <div
+                key={category.id}
+                className="flex items-center justify-between gap-3 rounded-2xl border border-surface-border bg-white px-3 py-2 transition hover:bg-surface-subtle"
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white"
+                    style={{ backgroundColor: dotColor }}
+                  >
+                    <CategoryIcon className="h-4 w-4" aria-hidden="true" />
                   </div>
-                  <ResourceActions
-                    editLabel={`Edit ${category.name}`}
-                    deleteLabel={`Delete ${category.name}`}
-                    onEdit={() => onEdit(category)}
-                    onDelete={() => onDelete(category)}
-                  />
+                  <span className="text-sm font-medium text-ink">
+                    {category.name}
+                  </span>
                 </div>
-              </Card>
+                <div className="relative shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setOpenMenuId(menuOpen ? null : category.id)}
+                    aria-expanded={menuOpen}
+                    aria-haspopup="true"
+                    aria-label={`Actions for ${category.name}`}
+                  >
+                    <MoreVertical className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                  {menuOpen ? (
+                    <div
+                      ref={menuRef}
+                      role="menu"
+                      aria-label={`Actions for ${category.name}`}
+                      onKeyDown={(event) => {
+                        if (event.key === "Escape") {
+                          setOpenMenuId(null);
+                        }
+                      }}
+                      className="absolute right-0 top-full z-50 mt-1 w-36 overflow-hidden rounded-xl border border-surface-border bg-white shadow-lg"
+                    >
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="flex w-full items-center px-4 py-2 text-left text-sm text-ink transition hover:bg-surface-subtle"
+                        onClick={() => {
+                          setOpenMenuId(null);
+                          onEdit(category);
+                        }}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="flex w-full items-center px-4 py-2 text-left text-sm text-danger transition hover:bg-danger-light"
+                        onClick={() => {
+                          setOpenMenuId(null);
+                          onDelete(category);
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
             );
           })}
         </div>
@@ -98,6 +202,19 @@ function CategorySection({
 export function CategoriesClient({ categories }: { categories: Category[] }) {
   const categoryDialog = useCrudDialog<Category>();
   const { isPending, error, runAction } = useRunAction();
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!openMenuId) return;
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpenMenuId(null);
+      }
+    }
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [openMenuId]);
 
   const incomeCategories = categories.filter((c) => c.type === "income");
   const expenseCategories = categories.filter((c) => c.type === "expense");
@@ -130,6 +247,9 @@ export function CategoriesClient({ categories }: { categories: Category[] }) {
             categories={incomeCategories}
             onEdit={(cat) => categoryDialog.openEdit(cat)}
             onDelete={(cat) => categoryDialog.setDeletingItem(cat)}
+            openMenuId={openMenuId}
+            setOpenMenuId={setOpenMenuId}
+            menuRef={menuRef}
             emptyMessage="No income categories yet."
           />
           <CategorySection
@@ -140,6 +260,9 @@ export function CategoriesClient({ categories }: { categories: Category[] }) {
             categories={expenseCategories}
             onEdit={(cat) => categoryDialog.openEdit(cat)}
             onDelete={(cat) => categoryDialog.setDeletingItem(cat)}
+            openMenuId={openMenuId}
+            setOpenMenuId={setOpenMenuId}
+            menuRef={menuRef}
             emptyMessage="No expense categories yet."
           />
         </div>

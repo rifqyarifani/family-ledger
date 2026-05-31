@@ -27,7 +27,8 @@ function validateAccount(account: Account): AccountInput {
   return {
     name,
     type: account.type,
-    openingBalance: account.openingBalance
+    openingBalance: account.openingBalance,
+    iconColor: account.iconColor
   };
 }
 

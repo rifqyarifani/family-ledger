@@ -16,6 +16,7 @@ type TransactionRow = {
   account_id: string;
   transfer_account_id: string | null;
   transaction_date: string;
+  transaction_time: string | null;
   note: string | null;
   categories: {
     name: string;
@@ -62,6 +63,7 @@ export type TransactionInput = {
   accountId: string;
   transferAccountId?: string;
   date: string;
+  time?: string;
   note?: string;
 };
 
@@ -80,6 +82,7 @@ function mapTransaction(row: TransactionRow): Transaction {
     transferAccountId: row.transfer_account_id ?? undefined,
     transferAccountName: row.transfer_account?.name ?? undefined,
     date: row.transaction_date,
+    time: row.transaction_time ?? undefined,
     note: row.note ?? undefined
   };
 }
@@ -206,6 +209,7 @@ async function normalizeTransactionInput(householdId: string, input: Transaction
     account_id: accountId,
     transfer_account_id: transferAccountId,
     transaction_date: input.date,
+    transaction_time: input.time || null,
     note: input.note?.trim() || null
   };
 }
@@ -225,6 +229,7 @@ export async function getTransactions(householdId: string, limit = 100, offset =
         account_id,
         transfer_account_id,
         transaction_date,
+        transaction_time,
         note,
         categories(name),
         household_members(display_name),
@@ -260,6 +265,7 @@ export async function getRecentTransactions(householdId: string, limit = 5) {
         account_id,
         transfer_account_id,
         transaction_date,
+        transaction_time,
         note,
         categories(name),
         household_members(display_name),
@@ -392,6 +398,7 @@ export async function getTransactionsForMonth(householdId: string, month: string
         account_id,
         transfer_account_id,
         transaction_date,
+        transaction_time,
         note,
         categories(name),
         household_members(display_name),

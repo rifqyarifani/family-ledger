@@ -6,6 +6,7 @@ type AccountRow = {
   name: string;
   type: Account["type"];
   opening_balance: number | string;
+  icon_color: string | null;
 };
 
 type AccountMovementRow = {
@@ -19,6 +20,7 @@ export type AccountInput = {
   name: string;
   type: Account["type"];
   openingBalance: number;
+  iconColor?: string;
 };
 
 function mapAccount(row: AccountRow): Account {
@@ -26,7 +28,8 @@ function mapAccount(row: AccountRow): Account {
     id: row.id,
     name: row.name,
     type: row.type,
-    openingBalance: Number(row.opening_balance)
+    openingBalance: Number(row.opening_balance),
+    iconColor: row.icon_color ?? undefined
   };
 }
 
@@ -34,7 +37,7 @@ export async function getAccounts(householdId: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("accounts")
-    .select("id, name, type, opening_balance")
+    .select("id, name, type, opening_balance, icon_color")
     .eq("household_id", householdId)
     .order("created_at", { ascending: true })
     .returns<AccountRow[]>();
@@ -125,6 +128,7 @@ export async function createAccount(householdId: string, account: AccountInput) 
     name: account.name,
     type: account.type,
     opening_balance: account.openingBalance,
+    icon_color: account.iconColor ?? null,
     created_by: user?.id ?? null
   });
 
@@ -140,7 +144,8 @@ export async function updateAccount(householdId: string, accountId: string, acco
     .update({
       name: account.name,
       type: account.type,
-      opening_balance: account.openingBalance
+      opening_balance: account.openingBalance,
+      icon_color: account.iconColor ?? null
     })
     .eq("household_id", householdId)
     .eq("id", accountId);

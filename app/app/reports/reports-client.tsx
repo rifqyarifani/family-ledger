@@ -4,15 +4,18 @@ import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import {
   BarChart3,
+  ChevronLeft,
+  ChevronRight,
   Landmark,
   TrendingDown,
   TrendingUp,
   Users,
 } from "lucide-react";
+import { Button } from "@/components/button";
 import { Card, CardHeader } from "@/components/card";
 import { ChartCard } from "@/components/chart-card";
 import { EmptyState } from "@/components/empty-state";
-import { Select } from "@/components/form-field";
+import { MonthPicker } from "@/components/month-picker";
 import { PageIntro } from "@/components/page-intro";
 import { StatCard } from "@/components/stat-card";
 import {
@@ -20,13 +23,12 @@ import {
   calculateTotalIncome,
   filterTransactionsByMonth,
   formatCurrency,
-  formatMonthKey,
   getMonthOptions,
   groupTransactionsByCategory,
   groupTransactionsByMember,
   groupTransactionsByMonth,
 } from "@/lib/finance";
-import type { Transaction } from "@/types/finance";
+import type { Category, Transaction } from "@/types/finance";
 
 const MonthlyIncomeExpenseChart = dynamic(
   () =>
@@ -66,8 +68,10 @@ function ChartLoading() {
 
 export function ReportsClient({
   transactions,
+  categories = [],
 }: {
   transactions: Transaction[];
+  categories?: Category[];
 }) {
   const monthOptions = useMemo(
     () => getMonthOptions(transactions),
@@ -97,10 +101,13 @@ export function ReportsClient({
     () => monthlyIncome - monthlyExpense,
     [monthlyIncome, monthlyExpense],
   );
-  const spending = useMemo(
-    () => groupTransactionsByCategory(monthlyTransactions),
-    [monthlyTransactions],
-  );
+  const spending = useMemo(() => {
+    const grouped = groupTransactionsByCategory(monthlyTransactions);
+    return grouped.map((item) => {
+      const category = categories.find((c) => c.name === item.category);
+      return { ...item, color: category?.color };
+    });
+  }, [monthlyTransactions, categories]);
   const spendingByMember = useMemo(
     () => groupTransactionsByMember(monthlyTransactions),
     [monthlyTransactions],
@@ -112,23 +119,38 @@ export function ReportsClient({
     [transactions],
   );
 
+  function getAdjacentMonth(monthKey: string, offset: number) {
+    const [year, month] = monthKey.split("-").map(Number);
+    const date = new Date(year, month - 1 + offset, 1);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+  }
+
   return (
     <>
       <PageIntro
         title="Reports"
         action={
-          <Select
-            value={selectedMonth}
-            onChange={(event) => setSelectedMonth(event.target.value)}
-            aria-label="Filter month"
-            className="w-full sm:w-44"
-          >
-            {monthOptions.map((month) => (
-              <option key={month} value={month}>
-                {formatMonthKey(month)}
-              </option>
-            ))}
-          </Select>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSelectedMonth(getAdjacentMonth(selectedMonth, -1))}
+              aria-label="Previous month"
+            >
+              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+            </Button>
+            <div className="w-48">
+              <MonthPicker value={selectedMonth} onChange={setSelectedMonth} />
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSelectedMonth(getAdjacentMonth(selectedMonth, 1))}
+              aria-label="Next month"
+            >
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          </div>
         }
       />
 

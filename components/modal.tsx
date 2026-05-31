@@ -29,6 +29,11 @@ export function Modal({
       role="dialog"
       aria-modal="true"
       aria-label={title}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) {
+          onClose();
+        }
+      }}
     >
       <div ref={dialogRef} className="my-4 w-full max-w-2xl rounded-3xl bg-white p-5 shadow-xl sm:my-0">
         <div className="mb-4 flex items-center justify-between gap-3">

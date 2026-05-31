@@ -2,10 +2,12 @@
 
 import { useState, type FormEvent } from "react";
 import { DatePicker } from "@/components/date-picker";
+import { TimePicker } from "@/components/time-picker";
 import { Field, Input, Select, Textarea } from "@/components/form-field";
 import { FormActions } from "@/components/form-actions";
 import { transactionCategories } from "@/constants/finance";
 import { formatInputAmount, handleBlockedNumberKeys, parseFormattedAmount, sanitizeFormattedAmount } from "@/lib/format-utils";
+import { getCurrentTime } from "@/lib/finance";
 import { createId } from "@/lib/utils";
 import type { Account, Category, FamilyMember, Transaction, TransactionType } from "@/types/finance";
 
@@ -20,6 +22,7 @@ type FormValues = {
   accountId: string;
   transferAccountId: string;
   date: string;
+  time: string;
   note: string;
 };
 
@@ -69,6 +72,7 @@ export function TransactionForm({
     accountId: initialAccountId,
     transferAccountId: getFallbackTransferAccountId(accounts, initialAccountId, transaction?.transferAccountId),
     date: transaction?.date ?? new Date().toISOString().slice(0, 10),
+    time: transaction?.time ?? getCurrentTime(),
     note: transaction?.note ?? ""
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -137,6 +141,7 @@ export function TransactionForm({
       accountId: values.accountId,
       transferAccountId: values.type === "transfer" ? values.transferAccountId : undefined,
       date: values.date,
+      time: values.time,
       note: values.note.trim()
     });
   }
@@ -250,9 +255,14 @@ export function TransactionForm({
           ))}
         </Select>
       </Field>
-      <Field label="Date" error={errors.date}>
-        <DatePicker value={values.date} onChange={(value) => updateField("date", value)} />
-      </Field>
+      <div className="sm:col-span-2 grid grid-cols-2 gap-4">
+        <Field label="Date" error={errors.date}>
+          <DatePicker value={values.date} onChange={(value) => updateField("date", value)} />
+        </Field>
+        <Field label="Time">
+          <TimePicker value={values.time} onChange={(value) => updateField("time", value)} />
+        </Field>
+      </div>
       <Field label="Note">
         <Textarea value={values.note} onChange={(event) => updateField("note", event.target.value)} />
       </Field>

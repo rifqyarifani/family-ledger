@@ -32,12 +32,18 @@ export default async function BudgetPage({
     .filter((category) => category.type === "expense")
     .map((category) => category.name);
 
+  const categoryMap: Record<string, { icon?: string; color?: string }> = {};
+  for (const category of categories) {
+    categoryMap[category.name] = { icon: category.icon, color: category.color };
+  }
+
   return (
     <BudgetClient
       budgets={budgets}
       transactions={transactions}
       expenseCategories={expenseCategories}
       selectedMonth={selectedMonth}
+      categoryMap={categoryMap}
     />
   );
 }

@@ -19,11 +19,14 @@ type CategoryRow = {
   name: string;
   type: TransactionType;
   color: string | null;
+  icon: string | null;
 };
 
 export type CategoryInput = {
   name: string;
   type: "income" | "expense";
+  color?: string;
+  icon?: string;
 };
 
 function mapCategory(row: CategoryRow): Category {
@@ -31,7 +34,8 @@ function mapCategory(row: CategoryRow): Category {
     id: row.id,
     name: row.name,
     type: row.type,
-    color: row.color ?? undefined
+    color: row.color ?? undefined,
+    icon: row.icon ?? undefined
   };
 }
 
@@ -39,7 +43,7 @@ export async function getCategories(householdId: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("categories")
-    .select("id, name, type, color")
+    .select("id, name, type, color, icon")
     .eq("household_id", householdId)
     .order("type", { ascending: true })
     .order("name", { ascending: true })
@@ -61,6 +65,8 @@ export async function createCategory(householdId: string, category: CategoryInpu
     household_id: householdId,
     name: category.name,
     type: category.type,
+    color: category.color ?? null,
+    icon: category.icon ?? null,
     created_by: user?.id ?? null
   });
 
@@ -75,7 +81,9 @@ export async function updateCategory(householdId: string, categoryId: string, ca
     .from("categories")
     .update({
       name: category.name,
-      type: category.type
+      type: category.type,
+      color: category.color ?? null,
+      icon: category.icon ?? null
     })
     .eq("household_id", householdId)
     .eq("id", categoryId);

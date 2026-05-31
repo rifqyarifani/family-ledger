@@ -21,6 +21,16 @@ export default async function TransactionsPage() {
     getCurrentHouseholdMemberId(household.id)
   ]);
 
+  const categoryMap: Record<string, { icon?: string; color?: string }> = {};
+  for (const category of categories) {
+    categoryMap[category.name] = { icon: category.icon, color: category.color };
+  }
+
+  const accountMap: Record<string, { iconColor?: string }> = {};
+  for (const account of accounts) {
+    accountMap[account.id] = { iconColor: account.iconColor };
+  }
+
   return (
     <TransactionsClient
       transactions={transactions}
@@ -28,6 +38,8 @@ export default async function TransactionsPage() {
       accounts={accounts}
       categories={categories}
       currentMemberId={currentMemberId}
+      categoryMap={categoryMap}
+      accountMap={accountMap}
     />
   );
 }

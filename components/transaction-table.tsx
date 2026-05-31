@@ -1,9 +1,26 @@
-import { useMemo } from "react";
-import { Edit2, Trash2 } from "lucide-react";
-import { Badge } from "@/components/badge";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import {
+  MoreVertical,
+  Tag,
+  Utensils,
+  Car,
+  Home,
+  Zap,
+  GraduationCap,
+  Tv,
+  Heart,
+  Shirt,
+  Plane,
+  Gift,
+  Briefcase,
+  TrendingUp,
+  DollarSign,
+  ShoppingBag,
+} from "lucide-react";
 import { Button } from "@/components/button";
 import { EmptyState } from "@/components/empty-state";
-import { formatCurrency, formatDate } from "@/lib/finance";
+import { cn } from "@/lib/utils";
+import { formatCurrency, formatDate, formatTime } from "@/lib/finance";
 import type {
   Account,
   FamilyMember,
@@ -11,11 +28,23 @@ import type {
   TransactionType,
 } from "@/types/finance";
 
-function getTransactionTone(type: TransactionType) {
-  if (type === "income") return "green";
-  if (type === "expense") return "red";
-  return "blue";
-}
+const categoryIconLookup: Record<string, React.ComponentType<{ className?: string }>> = {
+  tag: Tag,
+  utensils: Utensils,
+  car: Car,
+  home: Home,
+  zap: Zap,
+  "graduation-cap": GraduationCap,
+  tv: Tv,
+  heart: Heart,
+  shirt: Shirt,
+  plane: Plane,
+  gift: Gift,
+  briefcase: Briefcase,
+  "trending-up": TrendingUp,
+  "dollar-sign": DollarSign,
+  "shopping-bag": ShoppingBag,
+};
 
 function getAmountPrefix(type: TransactionType) {
   if (type === "income") return "+";
@@ -23,36 +52,69 @@ function getAmountPrefix(type: TransactionType) {
   return "";
 }
 
+function getAmountColor(type: TransactionType) {
+  if (type === "income") return "text-emerald-600";
+  if (type === "expense") return "text-danger";
+  return "text-blue-600";
+}
+
+function getFirstName(fullName: string) {
+  return fullName.split(" ")[0] ?? fullName;
+}
+
+type TransactionTableProps = {
+  transactions: Transaction[];
+  members: FamilyMember[];
+  accounts: Account[];
+  categoryMap?: Record<string, { icon?: string; color?: string }>;
+  accountMap?: Record<string, { iconColor?: string }>;
+  onEdit?: (transaction: Transaction) => void;
+  onDelete?: (transaction: Transaction) => void;
+};
+
 export function TransactionTable({
   transactions,
   members,
   accounts,
+  categoryMap = {},
+  accountMap = {},
   onEdit,
   onDelete,
-}: {
-  transactions: Transaction[];
-  members: FamilyMember[];
-  accounts: Account[];
-  onEdit?: (transaction: Transaction) => void;
-  onDelete?: (transaction: Transaction) => void;
-}) {
+}: TransactionTableProps) {
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
   const memberById = useMemo(() => new Map(members.map((member) => [member.id, member.name])), [members]);
-  const accountById = useMemo(() => new Map(accounts.map((account) => [account.id, account.name])), [accounts]);
+
+  useEffect(() => {
+    if (!openMenuId) return;
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpenMenuId(null);
+      }
+    }
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [openMenuId]);
+
+  const groupedTransactions = useMemo(() => {
+    const groups = new Map<string, Transaction[]>();
+    for (const transaction of transactions) {
+      const dateKey = transaction.date;
+      const existing = groups.get(dateKey) ?? [];
+      existing.push(transaction);
+      groups.set(dateKey, existing);
+    }
+    return Array.from(groups.entries()).sort(([a], [b]) => b.localeCompare(a));
+  }, [transactions]);
 
   function getAccountLabel(transaction: Transaction) {
-    const sourceAccount =
-      accountById.get(transaction.accountId) ??
-      transaction.accountName ??
-      "Unknown";
-    const destinationAccount = transaction.transferAccountId
-      ? (accountById.get(transaction.transferAccountId) ??
-        transaction.transferAccountName ??
-        "Unknown")
-      : "Unknown";
-
-    return transaction.type === "transfer"
-      ? `${sourceAccount} -> ${destinationAccount}`
-      : sourceAccount;
+    const account = accounts.find((a) => a.id === transaction.accountId);
+    if (transaction.type === "transfer") {
+      const destAccount = accounts.find((a) => a.id === transaction.transferAccountId);
+      return `${account?.name ?? "Unknown"} → ${destAccount?.name ?? "Unknown"}`;
+    }
+    return account?.name ?? transaction.accountName ?? "Unknown";
   }
 
   function getMemberLabel(transaction: Transaction) {
@@ -73,138 +135,259 @@ export function TransactionTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-surface-border">
+    <div className="rounded-2xl border border-surface-border">
       <div className="hidden overflow-x-auto md:block">
         <table className="w-full text-left text-sm">
           <thead className="bg-surface-subtle text-xs uppercase tracking-wide text-ink-secondary">
             <tr>
               <th className="px-4 py-3">Transaction</th>
-              <th className="px-4 py-3">Type</th>
               <th className="px-4 py-3">Category</th>
               <th className="px-4 py-3">Member</th>
               <th className="px-4 py-3">Account</th>
-              <th className="px-4 py-3">Date</th>
+              <th className="px-4 py-3">Time</th>
               <th className="px-4 py-3 text-right">Amount</th>
-              {(onEdit || onDelete) && (
-                <th className="px-4 py-3 text-right">Actions</th>
-              )}
+              <th className="px-4 py-3" />
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#cfd5ca] bg-white">
-            {transactions.map((transaction) => (
-              <tr key={transaction.id}>
-                <td className="px-4 py-3">
-                  <p className="font-medium text-ink">
-                    {transaction.title}
-                  </p>
-                  {transaction.note ? (
-                    <p className="mt-1 text-xs text-ink-secondary">
-                      {transaction.note}
-                    </p>
-                  ) : null}
-                </td>
-                <td className="px-4 py-3 capitalize">
-                  <Badge tone={getTransactionTone(transaction.type)}>
-                    {transaction.type}
-                  </Badge>
-                </td>
-                <td className="px-4 py-3 text-ink-secondary">
-                  {transaction.category}
-                </td>
-                <td className="px-4 py-3 text-ink-secondary">
-                  {getMemberLabel(transaction)}
-                </td>
-                <td className="px-4 py-3 text-ink-secondary">
-                  {getAccountLabel(transaction)}
-                </td>
-                <td className="px-4 py-3 text-ink-secondary">
-                  {formatDate(transaction.date)}
-                </td>
-                <td className="px-4 py-3 text-right font-semibold text-ink">
-                  {getAmountPrefix(transaction.type)}
-                  {formatCurrency(transaction.amount)}
-                </td>
-                {(onEdit || onDelete) && (
-                  <td className="px-4 py-3">
-                    <div className="flex justify-end gap-1">
-                      {onEdit ? (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onEdit(transaction)}
-                          aria-label={`Edit ${transaction.title}`}
-                        >
-                          <Edit2 className="h-4 w-4" aria-hidden="true" />
-                        </Button>
-                      ) : null}
-                      {onDelete ? (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onDelete(transaction)}
-                          aria-label={`Delete ${transaction.title}`}
-                        >
-                          <Trash2
-                            className="h-4 w-4 text-red-600"
-                            aria-hidden="true"
-                          />
-                        </Button>
-                      ) : null}
-                    </div>
+          <tbody className="divide-y divide-surface-border bg-white">
+            {groupedTransactions.map(([dateKey, dateTransactions]) => (
+              <Fragment key={dateKey}>
+                <tr key={`date-${dateKey}`}>
+                  <td
+                    colSpan={(onEdit || onDelete) ? 7 : 6}
+                    className="bg-surface-subtle px-4 py-2 text-xs font-semibold text-ink-secondary"
+                  >
+                    {formatDate(dateKey)}
                   </td>
-                )}
-              </tr>
+                </tr>
+                {dateTransactions.map((transaction) => {
+                  const menuOpen = openMenuId === transaction.id;
+                  const catInfo = categoryMap[transaction.category];
+                  const CategoryIcon = catInfo?.icon ? (categoryIconLookup[catInfo.icon] ?? Tag) : Tag;
+                  const catColor = catInfo?.color ?? "#64748b";
+                  const accInfo = accountMap[transaction.accountId];
+                  const accColor = accInfo?.iconColor ?? "#64748b";
+
+                  return (
+                    <tr key={transaction.id}>
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-ink">
+                          {transaction.title}
+                        </p>
+                        {transaction.note ? (
+                          <p className="mt-1 text-xs text-ink-secondary">
+                            {transaction.note}
+                          </p>
+                        ) : null}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-white"
+                            style={{ backgroundColor: catColor }}
+                          >
+                            <CategoryIcon className="h-3 w-3" aria-hidden="true" />
+                          </div>
+                          <span className="text-ink-secondary">{transaction.category}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-ink-secondary">
+                        {getFirstName(getMemberLabel(transaction))}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="inline-block h-2 w-2 shrink-0 rounded-full"
+                            style={{ backgroundColor: accColor }}
+                          />
+                          <span className="text-ink-secondary">{getAccountLabel(transaction)}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-ink-secondary">
+                        {formatTime(transaction.time ?? "")}
+                      </td>
+                      <td className={cn(
+                        "px-4 py-3 text-right font-semibold",
+                        getAmountColor(transaction.type)
+                      )}>
+                        {getAmountPrefix(transaction.type)}
+                        {formatCurrency(transaction.amount)}
+                      </td>
+                      {(onEdit || onDelete) && (
+                        <td className="px-4 py-3">
+                          <div className="relative flex justify-end">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setOpenMenuId(menuOpen ? null : transaction.id)}
+                              aria-expanded={menuOpen}
+                              aria-haspopup="true"
+                              aria-label={`Actions for ${transaction.title}`}
+                            >
+                              <MoreVertical className="h-4 w-4" aria-hidden="true" />
+                            </Button>
+                            {menuOpen ? (
+                              <div
+                                ref={menuRef}
+                                role="menu"
+                                aria-label={`Actions for ${transaction.title}`}
+                                onKeyDown={(event) => {
+                                  if (event.key === "Escape") {
+                                    setOpenMenuId(null);
+                                  }
+                                }}
+                                className="absolute right-0 top-full z-50 mt-1 w-36 overflow-hidden rounded-xl border border-surface-border bg-white shadow-lg"
+                              >
+                                {onEdit ? (
+                                  <button
+                                    type="button"
+                                    role="menuitem"
+                                    className="flex w-full items-center px-4 py-2 text-left text-sm text-ink transition hover:bg-surface-subtle"
+                                    onClick={() => {
+                                      setOpenMenuId(null);
+                                      onEdit(transaction);
+                                    }}
+                                  >
+                                    Edit
+                                  </button>
+                                ) : null}
+                                {onDelete ? (
+                                  <button
+                                    type="button"
+                                    role="menuitem"
+                                    className="flex w-full items-center px-4 py-2 text-left text-sm text-danger transition hover:bg-danger-light"
+                                    onClick={() => {
+                                      setOpenMenuId(null);
+                                      onDelete(transaction);
+                                    }}
+                                  >
+                                    Delete
+                                  </button>
+                                ) : null}
+                              </div>
+                            ) : null}
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
+              </Fragment>
             ))}
           </tbody>
         </table>
       </div>
-      <div className="divide-y divide-[#cfd5ca] bg-white md:hidden">
-        {transactions.map((transaction) => (
-          <article key={transaction.id} className="p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h3 className="font-medium text-ink">
-                  {transaction.title}
-                </h3>
-                <p className="mt-1 text-xs text-ink-secondary">
-                  {formatDate(transaction.date)} · {transaction.category}
-                </p>
-              </div>
-              <p className="shrink-0 text-right font-semibold text-ink">
-                {getAmountPrefix(transaction.type)}
-                {formatCurrency(transaction.amount)}
-              </p>
+      <div className="md:hidden">
+        {groupedTransactions.map(([dateKey, dateTransactions]) => (
+          <div key={`date-${dateKey}`}>
+            <div className="bg-surface-subtle px-4 py-2 text-xs font-semibold text-ink-secondary">
+              {formatDate(dateKey)}
             </div>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <Badge tone={getTransactionTone(transaction.type)}>
-                {transaction.type}
-              </Badge>
-              <Badge>{getMemberLabel(transaction)}</Badge>
-              <Badge>{getAccountLabel(transaction)}</Badge>
+            <div className="divide-y divide-surface-border bg-white">
+              {dateTransactions.map((transaction) => {
+                const menuOpen = openMenuId === transaction.id;
+                const catInfo = categoryMap[transaction.category];
+                const CategoryIcon = catInfo?.icon ? (categoryIconLookup[catInfo.icon] ?? Tag) : Tag;
+                const catColor = catInfo?.color ?? "#64748b";
+                const accInfo = accountMap[transaction.accountId];
+                const accColor = accInfo?.iconColor ?? "#64748b";
+
+                return (
+                  <article key={transaction.id} className="p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="font-medium text-ink">
+                          {transaction.title}
+                        </h3>
+                      </div>
+                      <p className={cn(
+                        "shrink-0 text-right font-semibold",
+                        getAmountColor(transaction.type)
+                      )}>
+                        {getAmountPrefix(transaction.type)}
+                        {formatCurrency(transaction.amount)}
+                      </p>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-xs text-ink-secondary">
+                        <div
+                          className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-white"
+                          style={{ backgroundColor: catColor }}
+                        >
+                          <CategoryIcon className="h-3 w-3" aria-hidden="true" />
+                        </div>
+                        <span>{transaction.category}</span>
+                        <span>·</span>
+                        <span>{getFirstName(getMemberLabel(transaction))}</span>
+                        <span>·</span>
+                        <span
+                          className="inline-block h-2 w-2 shrink-0 rounded-full"
+                          style={{ backgroundColor: accColor }}
+                        />
+                        <span>{getAccountLabel(transaction)}</span>
+                        <span>·</span>
+                        <span>{formatTime(transaction.time ?? "")}</span>
+                      </div>
+                      {(onEdit || onDelete) && (
+                        <div className="relative">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setOpenMenuId(menuOpen ? null : transaction.id)}
+                            aria-expanded={menuOpen}
+                            aria-haspopup="true"
+                            aria-label={`Actions for ${transaction.title}`}
+                          >
+                            <MoreVertical className="h-4 w-4" aria-hidden="true" />
+                          </Button>
+                          {menuOpen ? (
+                            <div
+                              ref={menuRef}
+                              role="menu"
+                              aria-label={`Actions for ${transaction.title}`}
+                              onKeyDown={(event) => {
+                                if (event.key === "Escape") {
+                                  setOpenMenuId(null);
+                                }
+                              }}
+                              className="absolute right-0 top-full z-50 mt-1 w-36 overflow-hidden rounded-xl border border-surface-border bg-white shadow-lg"
+                            >
+                              {onEdit ? (
+                                <button
+                                  type="button"
+                                  role="menuitem"
+                                  className="flex w-full items-center px-4 py-2 text-left text-sm text-ink transition hover:bg-surface-subtle"
+                                  onClick={() => {
+                                    setOpenMenuId(null);
+                                    onEdit(transaction);
+                                  }}
+                                >
+                                  Edit
+                                </button>
+                              ) : null}
+                              {onDelete ? (
+                                <button
+                                  type="button"
+                                  role="menuitem"
+                                  className="flex w-full items-center px-4 py-2 text-left text-sm text-danger transition hover:bg-danger-light"
+                                  onClick={() => {
+                                    setOpenMenuId(null);
+                                    onDelete(transaction);
+                                  }}
+                                >
+                                  Delete
+                                </button>
+                              ) : null}
+                            </div>
+                          ) : null}
+                        </div>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
             </div>
-            {(onEdit || onDelete) && (
-              <div className="mt-3 flex justify-end gap-2">
-                {onEdit ? (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => onEdit(transaction)}
-                  >
-                    Edit
-                  </Button>
-                ) : null}
-                {onDelete ? (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => onDelete(transaction)}
-                  >
-                    Delete
-                  </Button>
-                ) : null}
-              </div>
-            )}
-          </article>
+          </div>
         ))}
       </div>
     </div>

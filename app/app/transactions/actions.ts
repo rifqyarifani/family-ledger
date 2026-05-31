@@ -61,6 +61,7 @@ function validateTransaction(transaction: Transaction): TransactionInput {
     accountId: transaction.accountId,
     transferAccountId: isTransfer ? transaction.transferAccountId : undefined,
     date: transaction.date,
+    time: transaction.time,
     note
   };
 }
