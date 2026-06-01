@@ -4,25 +4,13 @@ import { Button } from "@/components/button";
 import { Field, Input } from "@/components/form-field";
 import { PublicHeader } from "@/components/public-header";
 
-function getSignupErrorMessage(error?: string) {
-  if (!error) {
-    return "";
-  }
-
-  if (error.toLowerCase().includes("email rate limit")) {
-    return "Email confirmation was rate-limited. Try again now; local signup no longer sends confirmation email.";
-  }
-
-  return error;
-}
-
 export default async function SignupPage({
   searchParams,
 }: {
   searchParams: Promise<{ error?: string }>;
 }) {
   const params = await searchParams;
-  const errorMessage = getSignupErrorMessage(params.error);
+  const errorMessage = params.error ?? "";
 
   return (
     <main className="min-h-screen bg-surface">

@@ -2,12 +2,8 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { createAdminClient } from "@/src/lib/supabase/admin";
-
-function getFormValue(formData: FormData, key: string) {
-  const value = formData.get(key);
-  return typeof value === "string" ? value.trim() : "";
-}
+import { createClient } from "@/src/lib/supabase/server";
+import { getFormValue } from "@/lib/form-utils";
 
 function redirectWithMessage(path: string, key: "error" | "message", message: string): never {
   redirect(`${path}?${key}=${encodeURIComponent(message)}`);
@@ -24,25 +20,33 @@ export async function signup(formData: FormData) {
   }
 
   const requestHeaders = await headers();
-  const origin = requestHeaders.get("origin") ?? "http://localhost:3000";
-  const admin = createAdminClient();
-  const { data, error } = await admin.auth.admin.createUser({
+  const host = requestHeaders.get("host") ?? "localhost:3000";
+  const protocol = requestHeaders.get("x-forwarded-proto") ?? "http";
+  const origin = `${protocol}://${host}`;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    email_confirm: true,
-    user_metadata: {
-      first_name: firstName,
-      last_name: lastName,
-      email_redirect_to: `${origin}/auth/callback`
+    options: {
+      emailRedirectTo: `${origin}/auth/callback`,
+      data: {
+        first_name: firstName,
+        last_name: lastName
+      }
     }
   });
 
-  if (error || !data.user) {
+  if (error) {
     const message =
-      error?.code === "email_exists" || error?.message.toLowerCase().includes("already")
+      error.code === "user_already_exists" || error.message.toLowerCase().includes("already")
         ? "An account with this email already exists. Please log in."
-        : error?.message ?? "Could not create the account.";
+        : error.message;
     redirectWithMessage("/signup", "error", message);
+  }
+
+  if (!data.session) {
+    redirectWithMessage("/login", "message", "Check your email to confirm your account, then log in.");
   }
 
   redirectWithMessage("/login", "message", "Account created. Log in to create or join a household.");
