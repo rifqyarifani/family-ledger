@@ -7,6 +7,7 @@ import {
   updateAccount,
   type AccountInput
 } from "@/src/lib/data/accounts";
+import { requireHouseholdId } from "@/lib/household-utils";
 import type { Account } from "@/types/finance";
 
 function validateAccount(account: Account): AccountInput {
@@ -24,6 +25,10 @@ function validateAccount(account: Account): AccountInput {
     throw new Error("Opening balance must be zero or more.");
   }
 
+  if (account.openingBalance > 999_999_999_999.99) {
+    throw new Error("Opening balance must be at most 999.999.999.999,99.");
+  }
+
   return {
     name,
     type: account.type,
@@ -32,19 +37,22 @@ function validateAccount(account: Account): AccountInput {
   };
 }
 
-export async function createAccountAction(householdId: string, account: Account) {
+export async function createAccountAction(account: Account) {
+  const householdId = await requireHouseholdId();
   await createAccount(householdId, validateAccount(account));
   revalidatePath("/app/accounts");
   revalidatePath("/app/goals");
 }
 
-export async function updateAccountAction(householdId: string, account: Account) {
+export async function updateAccountAction(account: Account) {
+  const householdId = await requireHouseholdId();
   await updateAccount(householdId, account.id, validateAccount(account));
   revalidatePath("/app/accounts");
   revalidatePath("/app/goals");
 }
 
-export async function deleteAccountAction(householdId: string, accountId: string) {
+export async function deleteAccountAction(accountId: string) {
+  const householdId = await requireHouseholdId();
   await deleteAccount(householdId, accountId);
   revalidatePath("/app/accounts");
   revalidatePath("/app/goals");
