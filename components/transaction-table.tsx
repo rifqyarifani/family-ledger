@@ -1,24 +1,9 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import {
-  MoreVertical,
-  Tag,
-  Utensils,
-  Car,
-  Home,
-  Zap,
-  GraduationCap,
-  Tv,
-  Heart,
-  Shirt,
-  Plane,
-  Gift,
-  Briefcase,
-  TrendingUp,
-  DollarSign,
-  ShoppingBag,
-} from "lucide-react";
+import { Fragment, useMemo, useRef, useState } from "react";
+import { MoreVertical, Tag } from "lucide-react";
+import { iconLookup } from "@/constants/icons";
 import { Button } from "@/components/button";
 import { EmptyState } from "@/components/empty-state";
+import { useClickOutside } from "@/hooks/use-click-outside";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatDate, formatTime } from "@/lib/finance";
 import type {
@@ -27,24 +12,6 @@ import type {
   Transaction,
   TransactionType,
 } from "@/types/finance";
-
-const categoryIconLookup: Record<string, React.ComponentType<{ className?: string }>> = {
-  tag: Tag,
-  utensils: Utensils,
-  car: Car,
-  home: Home,
-  zap: Zap,
-  "graduation-cap": GraduationCap,
-  tv: Tv,
-  heart: Heart,
-  shirt: Shirt,
-  plane: Plane,
-  gift: Gift,
-  briefcase: Briefcase,
-  "trending-up": TrendingUp,
-  "dollar-sign": DollarSign,
-  "shopping-bag": ShoppingBag,
-};
 
 function getAmountPrefix(type: TransactionType) {
   if (type === "income") return "+";
@@ -86,16 +53,7 @@ export function TransactionTable({
 
   const memberById = useMemo(() => new Map(members.map((member) => [member.id, member.name])), [members]);
 
-  useEffect(() => {
-    if (!openMenuId) return;
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setOpenMenuId(null);
-      }
-    }
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
-  }, [openMenuId]);
+  useClickOutside(menuRef, openMenuId !== null, () => setOpenMenuId(null));
 
   const groupedTransactions = useMemo(() => {
     const groups = new Map<string, Transaction[]>();
@@ -163,7 +121,7 @@ export function TransactionTable({
                 {dateTransactions.map((transaction) => {
                   const menuOpen = openMenuId === transaction.id;
                   const catInfo = categoryMap[transaction.category];
-                  const CategoryIcon = catInfo?.icon ? (categoryIconLookup[catInfo.icon] ?? Tag) : Tag;
+                  const CategoryIcon = catInfo?.icon ? (iconLookup[catInfo.icon] ?? iconLookup.tag) : iconLookup.tag;
                   const catColor = catInfo?.color ?? "#64748b";
                   const accInfo = accountMap[transaction.accountId];
                   const accColor = accInfo?.iconColor ?? "#64748b";
@@ -287,7 +245,7 @@ export function TransactionTable({
               {dateTransactions.map((transaction) => {
                 const menuOpen = openMenuId === transaction.id;
                 const catInfo = categoryMap[transaction.category];
-                const CategoryIcon = catInfo?.icon ? (categoryIconLookup[catInfo.icon] ?? Tag) : Tag;
+                const CategoryIcon = catInfo?.icon ? (iconLookup[catInfo.icon] ?? Tag) : Tag;
                 const catColor = catInfo?.color ?? "#64748b";
                 const accInfo = accountMap[transaction.accountId];
                 const accColor = accInfo?.iconColor ?? "#64748b";

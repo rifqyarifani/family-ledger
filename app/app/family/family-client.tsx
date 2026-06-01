@@ -88,7 +88,16 @@ export function FamilyClient({
           })}
         </div>
       ) : (
-        <EmptyState title="No family members" message="Add household members to track who contributed or spent each record." />
+        <EmptyState
+          title="No family members"
+          message="Add household members to track who contributed or spent each record."
+          action={
+            <Button onClick={memberDialog.openCreate}>
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              Add member
+            </Button>
+          }
+        />
       )}
 
       <Modal

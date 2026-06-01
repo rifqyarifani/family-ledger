@@ -9,7 +9,7 @@ import {
   updateSavingsGoal,
   type SavingsGoalInput
 } from "@/src/lib/data/savings-goals";
-import { getActiveHousehold } from "@/src/lib/data/households";
+import { requireHouseholdId } from "@/lib/household-utils";
 import { normalizeGoalName } from "@/lib/format-utils";
 import type { SavingsGoal } from "@/types/finance";
 
@@ -17,7 +17,7 @@ async function validateSavingsGoal(householdId: string, goal: SavingsGoal, curre
   const name = goal.name.trim();
 
   if (!name || name.length > 30) {
-    throw new Error("Choose a valid savings account.");
+    throw new Error("Goal name must be 1-30 characters.");
   }
 
   if (!Number.isFinite(goal.targetAmount) || goal.targetAmount <= 0) {
@@ -63,15 +63,6 @@ async function validateSavingsGoal(householdId: string, goal: SavingsGoal, curre
   };
 }
 
-async function requireHouseholdId() {
-  const household = await getActiveHousehold();
-
-  if (!household) {
-    throw new Error("No active household found.");
-  }
-
-  return household.id;
-}
 
 function revalidateGoals() {
   revalidatePath("/app");

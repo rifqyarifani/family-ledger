@@ -2,11 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/src/lib/supabase/server";
-
-function getFormValue(formData: FormData, key: string) {
-  const value = formData.get(key);
-  return typeof value === "string" ? value.trim() : "";
-}
+import { getFormValue } from "@/lib/form-utils";
 
 function redirectWithMessage(path: string, key: "error" | "message", message: string): never {
   redirect(`${path}?${key}=${encodeURIComponent(message)}`);

@@ -7,7 +7,7 @@ Main principles:
 - Use TypeScript strictly.
 - Use reusable components.
 - Do not connect to real bank APIs.
-- Store MVP data in localStorage.
+- Store data in Supabase with server-side data access.
 - Format money in Indonesian Rupiah.
 - Prefer clear code over clever code.
 - Make every page responsive.

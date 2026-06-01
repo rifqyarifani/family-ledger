@@ -3,6 +3,6 @@
 import { ErrorBoundary } from "@/components/error-boundary";
 
 export default function Error({ error, reset }: { error: Error; reset: () => void }) {
-  console.error("Categories page error:", error);
+  void error;
   return <ErrorBoundary message="Something went wrong loading categories." reset={reset} />;
 }

@@ -113,9 +113,10 @@ export function SettingsDialog({
     }
 
     if (activeSection === "household") {
-      updateHouseholdSettingsAction({
-        householdName: formValues.householdName,
-      }).then((result) => {
+      startTransition(async () => {
+        const result = await updateHouseholdSettingsAction({
+          householdName: formValues.householdName,
+        });
         setMessage(result.message);
         if (result.ok) {
           router.refresh();

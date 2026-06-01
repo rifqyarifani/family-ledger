@@ -6,14 +6,9 @@ import { Header } from "@/components/header";
 import { SettingsDialog } from "@/components/settings-dialog";
 import { Sidebar } from "@/components/sidebar";
 import type { ActiveHousehold } from "@/src/lib/data/households";
+import type { UserProfile } from "@/types/finance";
 
-type AppShellProfile = {
-  id: string;
-  email: string | null;
-  firstName: string;
-  lastName: string;
-  displayName: string;
-} | null;
+type AppShellProfile = UserProfile;
 
 export function AppShell({
   children,

@@ -5,11 +5,7 @@ import { createDefaultCategories } from "@/src/lib/data/categories";
 import { getActiveHousehold, getCurrentUserProfile } from "@/src/lib/data/households";
 import { formatHouseholdCode, generateHouseholdCode } from "@/src/lib/household-code";
 import { createAdminClient } from "@/src/lib/supabase/admin";
-
-function getFormValue(formData: FormData, key: string) {
-  const value = formData.get(key);
-  return typeof value === "string" ? value.trim() : "";
-}
+import { getFormValue } from "@/lib/form-utils";
 
 function redirectWithError(message: string): never {
   redirect(`/app/onboarding?error=${encodeURIComponent(message)}`);

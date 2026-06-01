@@ -4,12 +4,9 @@ import { Menu } from "lucide-react";
 import { AccountMenu } from "@/components/account-menu";
 import { Button } from "@/components/button";
 import type { ActiveHousehold } from "@/src/lib/data/households";
+import type { UserProfile } from "@/types/finance";
 
-type HeaderProfile = {
-  firstName: string;
-  lastName: string;
-  displayName: string;
-} | null;
+type HeaderProfile = UserProfile;
 
 export function Header({
   householdName,

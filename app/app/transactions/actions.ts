@@ -7,7 +7,7 @@ import {
   updateTransaction,
   type TransactionInput
 } from "@/src/lib/data/transactions";
-import { getActiveHousehold } from "@/src/lib/data/households";
+import { requireHouseholdId } from "@/lib/household-utils";
 import type { Transaction } from "@/types/finance";
 
 function validateTransaction(transaction: Transaction): TransactionInput {
@@ -66,15 +66,6 @@ function validateTransaction(transaction: Transaction): TransactionInput {
   };
 }
 
-async function requireHouseholdId() {
-  const household = await getActiveHousehold();
-
-  if (!household) {
-    throw new Error("No active household found.");
-  }
-
-  return household.id;
-}
 
 function revalidateTransactionViews() {
   revalidatePath("/app");

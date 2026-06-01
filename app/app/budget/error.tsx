@@ -3,6 +3,6 @@
 import { ErrorBoundary } from "@/components/error-boundary";
 
 export default function Error({ error, reset }: { error: Error; reset: () => void }) {
-  console.error("Budget page error:", error);
+  void error;
   return <ErrorBoundary message="Something went wrong loading the budget." reset={reset} />;
 }

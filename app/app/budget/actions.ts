@@ -7,7 +7,7 @@ import {
   updateBudget,
   type BudgetInput
 } from "@/src/lib/data/budgets";
-import { getActiveHousehold } from "@/src/lib/data/households";
+import { requireHouseholdId } from "@/lib/household-utils";
 import type { Budget } from "@/types/finance";
 
 function validateBudget(budget: Budget): BudgetInput {
@@ -32,15 +32,6 @@ function validateBudget(budget: Budget): BudgetInput {
   };
 }
 
-async function requireHouseholdId() {
-  const household = await getActiveHousehold();
-
-  if (!household) {
-    throw new Error("No active household found.");
-  }
-
-  return household.id;
-}
 
 function revalidateBudgetViews() {
   revalidatePath("/app");

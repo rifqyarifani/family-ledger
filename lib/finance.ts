@@ -169,3 +169,9 @@ export function calculatePercentage(value: number, total: number) {
 
   return Math.round((value / total) * 100);
 }
+
+export function getAdjacentMonth(monthKey: string, offset: number) {
+  const [year, month] = monthKey.split("-").map(Number);
+  const date = new Date(year, month - 1 + offset, 1);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}

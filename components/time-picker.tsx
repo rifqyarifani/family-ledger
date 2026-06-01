@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Clock } from "lucide-react";
+import { useClickOutside } from "@/hooks/use-click-outside";
 import { cn } from "@/lib/utils";
 
 const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
@@ -15,20 +16,11 @@ export function TimePicker({
   onChange: (value: string) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedHour, setSelectedHour] = useState(value ? value.split(":")[0] : "00");
+  const [selectedMinute, setSelectedMinute] = useState(value ? value.split(":")[1] : "00");
   const containerRef = useRef<HTMLDivElement>(null);
-  const [selectedHour, setSelectedHour] = useState(value?.split(":")[0] ?? "00");
-  const [selectedMinute, setSelectedMinute] = useState(value?.split(":")[1] ?? "00");
 
-  useEffect(() => {
-    if (!isOpen) return;
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
-  }, [isOpen]);
+  useClickOutside(containerRef, isOpen, () => setIsOpen(false));
 
   useEffect(() => {
     if (value) {

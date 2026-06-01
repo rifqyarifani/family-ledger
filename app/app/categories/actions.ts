@@ -7,7 +7,7 @@ import {
   updateCategory,
   type CategoryInput
 } from "@/src/lib/data/categories";
-import { getActiveHousehold } from "@/src/lib/data/households";
+import { requireHouseholdId } from "@/lib/household-utils";
 import type { Category } from "@/types/finance";
 
 function validateCategory(category: Category): CategoryInput {
@@ -29,15 +29,6 @@ function validateCategory(category: Category): CategoryInput {
   };
 }
 
-async function requireHouseholdId() {
-  const household = await getActiveHousehold();
-
-  if (!household) {
-    throw new Error("No active household found.");
-  }
-
-  return household.id;
-}
 
 function revalidateCategoryViews() {
   revalidatePath("/app");

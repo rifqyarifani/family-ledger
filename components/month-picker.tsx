@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/button";
+import { useClickOutside } from "@/hooks/use-click-outside";
 import { cn } from "@/lib/utils";
 
 const monthFormatter = new Intl.DateTimeFormat("id-ID", {
@@ -39,20 +40,7 @@ export function MonthPicker({
   const months = getYearMonths(visibleYear);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    setVisibleYear(fromMonthKey(value));
-  }, [value]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
-  }, [isOpen]);
+  useClickOutside(containerRef, isOpen, () => setIsOpen(false));
 
   function moveYear(offset: number) {
     setVisibleYear((current) => new Date(current.getFullYear() + offset, 0, 1));

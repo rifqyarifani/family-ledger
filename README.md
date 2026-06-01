@@ -14,11 +14,11 @@ Authentication uses Supabase Auth with `/login`, `/signup`, and protected `/app`
 - Persistent short household invite codes shown after onboarding and in Settings > Household, with one-click copy.
 - Protected dashboard routes under `/app`.
 - Transactions page loaded from Supabase with add, edit, delete, transfers between accounts, default member selection from the logged-in user, search, and filters for date range, type, category, member, and account.
-- Categories page loaded from Supabase with add, edit, and delete actions for income and expense categories.
+- Categories page loaded from Supabase with add, edit, and delete actions for income and expense categories. Deleting a category keeps transactions but clears their category assignment; budgets keyed on that category lose their target.
 - Budget page loaded from Supabase with expense-category limits, spent amount, remaining amount, percentage used, progress bars, and a custom month picker.
 - Reports page with Supabase-backed income vs expense, net cashflow, spending by category, and expense by member.
 - Family page loaded from Supabase for household members and member-level spending or contribution summaries.
-- Accounts page for cash, bank, credit, and savings accounts loaded from Supabase with create, edit, and delete actions protected by household RLS.
+- Accounts page for cash, bank, credit, and savings accounts loaded from Supabase with create, edit, and delete actions protected by household RLS. Deleting an account requires no linked transactions; linked savings goals cascade automatically.
 - Savings Goals page loaded from Supabase with create, edit, delete, target amount, due date, and progress tracked from a selected savings account.
 - Polished forms with required-field validation, Indonesian amount formatting, 30-character caps for key names/titles, and custom date picker controls.
 - Header profile menu with quick access to a settings popup and logout confirmation.

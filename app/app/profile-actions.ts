@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createAdminClient } from "@/src/lib/supabase/admin";
 import { getActiveHousehold } from "@/src/lib/data/households";
 import { createClient } from "@/src/lib/supabase/server";
 
@@ -56,8 +55,8 @@ export async function updateHouseholdSettingsAction(input: {
     return { ok: false, message: "Only household owners can update household settings." };
   }
 
-  const admin = createAdminClient();
-  const { data, error } = await admin
+  const supabase = await createClient();
+  const { data, error } = await supabase
     .from("households")
     .update({
       name: householdName,

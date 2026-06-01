@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   MoreVertical,
   Plus,
@@ -10,21 +11,8 @@ import {
   TrendingDown,
   TrendingUp,
   Wallet,
-  Tag,
-  Utensils,
-  Car,
-  Home,
-  Zap,
-  GraduationCap,
-  Tv,
-  Heart,
-  Shirt,
-  Plane,
-  Gift,
-  Briefcase,
-  DollarSign,
-  ShoppingBag,
 } from "lucide-react";
+import { iconLookup } from "@/constants/icons";
 import {
   createBudgetAction,
   deleteBudgetAction,
@@ -42,29 +30,8 @@ import { StatCard } from "@/components/stat-card";
 import { useCrudDialog } from "@/hooks/use-crud-dialog";
 import { useRunAction } from "@/hooks/use-run-action";
 import { cn } from "@/lib/utils";
-import { formatCurrency, getBudgetUsage } from "@/lib/finance";
+import { formatCurrency, getAdjacentMonth, getBudgetUsage } from "@/lib/finance";
 import type { Budget, Transaction } from "@/types/finance";
-
-const iconLookup: Record<
-  string,
-  React.ComponentType<{ className?: string }>
-> = {
-  tag: Tag,
-  utensils: Utensils,
-  car: Car,
-  home: Home,
-  zap: Zap,
-  "graduation-cap": GraduationCap,
-  tv: Tv,
-  heart: Heart,
-  shirt: Shirt,
-  plane: Plane,
-  gift: Gift,
-  briefcase: Briefcase,
-  "trending-up": TrendingUp,
-  "dollar-sign": DollarSign,
-  "shopping-bag": ShoppingBag,
-};
 
 export function BudgetClient({
   budgets,
@@ -81,6 +48,8 @@ export function BudgetClient({
 }) {
   const budgetDialog = useCrudDialog<Budget>();
   const { isPending, error, runAction } = useRunAction();
+  const router = useRouter();
+
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const hasExpenseCategories = expenseCategories.length > 0;
@@ -111,13 +80,7 @@ export function BudgetClient({
 
   function changeMonth(month: string) {
     setOpenMenuId(null);
-    window.location.href = `/app/budget?month=${month}`;
-  }
-
-  function getAdjacentMonth(monthKey: string, offset: number) {
-    const [year, month] = monthKey.split("-").map(Number);
-    const date = new Date(year, month - 1 + offset, 1);
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    router.push(`/app/budget?month=${month}`);
   }
 
   return (
@@ -195,8 +158,8 @@ export function BudgetClient({
             const menuOpen = openMenuId === budget.id;
             const catInfo = categoryMap[budget.category];
             const BudgetIcon = catInfo?.icon
-              ? (iconLookup[catInfo.icon] ?? Tag)
-              : Tag;
+              ? (iconLookup[catInfo.icon] ?? iconLookup.tag)
+              : iconLookup.tag;
             const iconColor = catInfo?.color ?? "#64748b";
 
             return (

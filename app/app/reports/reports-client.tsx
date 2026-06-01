@@ -23,6 +23,7 @@ import {
   calculateTotalIncome,
   filterTransactionsByMonth,
   formatCurrency,
+  getAdjacentMonth,
   getMonthOptions,
   groupTransactionsByCategory,
   groupTransactionsByMember,
@@ -118,12 +119,6 @@ export function ReportsClient({
     () => groupTransactionsByMonth(transactions),
     [transactions],
   );
-
-  function getAdjacentMonth(monthKey: string, offset: number) {
-    const [year, month] = monthKey.split("-").map(Number);
-    const date = new Date(year, month - 1 + offset, 1);
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-  }
 
   return (
     <>
