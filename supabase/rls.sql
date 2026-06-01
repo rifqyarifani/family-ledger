@@ -78,6 +78,10 @@ on public.households
 for select
 to authenticated
 using (public.is_household_member(id));
+-- IMPORTANT: must reference "id" (household UUID), NOT "created_by" (user UUID).
+-- The is_household_member() function expects a household_id and searches
+-- household_members.household_id. Passing a user UUID (from created_by)
+-- would never match and would silently block all reads.
 
 create policy "Authenticated users can create households"
 on public.households

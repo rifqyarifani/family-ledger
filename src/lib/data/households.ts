@@ -1,4 +1,3 @@
-import { createAdminClient } from "@/src/lib/supabase/admin";
 import { createClient } from "@/src/lib/supabase/server";
 import { generateHouseholdCode } from "@/src/lib/household-code";
 
@@ -20,37 +19,6 @@ type HouseholdData = {
   invite_code: string | null;
   monthly_cycle_day: number;
 };
-
-export async function getHouseholdData(householdId: string): Promise<HouseholdData> {
-  const admin = createAdminClient();
-  const { data, error } = await admin
-    .from("households")
-    .select("name, invite_code, monthly_cycle_day")
-    .eq("id", householdId)
-    .single<HouseholdData>();
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  if (!data.invite_code) {
-    const code = generateHouseholdCode();
-    const { data: updated, error: updateError } = await admin
-      .from("households")
-      .update({ invite_code: code })
-      .eq("id", householdId)
-      .select("name, invite_code, monthly_cycle_day")
-      .single<HouseholdData>();
-
-    if (updateError) {
-      throw new Error(updateError.message);
-    }
-
-    return updated;
-  }
-
-  return data;
-}
 
 export async function getActiveHousehold(): Promise<ActiveHousehold | null> {
   const supabase = await createClient();
@@ -78,12 +46,39 @@ export async function getActiveHousehold(): Promise<ActiveHousehold | null> {
     return null;
   }
 
-  const household = await getHouseholdData(data.household_id);
+  const { data: household, error: householdError } = await supabase
+    .from("households")
+    .select("name, invite_code, monthly_cycle_day")
+    .eq("id", data.household_id)
+    .maybeSingle<HouseholdData>();
+
+  if (householdError) {
+    throw new Error(householdError.message);
+  }
+
+  if (!household) {
+    return null;
+  }
+
+  let inviteCode = household.invite_code;
+
+  if (!inviteCode) {
+    const code = generateHouseholdCode();
+    const { error: updateError } = await supabase
+      .from("households")
+      .update({ invite_code: code })
+      .eq("id", data.household_id);
+
+    if (updateError) {
+      throw new Error(updateError.message);
+    }
+    inviteCode = code;
+  }
 
   return {
     id: data.household_id,
     name: household.name,
-    inviteCode: household.invite_code ?? "",
+    inviteCode: inviteCode ?? "",
     monthlyCycleDay: household.monthly_cycle_day ?? 1,
     role: data.role === "owner" ? "owner" : "member",
   };
