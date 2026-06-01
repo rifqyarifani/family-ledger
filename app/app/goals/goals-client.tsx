@@ -20,17 +20,20 @@ import { SavingsGoalForm } from "@/components/savings-goal-form";
 import { useCrudDialog } from "@/hooks/use-crud-dialog";
 import { useRunAction } from "@/hooks/use-run-action";
 import { calculatePercentage, formatCurrency, formatDate } from "@/lib/finance";
+import { formatGoalDeleteMessage } from "@/lib/account-delete-utils";
 import { normalizeGoalName } from "@/lib/format-utils";
 import type { SavingsGoal, SavingsGoalAccountOption } from "@/types/finance";
 
 export function GoalsClient({
   savingsGoals,
   savingsAccountOptions,
-  accountMap = {}
+  accountMap = {},
+  accountNameById = {}
 }: {
   savingsGoals: SavingsGoal[];
   savingsAccountOptions: SavingsGoalAccountOption[];
   accountMap?: Record<string, { icon?: string; iconColor?: string }>;
+  accountNameById?: Record<string, string>;
 }) {
   const goalDialog = useCrudDialog<SavingsGoal>();
   const { isPending, error, runAction, setError } = useRunAction();
@@ -164,7 +167,12 @@ export function GoalsClient({
       <ConfirmDialog
         open={Boolean(goalDialog.deletingItem)}
         title="Delete savings goal?"
-        message={`This will remove ${goalDialog.deletingItem?.name ?? "this savings goal"}.`}
+        message={formatGoalDeleteMessage(
+          goalDialog.deletingItem?.name ?? "",
+          goalDialog.deletingItem?.accountId
+            ? accountNameById[goalDialog.deletingItem.accountId] ?? null
+            : null
+        )}
         onClose={goalDialog.closeDelete}
         onConfirm={() =>
           goalDialog.deletingItem &&

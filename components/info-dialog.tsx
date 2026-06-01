@@ -1,25 +1,21 @@
 "use client";
 
 import { useRef } from "react";
-import { AlertTriangle } from "lucide-react";
+import { Info } from "lucide-react";
 import { Button } from "@/components/button";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 
-export function ConfirmDialog({
+export function InfoDialog({
   open,
   title,
   message,
-  confirmLabel = "Delete",
-  disabled = false,
-  onConfirm,
+  closeLabel = "Close",
   onClose
 }: {
   open: boolean;
   title: string;
   message: string;
-  confirmLabel?: string;
-  disabled?: boolean;
-  onConfirm: () => void;
+  closeLabel?: string;
   onClose: () => void;
 }) {
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -35,7 +31,7 @@ export function ConfirmDialog({
       role="alertdialog"
       aria-modal="true"
       aria-label={title}
-      aria-describedby="confirm-message"
+      aria-describedby="info-message"
       onClick={(event) => {
         if (event.target === event.currentTarget) {
           onClose();
@@ -44,20 +40,17 @@ export function ConfirmDialog({
     >
       <div ref={dialogRef} className="w-full max-w-md rounded-[2rem] bg-white p-6 shadow-xl">
         <div className="flex items-start gap-3">
-          <div className="rounded-full bg-danger-light p-2 text-danger">
-            <AlertTriangle className="h-5 w-5" aria-hidden="true" />
+          <div className="rounded-full bg-brand-light p-2 text-brand">
+            <Info className="h-5 w-5" aria-hidden="true" />
           </div>
           <div>
             <h2 className="text-base font-semibold text-ink">{title}</h2>
-            <p id="confirm-message" className="mt-2 text-sm text-ink-secondary">{message}</p>
+            <p id="info-message" className="mt-2 text-sm text-ink-secondary">{message}</p>
           </div>
         </div>
         <div className="mt-6 flex justify-end gap-2">
           <Button variant="secondary" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={onConfirm} disabled={disabled}>
-            {confirmLabel}
+            {closeLabel}
           </Button>
         </div>
       </div>

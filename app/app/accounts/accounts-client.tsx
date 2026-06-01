@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition, useOptimistic, useCallback } from "react";
 import {
@@ -21,10 +21,14 @@ import { AccountForm } from "@/components/account-form";
 import { Button } from "@/components/button";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { EmptyState } from "@/components/empty-state";
+import { InfoDialog } from "@/components/info-dialog";
 import { Modal } from "@/components/modal";
 import { PageIntro } from "@/components/page-intro";
+import { useClickOutside } from "@/hooks/use-click-outside";
 import { useCrudDialog } from "@/hooks/use-crud-dialog";
+import { formatAccountDeleteMessage } from "@/lib/account-delete-utils";
 import { formatCurrency } from "@/lib/finance";
+import type { AccountImpact } from "@/src/lib/data/accounts";
 import type { Account, AccountBalanceMap } from "@/types/finance";
 
 type AccountsState = {
@@ -40,11 +44,11 @@ type OptimisticAction =
 export function AccountsClient({
   accounts,
   accountBalances,
-  householdId,
+  accountImpacts,
 }: {
   accounts: Account[];
   accountBalances: AccountBalanceMap;
-  householdId: string;
+  accountImpacts: Record<string, AccountImpact>;
 }) {
   const router = useRouter();
   const accountDialog = useCrudDialog<Account>();
@@ -53,16 +57,7 @@ export function AccountsClient({
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    if (!openMenuId) return;
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setOpenMenuId(null);
-      }
-    }
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
-  }, [openMenuId]);
+  useClickOutside(menuRef, openMenuId !== null, () => setOpenMenuId(null));
 
   const [optimisticState, addOptimistic] = useOptimistic(
     { accounts, balances: accountBalances },
@@ -245,6 +240,12 @@ export function AccountsClient({
         <EmptyState
           title="No accounts"
           message="Add an account such as Cash, BCA Main, Mandiri Bills, Credit Card, or Emergency Fund."
+          action={
+            <Button onClick={accountDialog.openCreate}>
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              Add account
+            </Button>
+          }
         />
       )}
 
@@ -267,8 +268,8 @@ export function AccountsClient({
             runAction(
               () =>
                 accountDialog.editingItem
-                  ? updateAccountAction(householdId, account)
-                  : createAccountAction(householdId, account),
+                  ? updateAccountAction(account)
+                  : createAccountAction(account),
               optimisticAction,
               accountDialog.closeForm,
             );
@@ -276,21 +277,48 @@ export function AccountsClient({
         />
       </Modal>
 
-      <ConfirmDialog
-        open={Boolean(accountDialog.deletingItem)}
-        title="Delete account?"
-        message={`This will remove ${accountDialog.deletingItem?.name ?? "this account"}. Existing linked transactions will keep their records.`}
-        onClose={accountDialog.closeDelete}
-        onConfirm={() =>
-          accountDialog.deletingItem &&
-          runAction(
-            () =>
-              deleteAccountAction(householdId, accountDialog.deletingItem!.id),
-            { type: "delete", id: accountDialog.deletingItem!.id },
-            accountDialog.closeDelete,
-          )
+      {(() => {
+        const deleting = accountDialog.deletingItem;
+        const impact = deleting ? accountImpacts[deleting.id] : undefined;
+        const decision = formatAccountDeleteMessage(
+          deleting?.name ?? "",
+          impact?.transactionCount ?? 0,
+          impact?.goalCount ?? 0,
+          deleting?.type === "savings"
+        );
+
+        if (!decision.canDelete) {
+          return (
+            <InfoDialog
+              open={Boolean(deleting)}
+              title="Cannot delete account"
+              message={decision.message}
+              onClose={accountDialog.closeDelete}
+            />
+          );
         }
-      />
+
+        return (
+          <ConfirmDialog
+            open={Boolean(deleting)}
+            title="Delete account?"
+            message={decision.message}
+            confirmLabel={decision.confirmLabel}
+            onClose={accountDialog.closeDelete}
+            onConfirm={() => {
+              if (!deleting) {
+                accountDialog.closeDelete();
+                return;
+              }
+              runAction(
+                () => deleteAccountAction(deleting.id),
+                { type: "delete", id: deleting.id },
+                accountDialog.closeDelete,
+              );
+            }}
+          />
+        );
+      })()}
     </>
   );
 }

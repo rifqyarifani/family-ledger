@@ -104,12 +104,53 @@ export async function deleteCategory(householdId: string, categoryId: string) {
     .maybeSingle<{ id: string }>();
 
   if (error) {
+    if (error.code === "23503") {
+      throw new Error(
+        "Cannot delete this category. It has linked records that must be removed first."
+      );
+    }
     throw new Error(error.message);
   }
 
   if (!data) {
     throw new Error("Category was not found or could not be deleted.");
   }
+}
+
+export type CategoryImpact = {
+  transactionCount: number;
+  budgetCount: number;
+};
+
+export async function getCategoryImpact(
+  householdId: string,
+  categoryId: string
+): Promise<CategoryImpact> {
+  const supabase = await createClient();
+  const [txnResult, budgetResult] = await Promise.all([
+    supabase
+      .from("transactions")
+      .select("id", { count: "exact", head: true })
+      .eq("household_id", householdId)
+      .eq("category_id", categoryId),
+    supabase
+      .from("budgets")
+      .select("id", { count: "exact", head: true })
+      .eq("household_id", householdId)
+      .eq("category_id", categoryId)
+  ]);
+
+  if (txnResult.error) {
+    throw new Error(txnResult.error.message);
+  }
+  if (budgetResult.error) {
+    throw new Error(budgetResult.error.message);
+  }
+
+  return {
+    transactionCount: txnResult.count ?? 0,
+    budgetCount: budgetResult.count ?? 0
+  };
 }
 
 export async function createDefaultCategories(householdId: string, userId: string) {

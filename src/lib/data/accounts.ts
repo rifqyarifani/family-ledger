@@ -157,6 +157,14 @@ export async function updateAccount(householdId: string, accountId: string, acco
 
 export async function deleteAccount(householdId: string, accountId: string) {
   const supabase = await createClient();
+
+  const impact = await getAccountImpact(householdId, accountId);
+  if (impact.transactionCount > 0) {
+    throw new Error(
+      `Cannot delete this account. It has ${impact.transactionCount} linked transaction(s). Reassign or delete them first.`
+    );
+  }
+
   const { data, error } = await supabase
     .from("accounts")
     .delete()
@@ -166,10 +174,51 @@ export async function deleteAccount(householdId: string, accountId: string) {
     .maybeSingle<{ id: string }>();
 
   if (error) {
+    if (error.code === "23503") {
+      throw new Error(
+        "Cannot delete this account. It has linked records that must be removed first."
+      );
+    }
     throw new Error(error.message);
   }
 
   if (!data) {
     throw new Error("Account not found or no permission.");
   }
+}
+
+export type AccountImpact = {
+  transactionCount: number;
+  goalCount: number;
+};
+
+export async function getAccountImpact(
+  householdId: string,
+  accountId: string
+): Promise<AccountImpact> {
+  const supabase = await createClient();
+  const [txnResult, goalResult] = await Promise.all([
+    supabase
+      .from("transactions")
+      .select("id", { count: "exact", head: true })
+      .eq("household_id", householdId)
+      .or(`account_id.eq.${accountId},transfer_account_id.eq.${accountId}`),
+    supabase
+      .from("savings_goals")
+      .select("id", { count: "exact", head: true })
+      .eq("household_id", householdId)
+      .eq("account_id", accountId)
+  ]);
+
+  if (txnResult.error) {
+    throw new Error(txnResult.error.message);
+  }
+  if (goalResult.error) {
+    throw new Error(goalResult.error.message);
+  }
+
+  return {
+    transactionCount: txnResult.count ?? 0,
+    goalCount: goalResult.count ?? 0
+  };
 }

@@ -1,29 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   ArrowDownRight,
   ArrowUpRight,
   Plus,
-  Tags,
   Tag,
-  Utensils,
-  Car,
-  Home,
-  Zap,
-  GraduationCap,
-  Tv,
-  Heart,
-  Shirt,
-  Plane,
-  Gift,
-  Briefcase,
-  TrendingUp,
-  DollarSign,
-  ShoppingBag,
+  Tags,
   MoreVertical,
-  Ambulance,
 } from "lucide-react";
+import { iconLookup } from "@/constants/icons";
 import {
   createCategoryAction,
   deleteCategoryAction,
@@ -35,35 +21,16 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 import { EmptyState } from "@/components/empty-state";
 import { Modal } from "@/components/modal";
 import { PageIntro } from "@/components/page-intro";
+import { useClickOutside } from "@/hooks/use-click-outside";
 import { useCrudDialog } from "@/hooks/use-crud-dialog";
 import { useRunAction } from "@/hooks/use-run-action";
+import { formatCategoryDeleteMessage } from "@/lib/account-delete-utils";
+import type { CategoryImpact } from "@/src/lib/data/categories";
 import type { Category } from "@/types/finance";
 
 const defaultColors = {
   income: "#2ead4b",
   expense: "#d03238",
-};
-
-const iconLookup: Record<
-  string,
-  React.ComponentType<{ className?: string }>
-> = {
-  tag: Tag,
-  utensils: Utensils,
-  car: Car,
-  home: Home,
-  zap: Zap,
-  "graduation-cap": GraduationCap,
-  tv: Tv,
-  heart: Heart,
-  shirt: Shirt,
-  plane: Plane,
-  gift: Gift,
-  briefcase: Briefcase,
-  "trending-up": TrendingUp,
-  "dollar-sign": DollarSign,
-  "shopping-bag": ShoppingBag,
-  ambulance: Ambulance,
 };
 
 function CategorySection({
@@ -199,22 +166,19 @@ function CategorySection({
   );
 }
 
-export function CategoriesClient({ categories }: { categories: Category[] }) {
+export function CategoriesClient({
+  categories,
+  categoryImpacts = {}
+}: {
+  categories: Category[];
+  categoryImpacts?: Record<string, CategoryImpact>;
+}) {
   const categoryDialog = useCrudDialog<Category>();
   const { isPending, error, runAction } = useRunAction();
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    if (!openMenuId) return;
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setOpenMenuId(null);
-      }
-    }
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
-  }, [openMenuId]);
+  useClickOutside(menuRef, openMenuId !== null, () => setOpenMenuId(null));
 
   const incomeCategories = categories.filter((c) => c.type === "income");
   const expenseCategories = categories.filter((c) => c.type === "expense");
@@ -270,6 +234,12 @@ export function CategoriesClient({ categories }: { categories: Category[] }) {
         <EmptyState
           title="No categories"
           message="Add income or expense categories for transactions and budgets."
+          action={
+            <Button onClick={categoryDialog.openCreate}>
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              Add category
+            </Button>
+          }
         />
       )}
 
@@ -297,19 +267,32 @@ export function CategoriesClient({ categories }: { categories: Category[] }) {
         />
       </Modal>
 
-      <ConfirmDialog
-        open={Boolean(categoryDialog.deletingItem)}
-        title="Delete category?"
-        message={`This will remove ${categoryDialog.deletingItem?.name ?? "this category"}. Existing linked records may become uncategorized.`}
-        onClose={categoryDialog.closeDelete}
-        onConfirm={() =>
-          categoryDialog.deletingItem &&
-          runAction(
-            () => deleteCategoryAction(categoryDialog.deletingItem!.id),
-            categoryDialog.closeDelete,
-          )
-        }
-      />
+      {(() => {
+        const deleting = categoryDialog.deletingItem;
+        const impact = deleting ? categoryImpacts[deleting.id] : undefined;
+        const decision = formatCategoryDeleteMessage(
+          deleting?.name ?? "",
+          impact?.transactionCount ?? 0,
+          impact?.budgetCount ?? 0
+        );
+
+        return (
+          <ConfirmDialog
+            open={Boolean(deleting)}
+            title="Delete category?"
+            message={decision.message}
+            confirmLabel={decision.confirmLabel}
+            onClose={categoryDialog.closeDelete}
+            onConfirm={() =>
+              deleting &&
+              runAction(
+                () => deleteCategoryAction(deleting.id),
+                categoryDialog.closeDelete,
+              )
+            }
+          />
+        );
+      })()}
     </>
   );
 }
