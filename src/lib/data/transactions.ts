@@ -17,6 +17,7 @@ type TransactionRow = {
   transfer_account_id: string | null;
   transaction_date: string;
   transaction_time: string | null;
+  created_at: string;
   note: string | null;
   categories: {
     name: string;
@@ -32,6 +33,17 @@ type TransactionRow = {
   } | null;
 };
 
+export type TransactionCursor = {
+  transactionDate: string;
+  createdAt: string;
+  id: string;
+};
+
+export type TransactionPage = {
+  items: Transaction[];
+  nextCursor: TransactionCursor | null;
+};
+
 type TransactionMetricRow = {
   id: string;
   type: TransactionType;
@@ -40,6 +52,7 @@ type TransactionMetricRow = {
 };
 
 type ReportTransactionRow = TransactionMetricRow & {
+  created_at: string;
   categories: {
     name: string;
   } | null;
@@ -83,6 +96,7 @@ function mapTransaction(row: TransactionRow): Transaction {
     transferAccountName: row.transfer_account?.name ?? undefined,
     date: row.transaction_date,
     time: row.transaction_time ?? undefined,
+    createdAt: row.created_at,
     note: row.note ?? undefined
   };
 }
@@ -106,7 +120,8 @@ function mapReportTransaction(row: ReportTransactionRow): Transaction {
     memberId: "",
     memberName: row.household_members?.display_name ?? undefined,
     accountId: "",
-    date: row.transaction_date
+    date: row.transaction_date,
+    createdAt: row.transaction_date
   };
 }
 
@@ -163,6 +178,20 @@ async function getCategoryId(householdId: string, categoryName: string, type: "i
   return data.id;
 }
 
+type CursorChain = { or: (filter: string) => unknown };
+
+function applyTransactionCursor<T extends CursorChain>(query: T, cursor: TransactionCursor | undefined): T {
+  if (!cursor) {
+    return query;
+  }
+
+  return query.or(
+    `transaction_date.lt.${cursor.transactionDate},` +
+      `and(transaction_date.eq.${cursor.transactionDate},created_at.lt.${cursor.createdAt}),` +
+      `and(transaction_date.eq.${cursor.transactionDate},created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`
+  ) as T;
+}
+
 async function normalizeTransactionInput(householdId: string, input: TransactionInput) {
   const isTransfer = input.type === "transfer";
   const categoryIdPromise =
@@ -214,9 +243,13 @@ async function normalizeTransactionInput(householdId: string, input: Transaction
   };
 }
 
-export async function getTransactions(householdId: string, limit = 100, offset = 0) {
+export async function getTransactions(
+  householdId: string,
+  limit = 100,
+  cursor?: TransactionCursor
+): Promise<TransactionPage> {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("transactions")
     .select(
       `
@@ -230,6 +263,7 @@ export async function getTransactions(householdId: string, limit = 100, offset =
         transfer_account_id,
         transaction_date,
         transaction_time,
+        created_at,
         note,
         categories(name),
         household_members(display_name),
@@ -240,19 +274,36 @@ export async function getTransactions(householdId: string, limit = 100, offset =
     .eq("household_id", householdId)
     .order("transaction_date", { ascending: false })
     .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1)
-    .returns<TransactionRow[]>();
+    .order("id", { ascending: false });
+
+  query = applyTransactionCursor(query, cursor);
+
+  const { data, error } = await query.limit(limit).returns<TransactionRow[]>();
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return (data ?? []).map(mapTransaction);
+  const items = (data ?? []).map(mapTransaction);
+  const nextCursor: TransactionCursor | null =
+    items.length === limit
+      ? {
+          transactionDate: items[items.length - 1].date,
+          createdAt: items[items.length - 1].createdAt,
+          id: items[items.length - 1].id,
+        }
+      : null;
+
+  return { items, nextCursor };
 }
 
-export async function getRecentTransactions(householdId: string, limit = 5) {
+export async function getRecentTransactions(
+  householdId: string,
+  limit = 5,
+  cursor?: TransactionCursor
+): Promise<TransactionPage> {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("transactions")
     .select(
       `
@@ -266,6 +317,7 @@ export async function getRecentTransactions(householdId: string, limit = 5) {
         transfer_account_id,
         transaction_date,
         transaction_time,
+        created_at,
         note,
         categories(name),
         household_members(display_name),
@@ -276,14 +328,27 @@ export async function getRecentTransactions(householdId: string, limit = 5) {
     .eq("household_id", householdId)
     .order("transaction_date", { ascending: false })
     .order("created_at", { ascending: false })
-    .limit(limit)
-    .returns<TransactionRow[]>();
+    .order("id", { ascending: false });
+
+  query = applyTransactionCursor(query, cursor);
+
+  const { data, error } = await query.limit(limit).returns<TransactionRow[]>();
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return (data ?? []).map(mapTransaction);
+  const items = (data ?? []).map(mapTransaction);
+  const nextCursor: TransactionCursor | null =
+    items.length === limit
+      ? {
+          transactionDate: items[items.length - 1].date,
+          createdAt: items[items.length - 1].createdAt,
+          id: items[items.length - 1].id,
+        }
+      : null;
+
+  return { items, nextCursor };
 }
 
 export async function getTransactionMonthMetrics(householdId: string, monthsBack = 12) {
@@ -321,6 +386,7 @@ export async function getReportTransactions(householdId: string, monthsBack = 12
         type,
         amount,
         transaction_date,
+        created_at,
         categories(name),
         household_members(display_name)
       `
@@ -374,7 +440,12 @@ export async function getFamilyMemberTransactionTotals(householdId: string, mont
   }, {});
 }
 
-export async function getTransactionsForMonth(householdId: string, month: string) {
+export async function getTransactionsForMonth(
+  householdId: string,
+  month: string,
+  limit = 1000,
+  cursor?: TransactionCursor
+): Promise<TransactionPage> {
   const [year, monthNumber] = month.split("-").map(Number);
 
   if (!year || !monthNumber) {
@@ -385,7 +456,7 @@ export async function getTransactionsForMonth(householdId: string, month: string
   const nextMonthDate = new Date(year, monthNumber, 1);
   const endDate = `${nextMonthDate.getFullYear()}-${String(nextMonthDate.getMonth() + 1).padStart(2, "0")}-01`;
   const supabase = await createClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("transactions")
     .select(
       `
@@ -399,6 +470,7 @@ export async function getTransactionsForMonth(householdId: string, month: string
         transfer_account_id,
         transaction_date,
         transaction_time,
+        created_at,
         note,
         categories(name),
         household_members(display_name),
@@ -411,13 +483,27 @@ export async function getTransactionsForMonth(householdId: string, month: string
     .lt("transaction_date", endDate)
     .order("transaction_date", { ascending: false })
     .order("created_at", { ascending: false })
-    .returns<TransactionRow[]>();
+    .order("id", { ascending: false });
+
+  query = applyTransactionCursor(query, cursor);
+
+  const { data, error } = await query.limit(limit).returns<TransactionRow[]>();
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return (data ?? []).map(mapTransaction);
+  const items = (data ?? []).map(mapTransaction);
+  const nextCursor: TransactionCursor | null =
+    items.length === limit
+      ? {
+          transactionDate: items[items.length - 1].date,
+          createdAt: items[items.length - 1].createdAt,
+          id: items[items.length - 1].id,
+        }
+      : null;
+
+  return { items, nextCursor };
 }
 
 export async function createTransaction(householdId: string, input: TransactionInput) {

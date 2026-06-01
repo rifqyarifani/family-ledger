@@ -13,8 +13,8 @@ export default async function TransactionsPage() {
     return <EmptyState title="No household found" message="Create a household before managing transactions." />;
   }
 
-  const [transactions, familyMembers, accounts, categories, currentMemberId] = await Promise.all([
-    getTransactions(household.id, 100, 0),
+  const [transactionsPage, familyMembers, accounts, categories, currentMemberId] = await Promise.all([
+    getTransactions(household.id),
     getHouseholdMembers(household.id),
     getAccounts(household.id),
     getCategories(household.id),
@@ -33,7 +33,7 @@ export default async function TransactionsPage() {
 
   return (
     <TransactionsClient
-      transactions={transactions}
+      transactions={transactionsPage.items}
       familyMembers={familyMembers}
       accounts={accounts}
       categories={categories}

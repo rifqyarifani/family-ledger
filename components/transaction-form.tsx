@@ -142,6 +142,7 @@ export function TransactionForm({
       transferAccountId: values.type === "transfer" ? values.transferAccountId : undefined,
       date: values.date,
       time: values.time,
+      createdAt: transaction?.createdAt ?? new Date().toISOString(),
       note: values.note.trim()
     });
   }

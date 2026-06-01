@@ -23,7 +23,7 @@ export default async function BudgetPage({
     return <EmptyState title="No household found" message="Create a household before managing budgets." />;
   }
 
-  const [budgets, transactions, categories] = await Promise.all([
+  const [budgets, transactionsPage, categories] = await Promise.all([
     getBudgetsForMonth(household.id, selectedMonth),
     getTransactionsForMonth(household.id, selectedMonth),
     getCategories(household.id)
@@ -40,7 +40,7 @@ export default async function BudgetPage({
   return (
     <BudgetClient
       budgets={budgets}
-      transactions={transactions}
+      transactions={transactionsPage.items}
       expenseCategories={expenseCategories}
       selectedMonth={selectedMonth}
       categoryMap={categoryMap}

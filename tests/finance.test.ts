@@ -28,7 +28,8 @@ const transactions: Transaction[] = [
     memberId: "member-1",
     memberName: "Alice",
     accountId: "cash",
-    date: "2026-05-01"
+    date: "2026-05-01",
+    createdAt: "2026-05-01T00:00:00.000Z"
   },
   {
     id: "expense-1",
@@ -39,7 +40,8 @@ const transactions: Transaction[] = [
     memberId: "member-1",
     memberName: "Alice",
     accountId: "cash",
-    date: "2026-05-03"
+    date: "2026-05-03",
+    createdAt: "2026-05-03T00:00:00.000Z"
   },
   {
     id: "transfer-1",
@@ -50,7 +52,8 @@ const transactions: Transaction[] = [
     memberId: "member-1",
     accountId: "cash",
     transferAccountId: "savings",
-    date: "2026-05-05"
+    date: "2026-05-05",
+    createdAt: "2026-05-05T00:00:00.000Z"
   },
   {
     id: "expense-2",
@@ -61,7 +64,8 @@ const transactions: Transaction[] = [
     memberId: "member-2",
     memberName: "Bob",
     accountId: "cash",
-    date: "2026-04-10"
+    date: "2026-04-10",
+    createdAt: "2026-04-10T00:00:00.000Z"
   }
 ];
 
@@ -102,7 +106,7 @@ describe("finance calculations", () => {
   it("filters transactions by month", () => {
     const mayTransactions = filterTransactionsByMonth(transactions, "2026-05");
     assert.equal(mayTransactions.length, 3);
-    assert.ok(t => t.date.startsWith("2026-05"));
+    assert.ok(mayTransactions.every((t) => t.date.startsWith("2026-05")));
   });
 
   it("groups transactions by member", () => {

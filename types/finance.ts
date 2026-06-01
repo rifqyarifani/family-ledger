@@ -15,6 +15,7 @@ export type Transaction = {
   transferAccountName?: string;
   date: string;
   time?: string;
+  createdAt: string;
   note?: string;
 };
 
@@ -85,4 +86,12 @@ export type Settings = {
   monthlyCycleDay: number;
   themePreference: "system" | "light";
 };
+
+export type UserProfile = {
+  id: string;
+  email: string | null;
+  firstName: string;
+  lastName: string;
+  displayName: string;
+} | null;
 

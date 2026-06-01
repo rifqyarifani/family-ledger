@@ -50,7 +50,7 @@ export default async function DashboardPage() {
   }
 
   const currentMonth = getCurrentMonthKey();
-  const [monthlyTransactions, cashflowTransactions, recentTransactions, accounts, familyMembers, budgets, savingsGoals] =
+  const [monthlyPage, cashflowTransactions, recentPage, accounts, familyMembers, budgets, savingsGoals] =
     await Promise.all([
       getTransactionsForMonth(household.id, currentMonth),
       getTransactionMonthMetrics(household.id),
@@ -64,9 +64,9 @@ export default async function DashboardPage() {
 
   return (
     <DashboardClient
-      monthlyTransactions={monthlyTransactions}
+      monthlyTransactions={monthlyPage.items}
       cashflowTransactions={cashflowTransactions}
-      recentTransactions={recentTransactions}
+      recentTransactions={recentPage.items}
       accounts={accounts}
       accountBalances={accountBalances}
       familyMembers={familyMembers}
