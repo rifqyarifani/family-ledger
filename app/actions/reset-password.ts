@@ -1,12 +1,9 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { createClient } from "@/src/lib/supabase/server";
-
-function getFormValue(formData: FormData, key: string) {
-  const value = formData.get(key);
-  return typeof value === "string" ? value.trim() : "";
-}
+import { getFormValue } from "@/lib/form-utils";
 
 export async function requestPasswordReset(formData: FormData) {
   const email = getFormValue(formData, "email").toLowerCase();
@@ -16,7 +13,16 @@ export async function requestPasswordReset(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.resetPasswordForEmail(email);
+
+  const headerStore = await headers();
+  const host = headerStore.get("host") ?? "localhost:3000";
+  const protocol = headerStore.get("x-forwarded-proto") ?? "http";
+  const origin = `${protocol}://${host}`;
+  const redirectTo = `${origin}/reset-password/callback`;
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo,
+  });
 
   if (error) {
     redirect("/forgot-password?error=Could not send reset email. Try again.");
