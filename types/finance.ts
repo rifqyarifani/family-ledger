@@ -40,6 +40,8 @@ export type Account = {
   type: "cash" | "bank" | "credit" | "savings";
   openingBalance: number;
   iconColor?: string;
+  ownerMemberId?: string | null;
+  ownerName?: string;
 };
 
 export type AccountBalanceMap = Record<string, number>;

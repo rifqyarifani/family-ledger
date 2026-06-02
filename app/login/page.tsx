@@ -12,25 +12,26 @@ export default async function LoginPage({
   const params = await searchParams;
 
   return (
-    <main className="min-h-screen bg-surface">
-      <section className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-5 sm:px-6 lg:px-8">
-        <PublicHeader />
+    <>
+      <PublicHeader />
 
-        <div className="grid flex-1 items-center gap-8 py-10 lg:grid-cols-[0.95fr_1.05fr] lg:py-14">
-          <div className="rounded-[2rem] bg-brand p-6 text-white shadow-soft sm:p-8">
-            <p className="mb-4 inline-flex rounded-full bg-brand-green-pale px-3 py-1 text-xs font-bold uppercase text-brand-green-dark">
+      <main className="min-h-screen bg-surface">
+        <section className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-7xl items-center px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-12">
+          <div className="grid w-full items-center gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:gap-10">
+          <div className="rounded-[2rem] bg-ink p-8 text-canvas-soft shadow-soft sm:p-10 lg:p-12">
+            <span className="inline-flex items-center rounded-full bg-brand-green-pale px-3 py-1 text-xs font-bold uppercase tracking-wide text-brand-green-dark">
               Welcome back
-            </p>
-            <h1 className="text-5xl font-black leading-[0.95] text-brand-green sm:text-6xl">
+            </span>
+            <h1 className="mt-5 text-5xl font-black leading-[0.95] text-brand-green sm:text-6xl lg:text-7xl">
               Open your household workspace.
             </h1>
-            <p className="mt-6 text-base leading-7 text-surface">
+            <p className="mt-5 text-xl font-semibold leading-snug text-canvas-soft/85 lg:text-2xl">
               Continue tracking shared accounts, transactions, budgets, and
               savings goals from the same FamilyLedger dashboard.
             </p>
           </div>
 
-          <section className="w-full rounded-3xl border border-surface-border bg-white p-6 shadow-xl">
+          <section className="w-full rounded-[2rem] border border-surface-border bg-white p-6 shadow-soft sm:p-8">
             <div className="mb-6">
               <h2 className="text-2xl font-black text-ink">Log in</h2>
               <p className="text-sm text-ink-secondary">
@@ -39,12 +40,12 @@ export default async function LoginPage({
             </div>
 
             {params.error ? (
-              <p className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+              <p className="mb-4 rounded-2xl border border-danger-border bg-danger-lighter p-3 text-sm text-danger-deep">
                 {params.error}
               </p>
             ) : null}
             {params.message ? (
-              <p className="mb-4 rounded-lg bg-slate-50 p-3 text-sm text-slate-700">
+              <p className="mb-4 rounded-2xl bg-surface-subtle p-3 text-sm text-ink-secondary">
                 {params.message}
               </p>
             ) : null}
@@ -75,7 +76,7 @@ export default async function LoginPage({
                   Forgot password?
                 </Link>
               </div>
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="h-12 w-full">
                 Log in
               </Button>
             </form>
@@ -86,12 +87,17 @@ export default async function LoginPage({
                 href="/signup"
                 className="font-semibold text-ink underline-offset-4 hover:underline"
               >
-                Create an account
+                Create an account →
               </Link>
             </p>
+            <p className="mt-3 text-center text-xs text-ink-muted">
+              Your household data is private to your family — never shared or
+              sold.
+            </p>
           </section>
-        </div>
-      </section>
-    </main>
+          </div>
+        </section>
+      </main>
+    </>
   );
 }

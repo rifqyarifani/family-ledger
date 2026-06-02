@@ -3,12 +3,31 @@ import { AnalyticsProvider } from "@/components/analytics-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Family Ledger",
-  description:
-    "A family financial management dashboard for manual household records.",
-  icons: {
-    icon: "/favicon.png",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://familyledger.app"
+  ),
+  title: {
+    default: "FamilyLedger — Household money, clearly handled.",
+    template: "%s · FamilyLedger"
   },
+  description:
+    "Track income, expenses, accounts, budgets, and savings goals with your family — in IDR, no bank connection required.",
+  icons: {
+    icon: "/favicon.png"
+  },
+  openGraph: {
+    title: "FamilyLedger — Household money, clearly handled.",
+    description:
+      "The shared workspace where Indonesian families record income, expenses, accounts, budgets, and goals in IDR.",
+    type: "website",
+    locale: "id_ID"
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "FamilyLedger — Household money, clearly handled.",
+    description:
+      "The shared workspace where Indonesian families record income, expenses, accounts, budgets, and goals in IDR."
+  }
 };
 
 export default function RootLayout({

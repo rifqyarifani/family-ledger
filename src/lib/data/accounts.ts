@@ -7,6 +7,8 @@ type AccountRow = {
   type: Account["type"];
   opening_balance: number | string;
   icon_color: string | null;
+  owner_member_id: string | null;
+  household_members: { display_name: string } | { display_name: string }[] | null;
 };
 
 type AccountMovementRow = {
@@ -21,15 +23,21 @@ export type AccountInput = {
   type: Account["type"];
   openingBalance: number;
   iconColor?: string;
+  ownerMemberId?: string | null;
 };
 
 function mapAccount(row: AccountRow): Account {
+  const ownerRelation = Array.isArray(row.household_members)
+    ? row.household_members[0]
+    : row.household_members;
   return {
     id: row.id,
     name: row.name,
     type: row.type,
     openingBalance: Number(row.opening_balance),
-    iconColor: row.icon_color ?? undefined
+    iconColor: row.icon_color ?? undefined,
+    ownerMemberId: row.owner_member_id,
+    ownerName: ownerRelation?.display_name
   };
 }
 
@@ -37,7 +45,7 @@ export async function getAccounts(householdId: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("accounts")
-    .select("id, name, type, opening_balance, icon_color")
+    .select("id, name, type, opening_balance, icon_color, owner_member_id, household_members:owner_member_id (display_name)")
     .eq("household_id", householdId)
     .order("created_at", { ascending: true })
     .returns<AccountRow[]>();
@@ -129,6 +137,7 @@ export async function createAccount(householdId: string, account: AccountInput) 
     type: account.type,
     opening_balance: account.openingBalance,
     icon_color: account.iconColor ?? null,
+    owner_member_id: account.ownerMemberId ?? null,
     created_by: user?.id ?? null
   });
 
@@ -145,7 +154,8 @@ export async function updateAccount(householdId: string, accountId: string, acco
       name: account.name,
       type: account.type,
       opening_balance: account.openingBalance,
-      icon_color: account.iconColor ?? null
+      icon_color: account.iconColor ?? null,
+      owner_member_id: account.ownerMemberId ?? null
     })
     .eq("household_id", householdId)
     .eq("id", accountId);

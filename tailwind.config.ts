@@ -32,6 +32,10 @@ const config: Config = {
           border: "#cfd5ca",
           divider: "#e8ebe6"
         },
+        canvas: {
+          DEFAULT: "#ffffff",
+          soft: "#e8ebe6"
+        },
         ink: {
           DEFAULT: "#0e0f0c",
           secondary: "#454745",

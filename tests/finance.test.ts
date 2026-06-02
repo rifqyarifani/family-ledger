@@ -12,11 +12,12 @@ import {
   getCurrentMonthKey,
   getBudgetUsage,
   getMonthOptions,
+  groupAccountsByOwner,
   groupTransactionsByCategory,
   groupTransactionsByMember,
   groupTransactionsByMonth
 } from "../lib/finance";
-import type { Budget, Transaction, TransactionMonthMetric } from "../types/finance";
+import type { Account, Budget, FamilyMember, Transaction, TransactionMonthMetric } from "../types/finance";
 
 const transactions: Transaction[] = [
   {
@@ -155,5 +156,52 @@ describe("finance calculations", () => {
     const now = new Date();
     const expected = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
     assert.equal(getCurrentMonthKey(), expected);
+  });
+});
+
+describe("groupAccountsByOwner", () => {
+  const rifqy: FamilyMember = { id: "m1", name: "Rifqy", role: "owner" };
+  const ayu: FamilyMember = { id: "m2", name: "Ayu", role: "member" };
+  const budi: FamilyMember = { id: "m3", name: "Budi", role: "member" };
+
+  const joint: Account = { id: "a1", name: "Joint Bills", type: "bank", openingBalance: 0, ownerMemberId: null };
+  const rifqyPersonal: Account = { id: "a2", name: "Rifqy Wallet", type: "cash", openingBalance: 0, ownerMemberId: "m1" };
+  const ayuPersonal: Account = { id: "a3", name: "Ayu Wallet", type: "cash", openingBalance: 0, ownerMemberId: "m2" };
+  const orphanOwner: Account = { id: "a4", name: "Legacy", type: "bank", openingBalance: 0, ownerMemberId: "m-missing" };
+
+  it("returns empty groups for empty input", () => {
+    const result = groupAccountsByOwner([], [rifqy, ayu]);
+    assert.deepEqual(result.shared, []);
+    assert.deepEqual(result.byMember, []);
+  });
+
+  it("groups all shared accounts when none are private", () => {
+    const result = groupAccountsByOwner([joint], [rifqy, ayu]);
+    assert.equal(result.shared.length, 1);
+    assert.equal(result.shared[0].id, "a1");
+    assert.deepEqual(result.byMember, []);
+  });
+
+  it("groups accounts by member, excluding members without accounts", () => {
+    const result = groupAccountsByOwner([rifqyPersonal, ayuPersonal], [rifqy, ayu, budi]);
+    assert.deepEqual(result.shared, []);
+    assert.equal(result.byMember.length, 2);
+    assert.equal(result.byMember[0].member.id, "m1");
+    assert.equal(result.byMember[0].accounts[0].id, "a2");
+    assert.equal(result.byMember[1].member.id, "m2");
+    assert.equal(result.byMember[1].accounts[0].id, "a3");
+  });
+
+  it("handles a mix of shared and private", () => {
+    const result = groupAccountsByOwner([joint, rifqyPersonal, ayuPersonal], [rifqy, ayu]);
+    assert.equal(result.shared.length, 1);
+    assert.equal(result.byMember.length, 2);
+  });
+
+  it("treats accounts whose owner is not in the member list as shared", () => {
+    const result = groupAccountsByOwner([orphanOwner], [rifqy, ayu]);
+    assert.equal(result.shared.length, 1);
+    assert.equal(result.shared[0].id, "a4");
+    assert.deepEqual(result.byMember, []);
   });
 });

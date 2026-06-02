@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { Field, Input, Select, MoneyInput } from "@/components/form-field";
+import { FormActions } from "@/components/form-actions";
 import { DatePicker } from "@/components/date-picker";
-import { Field, Input, Select } from "@/components/form-field";
-import { FormActions, FormError } from "@/components/form-actions";
-import { formatInputAmount, handleBlockedNumberKeys, parseFormattedAmount, sanitizeFormattedAmount } from "@/lib/format-utils";
+import { useFormErrors } from "@/hooks/use-form-errors";
+import { formatInputAmount, parseFormattedAmount } from "@/lib/format-utils";
 import { createId } from "@/lib/utils";
+import { mustSelect, positiveAmount, requiredString } from "@/lib/validation";
 import type { SavingsGoal, SavingsGoalAccountOption } from "@/types/finance";
 
 export function SavingsGoalForm({
@@ -27,40 +29,48 @@ export function SavingsGoalForm({
     goal ? formatInputAmount(goal.targetAmount) : "0",
   );
   const [dueDate, setDueDate] = useState(goal?.dueDate ?? "");
-  const [error, setError] = useState("");
   const selectedAccount = savingsAccountOptions.find((account) => account.name === name);
   const savedAmount = selectedAccount?.savedAmount ?? 0;
+  const { errors, setAll, clearAll } = useFormErrors();
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const target = parseFormattedAmount(targetAmount);
 
-    if (
-      !selectedAccount ||
-      !dueDate ||
-      !Number.isFinite(target) ||
-      target <= 0
-    ) {
-      setError(
-        "Choose a savings account, due date, and positive target amount.",
-      );
+    const nextErrors = {
+      name: mustSelect(name, "Savings account"),
+      targetAmount: positiveAmount(targetAmount, parseFormattedAmount, "Target amount"),
+      dueDate: requiredString(dueDate, "Due date")
+    };
+
+    setAll(nextErrors);
+    if (Object.values(nextErrors).some(Boolean)) {
       return;
     }
 
     onSubmit({
       id: goal?.id ?? createId("goal"),
-      name: selectedAccount.name,
-      targetAmount: target,
+      name: selectedAccount!.name,
+      targetAmount: parseFormattedAmount(targetAmount),
       savedAmount,
-      dueDate,
+      dueDate
     });
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
-      <FormError message={error} />
-      <Field label="Linked savings account">
-        <Select value={name} onChange={(event) => setName(event.target.value)} required disabled={savingsAccountOptions.length === 0}>
+    <form
+      onSubmit={(event) => {
+        clearAll();
+        handleSubmit(event);
+      }}
+      className="grid gap-4 sm:grid-cols-2"
+    >
+      <Field label="Linked savings account" error={errors.name}>
+        <Select
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          required
+          disabled={savingsAccountOptions.length === 0}
+        >
           {savingsAccountOptions.length > 0 ? (
             savingsAccountOptions.map((account) => (
               <option key={account.name} value={account.name}>
@@ -72,18 +82,8 @@ export function SavingsGoalForm({
           )}
         </Select>
       </Field>
-      <Field label="Target amount">
-        <Input
-          type="text"
-          inputMode="decimal"
-          value={targetAmount}
-          onKeyDown={handleBlockedNumberKeys}
-          onChange={(event) =>
-            setTargetAmount(sanitizeFormattedAmount(event.target.value))
-          }
-          className="no-spinner"
-          required
-        />
+      <Field label="Target amount" error={errors.targetAmount}>
+        <MoneyInput value={targetAmount} onChange={setTargetAmount} required />
       </Field>
       <Field label="Saved amount">
         <Input
@@ -92,13 +92,18 @@ export function SavingsGoalForm({
           readOnly
           className="bg-surface-subtle"
         />
-        <p className="mt-1 text-xs text-ink-secondary">Saved amount follows this account balance automatically.</p>
+        <p className="mt-1 text-xs text-ink-secondary">
+          Saved amount follows this account balance automatically.
+        </p>
       </Field>
       <div className="block">
         <span className="text-sm font-medium text-ink-secondary">Due date</span>
         <div className="mt-1">
           <DatePicker value={dueDate} onChange={setDueDate} />
         </div>
+        {errors.dueDate ? (
+          <span className="mt-1 block text-xs text-red-600">{errors.dueDate}</span>
+        ) : null}
       </div>
       <FormActions
         submitLabel={goal ? "Save changes" : "Add goal"}

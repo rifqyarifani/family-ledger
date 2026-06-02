@@ -8,9 +8,32 @@ import {
   type AccountInput
 } from "@/src/lib/data/accounts";
 import { requireHouseholdId } from "@/lib/household-utils";
+import { createClient } from "@/src/lib/supabase/server";
 import type { Account } from "@/types/finance";
 
-function validateAccount(account: Account): AccountInput {
+async function assertOwnerIsMember(householdId: string, ownerMemberId: string | null | undefined) {
+  if (!ownerMemberId) {
+    return;
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("household_members")
+    .select("id")
+    .eq("household_id", householdId)
+    .eq("id", ownerMemberId)
+    .maybeSingle<{ id: string }>();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data) {
+    throw new Error("Selected owner is not a member of this household.");
+  }
+}
+
+async function validateAccount(householdId: string, account: Account): Promise<AccountInput> {
   const name = account.name.trim();
 
   if (!name || name.length > 30) {
@@ -29,24 +52,27 @@ function validateAccount(account: Account): AccountInput {
     throw new Error("Opening balance must be at most 999.999.999.999,99.");
   }
 
+  await assertOwnerIsMember(householdId, account.ownerMemberId);
+
   return {
     name,
     type: account.type,
     openingBalance: account.openingBalance,
-    iconColor: account.iconColor
+    iconColor: account.iconColor,
+    ownerMemberId: account.ownerMemberId ?? null
   };
 }
 
 export async function createAccountAction(account: Account) {
   const householdId = await requireHouseholdId();
-  await createAccount(householdId, validateAccount(account));
+  await createAccount(householdId, await validateAccount(householdId, account));
   revalidatePath("/app/accounts");
   revalidatePath("/app/goals");
 }
 
 export async function updateAccountAction(account: Account) {
   const householdId = await requireHouseholdId();
-  await updateAccount(householdId, account.id, validateAccount(account));
+  await updateAccount(householdId, account.id, await validateAccount(householdId, account));
   revalidatePath("/app/accounts");
   revalidatePath("/app/goals");
 }

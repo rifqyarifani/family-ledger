@@ -5,6 +5,8 @@ alter table public.categories enable row level security;
 alter table public.transactions enable row level security;
 alter table public.budgets enable row level security;
 alter table public.savings_goals enable row level security;
+alter table public.debts enable row level security;
+alter table public.debt_payments enable row level security;
 
 create or replace function public.is_household_member(target_household_id uuid)
 returns boolean
@@ -72,6 +74,14 @@ drop policy if exists "Members can create savings goals" on public.savings_goals
 drop policy if exists "Members can update savings goals" on public.savings_goals;
 drop policy if exists "Owners and admins can delete savings goals" on public.savings_goals;
 drop policy if exists "Owners can delete savings goals" on public.savings_goals;
+drop policy if exists "Members can view debts" on public.debts;
+drop policy if exists "Members can create debts" on public.debts;
+drop policy if exists "Members can update debts" on public.debts;
+drop policy if exists "Members can delete debts" on public.debts;
+drop policy if exists "Members can view debt payments" on public.debt_payments;
+drop policy if exists "Members can create debt payments" on public.debt_payments;
+drop policy if exists "Members can update debt payments" on public.debt_payments;
+drop policy if exists "Members can delete debt payments" on public.debt_payments;
 
 create policy "Members can view their households"
 on public.households

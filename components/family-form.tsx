@@ -1,12 +1,19 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Field, Input, Select } from "@/components/form-field";
-import { FormActions, FormError } from "@/components/form-actions";
+import { Field, Input, Select, CappedTextInput } from "@/components/form-field";
+import { FormActions } from "@/components/form-actions";
+import { useFormErrors } from "@/hooks/use-form-errors";
 import { createId } from "@/lib/utils";
+import {
+  MAX_NAME_LENGTH,
+  cappedName,
+  composeValidators,
+  mustSelect,
+  requiredString
+} from "@/lib/validation";
 import type { FamilyMember } from "@/types/finance";
 
-const maxMemberNameLength = 30;
 const roles = [
   { value: "owner", label: "Owner" },
   { value: "member", label: "Member" }
@@ -24,14 +31,22 @@ export function FamilyForm({
   const [name, setName] = useState(member?.name ?? "");
   const [role, setRole] = useState(member?.role === "owner" ? "owner" : "member");
   const [email, setEmail] = useState(member?.email ?? "");
-  const [error, setError] = useState("");
   const isEditing = Boolean(member);
+  const { errors, setAll, clearAll } = useFormErrors();
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!name.trim() || name.trim().length > maxMemberNameLength || !role.trim() || (!isEditing && !email.trim())) {
-      setError("Name up to 30 characters, role, and email are required.");
+    const nextErrors = {
+      name: cappedName(name),
+      role: mustSelect(role, "Role"),
+      email: isEditing
+        ? null
+        : composeValidators(requiredString(email, "Email"))
+    };
+
+    setAll(nextErrors);
+    if (Object.values(nextErrors).some(Boolean)) {
       return;
     }
 
@@ -44,20 +59,22 @@ export function FamilyForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
-      <FormError message={error} />
-      <Field label="Name">
-        <Input
+    <form
+      onSubmit={(event) => {
+        clearAll();
+        handleSubmit(event);
+      }}
+      className="grid gap-4 sm:grid-cols-2"
+    >
+      <Field label="Name" error={errors.name}>
+        <CappedTextInput
           value={name}
-          maxLength={maxMemberNameLength}
-          onChange={(event) => setName(event.target.value.slice(0, maxMemberNameLength))}
+          onChange={setName}
+          maxLength={MAX_NAME_LENGTH}
           required
         />
-        <p className="mt-1 text-right text-xs text-slate-400">
-          {name.length}/{maxMemberNameLength}
-        </p>
       </Field>
-      <Field label="Role">
+      <Field label="Role" error={errors.role}>
         <Select value={role} onChange={(event) => setRole(event.target.value)} required>
           {roles.map((option) => (
             <option key={option.value} value={option.value}>
@@ -66,8 +83,13 @@ export function FamilyForm({
           ))}
         </Select>
       </Field>
-      <Field label="Email">
-        <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required={!isEditing} />
+      <Field label="Email" error={errors.email}>
+        <Input
+          type="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          required={!isEditing}
+        />
       </Field>
       <FormActions submitLabel={member ? "Save changes" : "Add member"} onCancel={onCancel} />
     </form>

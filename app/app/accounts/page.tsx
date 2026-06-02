@@ -7,6 +7,7 @@ import {
   getAccounts,
   type AccountImpact
 } from "@/src/lib/data/accounts";
+import { getHouseholdMembers } from "@/src/lib/data/household-members";
 
 export default async function AccountsPage() {
   const supabase = await createClient();
@@ -31,9 +32,10 @@ export default async function AccountsPage() {
 
   const householdId = member.household_id;
 
-  const [accounts, accountBalances] = await Promise.all([
+  const [accounts, accountBalances, members] = await Promise.all([
     getAccounts(householdId),
     getAccountBalanceMap(householdId),
+    getHouseholdMembers(householdId),
   ]);
 
   const impacts = await Promise.all(
@@ -49,6 +51,7 @@ export default async function AccountsPage() {
       accounts={accounts}
       accountBalances={accountBalances}
       accountImpacts={accountImpacts}
+      members={members}
     />
   );
 }

@@ -13,14 +13,14 @@ Authentication uses Supabase Auth with `/login`, `/signup`, and protected `/app`
 - First-login household onboarding where users can create a household or join an existing household by code.
 - Persistent short household invite codes shown after onboarding and in Settings > Household, with one-click copy.
 - Protected dashboard routes under `/app`.
-- Transactions page loaded from Supabase with add, edit, delete, transfers between accounts, default member selection from the logged-in user, search, and filters for date range, type, category, member, and account.
+- Transactions page loaded from Supabase with add, edit, delete, transfers between accounts, default member selection from the logged-in user, search, and filters for date range, type, category, member, and account. The Add Transaction form and the Account filter use a 2-level account picker grouped by Shared and per-member, mirroring the Accounts page.
 - Categories page loaded from Supabase with add, edit, and delete actions for income and expense categories. Deleting a category keeps transactions but clears their category assignment; budgets keyed on that category lose their target.
 - Budget page loaded from Supabase with expense-category limits, spent amount, remaining amount, percentage used, progress bars, and a custom month picker.
 - Reports page with Supabase-backed income vs expense, net cashflow, spending by category, and expense by member.
 - Family page loaded from Supabase for household members and member-level spending or contribution summaries.
-- Accounts page for cash, bank, credit, and savings accounts loaded from Supabase with create, edit, and delete actions protected by household RLS. Deleting an account requires no linked transactions; linked savings goals cascade automatically.
+- Accounts page for cash, bank, credit, and savings accounts loaded from Supabase with create, edit, and delete actions protected by household RLS. Deleting an account requires no linked transactions; linked savings goals cascade automatically. Each account can be marked Shared (owned by the whole household) or Private (owned by a specific member), and the page groups accounts into "Shared" and per-member sections.
 - Savings Goals page loaded from Supabase with create, edit, delete, target amount, due date, and progress tracked from a selected savings account.
-- Polished forms with required-field validation, Indonesian amount formatting, 30-character caps for key names/titles, and custom date picker controls.
+- Polished forms with per-field validation, Indonesian amount formatting, 30-character caps for key names/titles, and custom date picker controls.
 - Header profile menu with quick access to a settings popup and logout confirmation.
 - Settings popup with left navigation for Profile and Household. Profile and household settings save to Supabase.
 
@@ -87,5 +87,4 @@ npm run start
 - CSV import and export templates.
 - More report filters and printable summaries.
 - Dark theme implementation.
-- Shared validation and formatting helpers for all financial forms.
 - Optional real-time household collaboration with Supabase Realtime.

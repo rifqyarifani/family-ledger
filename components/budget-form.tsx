@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Field, Input, Select } from "@/components/form-field";
-import { FormActions, FormError } from "@/components/form-actions";
+import { Field, Select, MoneyInput } from "@/components/form-field";
+import { FormActions } from "@/components/form-actions";
 import { MonthPicker } from "@/components/month-picker";
-import { formatInputAmount, handleBlockedNumberKeys, parseFormattedAmount, sanitizeFormattedAmount } from "@/lib/format-utils";
+import { useFormErrors } from "@/hooks/use-form-errors";
+import { formatInputAmount, parseFormattedAmount } from "@/lib/format-utils";
 import { getCurrentMonthKey } from "@/lib/finance";
 import { createId } from "@/lib/utils";
+import { mustSelect, positiveAmount } from "@/lib/validation";
 import type { Budget } from "@/types/finance";
 
 export function BudgetForm({
@@ -31,34 +33,39 @@ export function BudgetForm({
     budget ? formatInputAmount(budget.limit) : "0"
   );
   const [month, setMonth] = useState(budget?.month ?? defaultMonth ?? getCurrentMonthKey());
-  const [error, setError] = useState("");
+  const { errors, setAll, clearAll } = useFormErrors();
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const numericLimit = parseFormattedAmount(limit);
 
-    if (
-      !category ||
-      !month ||
-      !Number.isFinite(numericLimit) ||
-      numericLimit <= 0
-    ) {
-      setError("Expense category, month, and a positive limit are required.");
+    const nextErrors = {
+      category: mustSelect(category, "Expense category"),
+      month: mustSelect(month, "Month"),
+      limit: positiveAmount(limit, parseFormattedAmount, "Limit")
+    };
+
+    setAll(nextErrors);
+    if (Object.values(nextErrors).some(Boolean)) {
       return;
     }
 
     onSubmit({
       id: budget?.id ?? createId("budget"),
       category,
-      limit: numericLimit,
+      limit: parseFormattedAmount(limit),
       month
     });
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
-      <FormError message={error} />
-      <Field label="Category">
+    <form
+      onSubmit={(event) => {
+        clearAll();
+        handleSubmit(event);
+      }}
+      className="grid gap-4 sm:grid-cols-2"
+    >
+      <Field label="Category" error={errors.category}>
         <Select value={category} onChange={(event) => setCategory(event.target.value)} required>
           {expenseCategories.map((expenseCategory) => (
             <option key={expenseCategory} value={expenseCategory}>
@@ -67,18 +74,8 @@ export function BudgetForm({
           ))}
         </Select>
       </Field>
-      <Field label="Limit">
-        <Input
-          type="text"
-          inputMode="decimal"
-          value={limit}
-          onKeyDown={handleBlockedNumberKeys}
-          onChange={(event) =>
-            setLimit(sanitizeFormattedAmount(event.target.value))
-          }
-          className="no-spinner"
-          required
-        />
+      <Field label="Limit" error={errors.limit}>
+        <MoneyInput value={limit} onChange={setLimit} required />
       </Field>
       <div className="block">
         <span className="text-sm font-medium text-ink-secondary">Month</span>

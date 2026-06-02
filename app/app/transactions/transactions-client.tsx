@@ -16,6 +16,7 @@ import { Modal } from "@/components/modal";
 import { PageIntro } from "@/components/page-intro";
 import { TransactionForm } from "@/components/transaction-form";
 import { TransactionTable } from "@/components/transaction-table";
+import { groupAccountsByOwner } from "@/lib/finance";
 import { useCrudDialog } from "@/hooks/use-crud-dialog";
 import { useRunAction } from "@/hooks/use-run-action";
 import type {
@@ -55,6 +56,11 @@ export function TransactionsClient({
     startDate: "",
     endDate: "",
   });
+
+  const accountGroups = useMemo(
+    () => groupAccountsByOwner(accounts, familyMembers),
+    [accounts, familyMembers]
+  );
 
   const categoryNames = useMemo(
     () =>
@@ -217,10 +223,23 @@ export function TransactionsClient({
                 }
               >
                 <option value="all">All accounts</option>
-                {accounts.map((account) => (
-                  <option key={account.id} value={account.id}>
-                    {account.name}
-                  </option>
+                {accountGroups.shared.length > 0 ? (
+                  <optgroup label="Shared">
+                    {accountGroups.shared.map((account) => (
+                      <option key={account.id} value={account.id}>
+                        {account.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                ) : null}
+                {accountGroups.byMember.map(({ member, accounts: memberAccounts }) => (
+                  <optgroup key={member.id} label={`${member.name}'s accounts`}>
+                    {memberAccounts.map((account) => (
+                      <option key={account.id} value={account.id}>
+                        {account.name}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </Select>
             </Field>

@@ -1,17 +1,29 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { DatePicker } from "@/components/date-picker";
 import { TimePicker } from "@/components/time-picker";
-import { Field, Input, Select, Textarea } from "@/components/form-field";
+import {
+  Field,
+  Select,
+  Textarea,
+  CappedTextInput,
+  MoneyInput
+} from "@/components/form-field";
 import { FormActions } from "@/components/form-actions";
+import { useFormErrors } from "@/hooks/use-form-errors";
 import { transactionCategories } from "@/constants/finance";
-import { formatInputAmount, handleBlockedNumberKeys, parseFormattedAmount, sanitizeFormattedAmount } from "@/lib/format-utils";
-import { getCurrentTime } from "@/lib/finance";
+import { formatInputAmount, parseFormattedAmount } from "@/lib/format-utils";
+import { getCurrentTime, groupAccountsByOwner } from "@/lib/finance";
 import { createId } from "@/lib/utils";
+import {
+  MAX_NAME_LENGTH,
+  cappedName,
+  mustSelect,
+  positiveAmount,
+  requiredString
+} from "@/lib/validation";
 import type { Account, Category, FamilyMember, Transaction, TransactionType } from "@/types/finance";
-
-const maxTitleLength = 30;
 
 type FormValues = {
   title: string;
@@ -75,7 +87,7 @@ export function TransactionForm({
     time: transaction?.time ?? getCurrentTime(),
     note: transaction?.note ?? ""
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const { errors, setAll, clearAll } = useFormErrors();
 
   function updateField(name: keyof FormValues, value: string) {
     setValues((current) => ({ ...current, [name]: value }));
@@ -102,32 +114,44 @@ export function TransactionForm({
     }));
   }
 
+  const accountGroups = useMemo(
+    () => groupAccountsByOwner(accounts, members),
+    [accounts, members]
+  );
+
+  const destinationAccountGroups = useMemo(
+    () =>
+      groupAccountsByOwner(
+        accounts.filter((account) => account.id !== values.accountId),
+        members
+      ),
+    [accounts, members, values.accountId]
+  );
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const nextErrors: Record<string, string> = {};
     const amount = parseFormattedAmount(values.amount);
+    const isTransfer = values.type === "transfer";
+    const sameAccount = values.accountId === values.transferAccountId;
 
-    if (!values.title.trim() || values.title.trim().length > maxTitleLength) {
-      nextErrors.title = "Title up to 30 characters is required.";
-    }
-    if (!values.date) nextErrors.date = "Date is required.";
-    if (!values.memberId) nextErrors.memberId = "Choose a family member.";
-    if (!values.accountId) nextErrors.accountId = "Choose an account.";
-    if (!allowTransfer && values.type === "transfer") {
-      nextErrors.type = "Choose income or expense.";
-    }
-    if (values.type === "transfer") {
-      if (!values.transferAccountId) nextErrors.transferAccountId = "Choose a destination account.";
-      if (values.accountId === values.transferAccountId) {
-        nextErrors.transferAccountId = "Choose a different destination account.";
-      }
-    }
-    if (values.type !== "transfer" && !values.category.trim()) nextErrors.category = "Category is required.";
-    if (!Number.isFinite(amount) || amount <= 0) nextErrors.amount = "Amount must be positive.";
+    const nextErrors = {
+      title: cappedName(values.title, "Title"),
+      date: requiredString(values.date, "Date"),
+      memberId: mustSelect(values.memberId, "Family member"),
+      accountId: mustSelect(values.accountId, "Account"),
+      type: !allowTransfer && isTransfer ? "Choose income or expense." : null,
+      transferAccountId: isTransfer
+        ? mustSelect(values.transferAccountId, "Destination account") ??
+          (sameAccount ? "Choose a different destination account." : null)
+        : null,
+      category: !isTransfer
+        ? mustSelect(values.category, "Category")
+        : null,
+      amount: positiveAmount(values.amount, parseFormattedAmount, "Amount")
+    };
 
-    setErrors(nextErrors);
-
-    if (Object.keys(nextErrors).length > 0) {
+    setAll(nextErrors);
+    if (Object.values(nextErrors).some(Boolean)) {
       return;
     }
 
@@ -153,21 +177,22 @@ export function TransactionForm({
     : [...transactionCategories];
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
+    <form
+      onSubmit={(event) => {
+        clearAll();
+        handleSubmit(event);
+      }}
+      className="grid gap-4 sm:grid-cols-2"
+    >
       <Field label="Title" error={errors.title}>
-        <Input
+        <CappedTextInput
           value={values.title}
-          maxLength={maxTitleLength}
-          onChange={(event) =>
-            updateField("title", event.target.value.slice(0, maxTitleLength))
-          }
+          onChange={(value) => updateField("title", value)}
+          maxLength={MAX_NAME_LENGTH}
           required
         />
-        <p className="mt-1 text-right text-xs text-slate-400">
-          {values.title.length}/{maxTitleLength}
-        </p>
       </Field>
-      <Field label="Type">
+      <Field label="Type" error={errors.type}>
         <Select
           value={values.type}
           onChange={(event) => handleTypeChange(event.target.value as TransactionType)}
@@ -179,15 +204,9 @@ export function TransactionForm({
         </Select>
       </Field>
       <Field label="Amount" error={errors.amount}>
-        <Input
-          type="text"
-          inputMode="decimal"
+        <MoneyInput
           value={values.amount}
-          onKeyDown={handleBlockedNumberKeys}
-          onChange={(event) =>
-            updateField("amount", sanitizeFormattedAmount(event.target.value))
-          }
-          className="no-spinner"
+          onChange={(value) => updateField("amount", value)}
           required
         />
       </Field>
@@ -198,13 +217,24 @@ export function TransactionForm({
             onChange={(event) => updateField("transferAccountId", event.target.value)}
             required
           >
-            {accounts
-              .filter((account) => account.id !== values.accountId)
-              .map((account) => (
-                <option key={account.id} value={account.id}>
-                  {account.name}
-                </option>
-              ))}
+            {destinationAccountGroups.shared.length > 0 ? (
+              <optgroup label="Shared">
+                {destinationAccountGroups.shared.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.name}
+                  </option>
+                ))}
+              </optgroup>
+            ) : null}
+            {destinationAccountGroups.byMember.map(({ member, accounts: memberAccounts }) => (
+              <optgroup key={member.id} label={`${member.name}'s accounts`}>
+                {memberAccounts.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.name}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
           </Select>
         </Field>
       ) : (
@@ -223,10 +253,11 @@ export function TransactionForm({
             </Select>
           ) : (
             <>
-              <Input
-                list="transaction-categories"
+              <CappedTextInput
                 value={values.category}
-                onChange={(event) => updateField("category", event.target.value)}
+                onChange={(value) => updateField("category", value)}
+                showCounter={false}
+                list="transaction-categories"
                 required
               />
               <datalist id="transaction-categories">
@@ -249,10 +280,23 @@ export function TransactionForm({
       </Field>
       <Field label={isTransfer ? "From account" : "Account"} error={errors.accountId}>
         <Select value={values.accountId} onChange={(event) => handleSourceAccountChange(event.target.value)} required>
-          {accounts.map((account) => (
-            <option key={account.id} value={account.id}>
-              {account.name}
-            </option>
+          {accountGroups.shared.length > 0 ? (
+            <optgroup label="Shared">
+              {accountGroups.shared.map((account) => (
+                <option key={account.id} value={account.id}>
+                  {account.name}
+                </option>
+              ))}
+            </optgroup>
+          ) : null}
+          {accountGroups.byMember.map(({ member, accounts: memberAccounts }) => (
+            <optgroup key={member.id} label={`${member.name}'s accounts`}>
+              {memberAccounts.map((account) => (
+                <option key={account.id} value={account.id}>
+                  {account.name}
+                </option>
+              ))}
+            </optgroup>
           ))}
         </Select>
       </Field>

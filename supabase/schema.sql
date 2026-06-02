@@ -59,6 +59,7 @@ create table if not exists public.accounts (
   type public.account_type not null default 'bank',
   opening_balance numeric(14, 2) not null default 0,
   icon_color text,
+  owner_member_id uuid references public.household_members(id) on delete set null,
   created_by uuid references auth.users(id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -127,6 +128,7 @@ create table if not exists public.savings_goals (
 create index if not exists household_members_household_id_idx on public.household_members(household_id);
 create index if not exists household_members_user_id_idx on public.household_members(user_id);
 create index if not exists accounts_household_id_idx on public.accounts(household_id);
+create index if not exists accounts_owner_member_id_idx on public.accounts(owner_member_id);
 create index if not exists categories_household_id_idx on public.categories(household_id);
 create index if not exists transactions_household_date_idx on public.transactions(household_id, transaction_date desc);
 create index if not exists transactions_account_id_idx on public.transactions(account_id);

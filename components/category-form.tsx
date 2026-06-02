@@ -17,48 +17,49 @@ import {
   TrendingUp,
   DollarSign,
   ShoppingBag,
-  Ambulance,
+  Ambulance
 } from "lucide-react";
-import { Field, Input, Select } from "@/components/form-field";
-import { FormActions, FormError } from "@/components/form-actions";
-import { cn } from "@/lib/utils";
+import { Field, Select, CappedTextInput } from "@/components/form-field";
+import { FormActions } from "@/components/form-actions";
+import { ColorPicker, type ColorOption } from "@/components/color-picker";
+import { IconPicker, type IconOption } from "@/components/icon-picker";
+import { useFormErrors } from "@/hooks/use-form-errors";
 import { createId } from "@/lib/utils";
+import { MAX_NAME_LENGTH, cappedName, mustSelect } from "@/lib/validation";
 import type { Category } from "@/types/finance";
 
-const maxCategoryLength = 30;
-
-const iconOptions = [
-  { name: "tag", icon: Tag },
-  { name: "utensils", icon: Utensils },
-  { name: "car", icon: Car },
-  { name: "home", icon: Home },
-  { name: "zap", icon: Zap },
-  { name: "graduation-cap", icon: GraduationCap },
-  { name: "tv", icon: Tv },
-  { name: "heart", icon: Heart },
-  { name: "shirt", icon: Shirt },
-  { name: "plane", icon: Plane },
-  { name: "gift", icon: Gift },
-  { name: "briefcase", icon: Briefcase },
-  { name: "trending-up", icon: TrendingUp },
-  { name: "dollar-sign", icon: DollarSign },
-  { name: "shopping-bag", icon: ShoppingBag },
-  { name: "ambulance", icon: Ambulance },
+const iconOptions: IconOption[] = [
+  { value: "tag", label: "Tag", icon: Tag },
+  { value: "utensils", label: "Utensils", icon: Utensils },
+  { value: "car", label: "Car", icon: Car },
+  { value: "home", label: "Home", icon: Home },
+  { value: "zap", label: "Zap", icon: Zap },
+  { value: "graduation-cap", label: "Graduation Cap", icon: GraduationCap },
+  { value: "tv", label: "Tv", icon: Tv },
+  { value: "heart", label: "Heart", icon: Heart },
+  { value: "shirt", label: "Shirt", icon: Shirt },
+  { value: "plane", label: "Plane", icon: Plane },
+  { value: "gift", label: "Gift", icon: Gift },
+  { value: "briefcase", label: "Briefcase", icon: Briefcase },
+  { value: "trending-up", label: "Trending Up", icon: TrendingUp },
+  { value: "dollar-sign", label: "Dollar Sign", icon: DollarSign },
+  { value: "shopping-bag", label: "Shopping Bag", icon: ShoppingBag },
+  { value: "ambulance", label: "Ambulance", icon: Ambulance }
 ];
 
-const colorOptions = [
-  "#64748b",
-  "#9fe870",
-  "#3b82f6",
-  "#f59e0b",
-  "#ef4444",
-  "#8b5cf6",
-  "#06b6d4",
-  "#ec4899",
-  "#6366f1",
-  "#10b981",
-  "#f97316",
-  "#14b8a6",
+const colorOptions: ColorOption[] = [
+  { value: "#64748b", label: "Slate" },
+  { value: "#9fe870", label: "Lime" },
+  { value: "#3b82f6", label: "Blue" },
+  { value: "#f59e0b", label: "Amber" },
+  { value: "#ef4444", label: "Red" },
+  { value: "#8b5cf6", label: "Purple" },
+  { value: "#06b6d4", label: "Cyan" },
+  { value: "#ec4899", label: "Pink" },
+  { value: "#6366f1", label: "Indigo" },
+  { value: "#10b981", label: "Emerald" },
+  { value: "#f97316", label: "Orange" },
+  { value: "#14b8a6", label: "Teal" }
 ];
 
 export function CategoryForm({
@@ -72,49 +73,53 @@ export function CategoryForm({
 }) {
   const [name, setName] = useState(category?.name ?? "");
   const [type, setType] = useState<"income" | "expense">(
-    category?.type === "income" ? "income" : "expense",
+    category?.type === "income" ? "income" : "expense"
   );
   const [icon, setIcon] = useState(category?.icon ?? "tag");
   const [color, setColor] = useState(
-    category?.color ?? (type === "income" ? "#2ead4b" : "#d03238"),
+    category?.color ?? (type === "income" ? "#2ead4b" : "#d03238")
   );
-  const [error, setError] = useState("");
+  const { errors, setAll, clearAll } = useFormErrors();
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const trimmedName = name.trim();
 
-    if (!trimmedName || trimmedName.length > maxCategoryLength) {
-      setError("Category name must be 1-30 characters.");
+    const nextErrors = {
+      name: cappedName(name, "Category name"),
+      type: mustSelect(type, "Type")
+    };
+
+    setAll(nextErrors);
+    if (Object.values(nextErrors).some(Boolean)) {
       return;
     }
 
     onSubmit({
       id: category?.id ?? createId("category"),
-      name: trimmedName,
+      name: name.trim(),
       type,
       icon,
-      color,
+      color
     });
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
-      <FormError message={error} />
-      <Field label="Category name">
-        <Input
+    <form
+      onSubmit={(event) => {
+        clearAll();
+        handleSubmit(event);
+      }}
+      className="grid gap-4 sm:grid-cols-2"
+    >
+      <Field label="Category name" error={errors.name}>
+        <CappedTextInput
           value={name}
-          maxLength={maxCategoryLength}
-          onChange={(event) =>
-            setName(event.target.value.slice(0, maxCategoryLength))
-          }
+          onChange={setName}
+          maxLength={MAX_NAME_LENGTH}
           required
         />
-        <p className="mt-1 text-right text-xs text-ink-muted">
-          {name.length}/{maxCategoryLength}
-        </p>
       </Field>
-      <Field label="Type">
+      <Field label="Type" error={errors.type}>
         <Select
           value={type}
           onChange={(event) =>
@@ -127,46 +132,20 @@ export function CategoryForm({
         </Select>
       </Field>
       <Field label="Icon">
-        <div className="flex flex-wrap gap-2">
-          {iconOptions.map((iconOption) => {
-            const Icon = iconOption.icon;
-            return (
-              <button
-                key={iconOption.name}
-                type="button"
-                onClick={() => setIcon(iconOption.name)}
-                className={cn(
-                  "h-9 w-9 rounded-lg border-2 flex items-center justify-center transition-all",
-                  icon === iconOption.name
-                    ? "border-ink bg-surface-subtle"
-                    : "border-transparent hover:bg-surface-subtle",
-                )}
-                aria-label={iconOption.name}
-              >
-                <Icon className="h-4 w-4" aria-hidden="true" />
-              </button>
-            );
-          })}
-        </div>
+        <IconPicker
+          value={icon}
+          options={iconOptions}
+          onChange={setIcon}
+          ariaLabel="Category icon"
+        />
       </Field>
       <Field label="Color">
-        <div className="flex flex-wrap gap-2">
-          {colorOptions.map((colorOption) => (
-            <button
-              key={colorOption}
-              type="button"
-              onClick={() => setColor(colorOption)}
-              className={cn(
-                "h-8 w-8 rounded-full border-2 transition-all",
-                color === colorOption
-                  ? "border-ink scale-110"
-                  : "border-transparent hover:scale-105",
-              )}
-              style={{ backgroundColor: colorOption }}
-              aria-label={colorOption}
-            />
-          ))}
-        </div>
+        <ColorPicker
+          value={color}
+          options={colorOptions}
+          onChange={setColor}
+          ariaLabel="Category color"
+        />
       </Field>
       <div className="sm:col-span-2">
         <FormActions

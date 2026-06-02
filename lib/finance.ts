@@ -1,4 +1,4 @@
-import type { Budget, Transaction, TransactionMonthMetric } from "@/types/finance";
+import type { Account, Budget, FamilyMember, Transaction, TransactionMonthMetric } from "@/types/finance";
 
 const currencyFormatter = new Intl.NumberFormat("id-ID", {
   style: "currency",
@@ -174,4 +174,46 @@ export function getAdjacentMonth(monthKey: string, offset: number) {
   const [year, month] = monthKey.split("-").map(Number);
   const date = new Date(year, month - 1 + offset, 1);
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+export type AccountGroups = {
+  shared: Account[];
+  byMember: { member: FamilyMember; accounts: Account[] }[];
+};
+
+export function groupAccountsByOwner(
+  accounts: Account[],
+  members: FamilyMember[]
+): AccountGroups {
+  const memberById = new Map<string, FamilyMember>();
+  for (const member of members) {
+    memberById.set(member.id, member);
+  }
+
+  const shared: Account[] = [];
+  const privateByMemberId = new Map<string, Account[]>();
+
+  for (const account of accounts) {
+    if (!account.ownerMemberId) {
+      shared.push(account);
+      continue;
+    }
+    if (!memberById.has(account.ownerMemberId)) {
+      shared.push(account);
+      continue;
+    }
+    const list = privateByMemberId.get(account.ownerMemberId) ?? [];
+    list.push(account);
+    privateByMemberId.set(account.ownerMemberId, list);
+  }
+
+  const byMember: { member: FamilyMember; accounts: Account[] }[] = [];
+  for (const member of members) {
+    const list = privateByMemberId.get(member.id);
+    if (list && list.length > 0) {
+      byMember.push({ member, accounts: list });
+    }
+  }
+
+  return { shared, byMember };
 }

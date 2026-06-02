@@ -58,7 +58,7 @@ export function DashboardClient({
   accountBalances,
   familyMembers,
   budgets,
-  savingsGoals,
+  savingsGoals
 }: {
   monthlyTransactions: Transaction[];
   cashflowTransactions: TransactionMonthMetric[];
