@@ -6,6 +6,7 @@ import { getBudgetsForMonth } from "@/src/lib/data/budgets";
 import { getActiveHousehold } from "@/src/lib/data/households";
 import { getHouseholdMembers } from "@/src/lib/data/household-members";
 import { getSavingsGoals } from "@/src/lib/data/savings-goals";
+import { getCategories } from "@/src/lib/data/categories";
 import {
   getRecentTransactions,
   getTransactionMonthMetrics,
@@ -50,13 +51,14 @@ export default async function DashboardPage() {
   }
 
   const currentMonth = getCurrentMonthKey();
-  const [monthlyPage, cashflowTransactions, recentPage, accounts, familyMembers, budgets, savingsGoals] =
+  const [monthlyPage, cashflowTransactions, recentPage, accounts, familyMembers, categories, budgets, savingsGoals] =
     await Promise.all([
       getTransactionsForMonth(household.id, currentMonth),
       getTransactionMonthMetrics(household.id),
       getRecentTransactions(household.id, 5),
       getAccounts(household.id),
       getHouseholdMembers(household.id),
+      getCategories(household.id),
       getBudgetsForMonth(household.id, currentMonth),
       getSavingsGoals(household.id)
     ]);
@@ -70,6 +72,7 @@ export default async function DashboardPage() {
       accounts={accounts}
       accountBalances={accountBalances}
       familyMembers={familyMembers}
+      categories={categories}
       budgets={budgets}
       savingsGoals={applySavingsAccountTracking({ goals: savingsGoals, accounts, accountBalances })}
     />

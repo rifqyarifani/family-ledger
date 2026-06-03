@@ -25,6 +25,7 @@ type CashflowDatum = {
 type SpendingDatum = {
   category: string;
   amount: number;
+  color?: string;
 };
 
 export function CashflowTrendChart({ data }: { data: CashflowDatum[] }) {
@@ -44,6 +45,8 @@ export function CashflowTrendChart({ data }: { data: CashflowDatum[] }) {
 }
 
 export function SpendingBreakdownChart({ data }: { data: SpendingDatum[] }) {
+  const total = data.reduce((sum, item) => sum + item.amount, 0);
+
   return (
     <div className="flex h-full flex-col">
       <div className="min-h-0 flex-1">
@@ -51,7 +54,10 @@ export function SpendingBreakdownChart({ data }: { data: SpendingDatum[] }) {
           <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
             <Pie data={data} dataKey="amount" nameKey="category" innerRadius={52} outerRadius={82} paddingAngle={4}>
               {data.map((entry, index) => (
-                <Cell key={entry.category} fill={chartColors[index % chartColors.length]} />
+                <Cell
+                  key={entry.category}
+                  fill={entry.color ?? chartColors[index % chartColors.length]}
+                />
               ))}
             </Pie>
             <Tooltip formatter={(value: number) => formatCurrency(value)} />
@@ -59,16 +65,22 @@ export function SpendingBreakdownChart({ data }: { data: SpendingDatum[] }) {
         </ResponsiveContainer>
       </div>
       <div className="mt-3 grid grid-cols-1 gap-2 border-t border-surface pt-3 sm:grid-cols-2">
-        {data.map((item, index) => (
-          <div key={item.category} className="flex min-w-0 items-center gap-2 text-xs">
-            <span
-              className="h-2.5 w-2.5 shrink-0 rounded-full"
-              style={{ backgroundColor: chartColors[index % chartColors.length] }}
-              aria-hidden="true"
-            />
-            <span className="truncate text-ink-secondary">{item.category}</span>
-          </div>
-        ))}
+        {data.map((item, index) => {
+          const percentage = total > 0 ? Math.round((item.amount / total) * 100) : 0;
+          return (
+            <div key={item.category} className="flex items-center justify-between gap-2 text-xs">
+              <div className="flex min-w-0 items-center gap-2">
+                <span
+                  className="h-2.5 w-2.5 shrink-0 rounded-full"
+                  style={{ backgroundColor: item.color ?? chartColors[index % chartColors.length] }}
+                  aria-hidden="true"
+                />
+                <span className="truncate text-ink-secondary">{item.category}</span>
+              </div>
+              <span className="shrink-0 font-medium text-ink">{percentage}%</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

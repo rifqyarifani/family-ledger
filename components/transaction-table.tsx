@@ -63,6 +63,21 @@ export function TransactionTable({
       existing.push(transaction);
       groups.set(dateKey, existing);
     }
+    for (const rows of groups.values()) {
+      rows.sort((a, b) => {
+        if (a.time && b.time) {
+          const byTime = b.time.localeCompare(a.time);
+          if (byTime !== 0) return byTime;
+        } else if (a.time) {
+          return -1;
+        } else if (b.time) {
+          return 1;
+        }
+        const byCreated = b.createdAt.localeCompare(a.createdAt);
+        if (byCreated !== 0) return byCreated;
+        return b.id.localeCompare(a.id);
+      });
+    }
     return Array.from(groups.entries()).sort(([a], [b]) => b.localeCompare(a));
   }, [transactions]);
 

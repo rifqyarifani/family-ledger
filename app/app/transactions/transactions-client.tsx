@@ -121,7 +121,21 @@ export function TransactionsClient({
           matchesEnd
         );
       })
-      .sort((a, b) => b.date.localeCompare(a.date));
+      .sort((a, b) => {
+        const byDate = b.date.localeCompare(a.date);
+        if (byDate !== 0) return byDate;
+        if (a.time && b.time) {
+          const byTime = b.time.localeCompare(a.time);
+          if (byTime !== 0) return byTime;
+        } else if (a.time) {
+          return -1;
+        } else if (b.time) {
+          return 1;
+        }
+        const byCreated = b.createdAt.localeCompare(a.createdAt);
+        if (byCreated !== 0) return byCreated;
+        return b.id.localeCompare(a.id);
+      });
   }, [filters, transactions]);
 
   const visibleTransactions = filteredTransactions.slice(0, visibleCount);

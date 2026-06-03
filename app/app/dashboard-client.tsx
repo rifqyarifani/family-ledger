@@ -24,6 +24,7 @@ import type {
   Account,
   AccountBalanceMap,
   Budget,
+  Category,
   FamilyMember,
   SavingsGoal,
   Transaction,
@@ -57,6 +58,7 @@ export function DashboardClient({
   accounts,
   accountBalances,
   familyMembers,
+  categories = [],
   budgets,
   savingsGoals
 }: {
@@ -66,6 +68,7 @@ export function DashboardClient({
   accounts: Account[];
   accountBalances: AccountBalanceMap;
   familyMembers: FamilyMember[];
+  categories?: Category[];
   budgets: Budget[];
   savingsGoals: SavingsGoal[];
 }) {
@@ -95,10 +98,13 @@ export function DashboardClient({
     () => groupTransactionsByMonth(cashflowTransactions),
     [cashflowTransactions],
   );
-  const spending = useMemo(
-    () => groupTransactionsByCategory(monthlyTransactions),
-    [monthlyTransactions],
-  );
+  const spending = useMemo(() => {
+    const grouped = groupTransactionsByCategory(monthlyTransactions);
+    return grouped.map((item) => {
+      const category = categories.find((c) => c.name === item.category);
+      return { ...item, color: category?.color };
+    });
+  }, [monthlyTransactions, categories]);
   const currentBudgets = useMemo(
     () => budgets.filter((budget) => budget.month === month).slice(0, 2),
     [budgets, month],

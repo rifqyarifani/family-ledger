@@ -35,6 +35,7 @@ type TransactionRow = {
 
 export type TransactionCursor = {
   transactionDate: string;
+  transactionTime: string | null;
   createdAt: string;
   id: string;
 };
@@ -49,6 +50,7 @@ type TransactionMetricRow = {
   type: TransactionType;
   amount: number | string;
   transaction_date: string;
+  transaction_time: string | null;
 };
 
 type ReportTransactionRow = TransactionMetricRow & {
@@ -185,11 +187,22 @@ function applyTransactionCursor<T extends CursorChain>(query: T, cursor: Transac
     return query;
   }
 
-  return query.or(
-    `transaction_date.lt.${cursor.transactionDate},` +
-      `and(transaction_date.eq.${cursor.transactionDate},created_at.lt.${cursor.createdAt}),` +
-      `and(transaction_date.eq.${cursor.transactionDate},created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`
-  ) as T;
+  const date = cursor.transactionDate;
+  const time = cursor.transactionTime;
+  const createdAt = cursor.createdAt;
+  const id = cursor.id;
+
+  const orChain = time
+    ? `transaction_date.lt.${date},` +
+      `and(transaction_date.eq.${date},transaction_time.lt.${time}),` +
+      `and(transaction_date.eq.${date},transaction_time.eq.${time},created_at.lt.${createdAt}),` +
+      `and(transaction_date.eq.${date},transaction_time.eq.${time},created_at.eq.${createdAt},id.lt.${id})`
+    : `transaction_date.lt.${date},` +
+      `and(transaction_date.eq.${date},transaction_time.not.is.null),` +
+      `and(transaction_date.eq.${date},transaction_time.is.null,created_at.lt.${createdAt}),` +
+      `and(transaction_date.eq.${date},transaction_time.is.null,created_at.eq.${createdAt},id.lt.${id})`;
+
+  return query.or(orChain) as T;
 }
 
 async function normalizeTransactionInput(householdId: string, input: TransactionInput) {
@@ -273,6 +286,7 @@ export async function getTransactions(
     )
     .eq("household_id", householdId)
     .order("transaction_date", { ascending: false })
+    .order("transaction_time", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
     .order("id", { ascending: false });
 
@@ -289,6 +303,7 @@ export async function getTransactions(
     items.length === limit
       ? {
           transactionDate: items[items.length - 1].date,
+          transactionTime: items[items.length - 1].time ?? null,
           createdAt: items[items.length - 1].createdAt,
           id: items[items.length - 1].id,
         }
@@ -327,6 +342,7 @@ export async function getRecentTransactions(
     )
     .eq("household_id", householdId)
     .order("transaction_date", { ascending: false })
+    .order("transaction_time", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
     .order("id", { ascending: false });
 
@@ -343,6 +359,7 @@ export async function getRecentTransactions(
     items.length === limit
       ? {
           transactionDate: items[items.length - 1].date,
+          transactionTime: items[items.length - 1].time ?? null,
           createdAt: items[items.length - 1].createdAt,
           id: items[items.length - 1].id,
         }
@@ -359,10 +376,11 @@ export async function getTransactionMonthMetrics(householdId: string, monthsBack
 
   const { data, error } = await supabase
     .from("transactions")
-    .select("id, type, amount, transaction_date")
+    .select("id, type, amount, transaction_date, transaction_time")
     .eq("household_id", householdId)
     .gte("transaction_date", startDateStr)
     .order("transaction_date", { ascending: true })
+    .order("transaction_time", { ascending: true, nullsFirst: false })
     .returns<TransactionMetricRow[]>();
 
   if (error) {
@@ -386,6 +404,7 @@ export async function getReportTransactions(householdId: string, monthsBack = 12
         type,
         amount,
         transaction_date,
+        transaction_time,
         created_at,
         categories(name),
         household_members(display_name)
@@ -394,6 +413,9 @@ export async function getReportTransactions(householdId: string, monthsBack = 12
     .eq("household_id", householdId)
     .gte("transaction_date", startDateStr)
     .order("transaction_date", { ascending: false })
+    .order("transaction_time", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
     .returns<ReportTransactionRow[]>();
 
   if (error) {
@@ -482,6 +504,7 @@ export async function getTransactionsForMonth(
     .gte("transaction_date", startDate)
     .lt("transaction_date", endDate)
     .order("transaction_date", { ascending: false })
+    .order("transaction_time", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
     .order("id", { ascending: false });
 
@@ -498,6 +521,7 @@ export async function getTransactionsForMonth(
     items.length === limit
       ? {
           transactionDate: items[items.length - 1].date,
+          transactionTime: items[items.length - 1].time ?? null,
           createdAt: items[items.length - 1].createdAt,
           id: items[items.length - 1].id,
         }
