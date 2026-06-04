@@ -1,5 +1,5 @@
 import { DashboardClient } from "@/app/app/dashboard-client";
-import { EmptyState } from "@/components/empty-state";
+import { NoHouseholdCallout } from "@/components/no-household-callout";
 import { getCurrentMonthKey } from "@/lib/finance";
 import { getAccountBalanceMap, getAccounts } from "@/src/lib/data/accounts";
 import { getBudgetsForMonth } from "@/src/lib/data/budgets";
@@ -47,11 +47,11 @@ export default async function DashboardPage() {
   const household = await getActiveHousehold();
 
   if (!household) {
-    return <EmptyState title="No household found" message="Create a household before viewing the dashboard." />;
+    return <NoHouseholdCallout message="Create a household before viewing the dashboard." />;
   }
 
   const currentMonth = getCurrentMonthKey();
-  const [monthlyPage, cashflowTransactions, recentPage, accounts, familyMembers, categories, budgets, savingsGoals] =
+  const [monthlyPage, cashflowTransactions, recentPage, accounts, familyMembers, categories, budgets, savingsGoals, accountBalances] =
     await Promise.all([
       getTransactionsForMonth(household.id, currentMonth),
       getTransactionMonthMetrics(household.id),
@@ -60,9 +60,9 @@ export default async function DashboardPage() {
       getHouseholdMembers(household.id),
       getCategories(household.id),
       getBudgetsForMonth(household.id, currentMonth),
-      getSavingsGoals(household.id)
+      getSavingsGoals(household.id),
+      getAccountBalanceMap(household.id)
     ]);
-  const accountBalances = await getAccountBalanceMap(household.id, accounts);
 
   return (
     <DashboardClient

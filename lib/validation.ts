@@ -67,3 +67,47 @@ export function composeValidators(
   }
   return null;
 }
+
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const MONTH_KEY_PATTERN = /^\d{4}-\d{2}$/;
+const TIME_PATTERN = /^\d{2}:\d{2}(:\d{2})?$/;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function isValidISODate(value: string): boolean {
+  if (!ISO_DATE_PATTERN.test(value)) {
+    return false;
+  }
+  const [yearStr, monthStr, dayStr] = value.split("-");
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+  const day = Number(dayStr);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
+}
+
+export function isValidTime(value: string): boolean {
+  if (!TIME_PATTERN.test(value)) {
+    return false;
+  }
+  const parts = value.split(":");
+  const hours = Number(parts[0]);
+  const minutes = Number(parts[1]);
+  return hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59;
+}
+
+export function isValidMonthKey(value: string): boolean {
+  if (!MONTH_KEY_PATTERN.test(value)) {
+    return false;
+  }
+  const month = Number(value.slice(5, 7));
+  return month >= 1 && month <= 12;
+}
+
+export function isValidUuid(value: string): boolean {
+  return UUID_PATTERN.test(value);
+}
+

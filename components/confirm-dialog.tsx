@@ -11,6 +11,8 @@ export function ConfirmDialog({
   message,
   confirmLabel = "Delete",
   disabled = false,
+  pending = false,
+  pendingLabel,
   onConfirm,
   onClose
 }: {
@@ -19,6 +21,8 @@ export function ConfirmDialog({
   message: string;
   confirmLabel?: string;
   disabled?: boolean;
+  pending?: boolean;
+  pendingLabel?: string;
   onConfirm: () => void;
   onClose: () => void;
 }) {
@@ -37,7 +41,7 @@ export function ConfirmDialog({
       aria-label={title}
       aria-describedby="confirm-message"
       onClick={(event) => {
-        if (event.target === event.currentTarget) {
+        if (event.target === event.currentTarget && !pending) {
           onClose();
         }
       }}
@@ -53,11 +57,11 @@ export function ConfirmDialog({
           </div>
         </div>
         <div className="mt-6 flex justify-end gap-2">
-          <Button variant="secondary" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose} disabled={pending}>
             Cancel
           </Button>
-          <Button variant="danger" onClick={onConfirm} disabled={disabled}>
-            {confirmLabel}
+          <Button variant="danger" onClick={onConfirm} disabled={disabled || pending}>
+            {pending ? (pendingLabel ?? "Working...") : confirmLabel}
           </Button>
         </div>
       </div>

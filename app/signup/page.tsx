@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { signup } from "@/app/actions/signup";
-import { Button } from "@/components/button";
 import { Field, Input } from "@/components/form-field";
 import { PublicHeader } from "@/components/public-header";
+import { SubmitButton } from "@/components/submit-button";
 
 export default async function SignupPage({
   searchParams,
@@ -72,9 +72,9 @@ export default async function SignupPage({
                     required
                   />
                 </Field>
-                <Button type="submit" className="h-12 w-full">
+                <SubmitButton className="h-12 w-full" pendingLabel="Creating account...">
                   Create account
-                </Button>
+                </SubmitButton>
               </form>
 
               <p className="mt-5 text-center text-sm text-ink-secondary">

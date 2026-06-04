@@ -1,0 +1,4 @@
+MOBILE_API_BASE_URL = http:/$()/localhost:3000/api/mobile/v1
+SUPABASE_URL =
+SUPABASE_PUBLISHABLE_KEY =
+#include? "Local.xcconfig"

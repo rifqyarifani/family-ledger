@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { updatePassword } from "@/app/actions/reset-password";
-import { Button } from "@/components/button";
 import { Field, Input } from "@/components/form-field";
 import { PublicHeader } from "@/components/public-header";
+import { SubmitButton } from "@/components/submit-button";
 
 export default async function ResetPasswordPage({
   searchParams,
@@ -64,9 +64,9 @@ export default async function ResetPasswordPage({
                     required
                   />
                 </Field>
-                <Button type="submit" className="h-12 w-full">
+                <SubmitButton className="h-12 w-full" pendingLabel="Updating...">
                   Update password
-                </Button>
+                </SubmitButton>
               </form>
 
               <p className="mt-5 text-center text-sm text-ink-secondary">

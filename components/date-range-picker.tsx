@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/button";
-import { formatDate } from "@/lib/finance";
+import { formatDate, formatMonthLongYear } from "@/lib/finance";
 import { cn } from "@/lib/utils";
 
 const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -58,7 +58,7 @@ export function DateRangePicker({
   const [isOpen, setIsOpen] = useState(false);
   const [visibleMonth, setVisibleMonth] = useState(() => fromIsoDate(startDate || endDate));
   const visibleDays = useMemo(() => getMonthDays(visibleMonth), [visibleMonth]);
-  const monthLabel = new Intl.DateTimeFormat("id-ID", { month: "long", year: "numeric" }).format(visibleMonth);
+  const monthLabel = formatMonthLongYear(visibleMonth);
 
   function moveMonth(offset: number) {
     setVisibleMonth((current) => new Date(current.getFullYear(), current.getMonth() + offset, 1));

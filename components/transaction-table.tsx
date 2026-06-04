@@ -113,13 +113,13 @@ export function TransactionTable({
         <table className="w-full text-left text-sm">
           <thead className="bg-surface-subtle text-xs uppercase tracking-wide text-ink-secondary">
             <tr>
-              <th className="px-4 py-3">Transaction</th>
-              <th className="px-4 py-3">Category</th>
-              <th className="px-4 py-3">Member</th>
-              <th className="px-4 py-3">Account</th>
-              <th className="px-4 py-3">Time</th>
-              <th className="px-4 py-3 text-right">Amount</th>
-              <th className="px-4 py-3" />
+              <th scope="col" className="px-4 py-3">Transaction</th>
+              <th scope="col" className="px-4 py-3">Category</th>
+              <th scope="col" className="px-4 py-3">Member</th>
+              <th scope="col" className="px-4 py-3">Account</th>
+              <th scope="col" className="px-4 py-3">Time</th>
+              <th scope="col" className="px-4 py-3 text-right">Amount</th>
+              <th scope="col" className="px-4 py-3" />
             </tr>
           </thead>
           <tbody className="divide-y divide-surface-border bg-white">

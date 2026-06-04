@@ -155,12 +155,21 @@ export function GoalsClient({
           goal={goalDialog.editingItem}
           savingsAccountOptions={availableSavingsAccounts}
           onCancel={goalDialog.closeForm}
-          onSubmit={(goal) =>
+          pending={isPending}
+          pendingLabel={goalDialog.editingItem ? "Saving..." : "Adding..."}
+          onSubmit={(goal) => {
+            const editingId = goalDialog.editingItem?.id;
             runAction(
-              () => (goalDialog.editingItem ? updateSavingsGoalAction(goal) : createSavingsGoalAction(goal)),
-              goalDialog.closeForm
-            )
-          }
+              () =>
+                editingId
+                  ? updateSavingsGoalAction(editingId, goal)
+                  : createSavingsGoalAction(goal),
+              goalDialog.closeForm,
+              {
+                successMessage: editingId ? "Goal updated" : "Goal added"
+              }
+            );
+          }}
         />
       </Modal>
 
@@ -173,10 +182,16 @@ export function GoalsClient({
             ? accountNameById[goalDialog.deletingItem.accountId] ?? null
             : null
         )}
+        pending={isPending}
+        pendingLabel="Deleting..."
         onClose={goalDialog.closeDelete}
         onConfirm={() =>
           goalDialog.deletingItem &&
-          runAction(() => deleteSavingsGoalAction(goalDialog.deletingItem!.id), goalDialog.closeDelete)
+          runAction(
+            () => deleteSavingsGoalAction(goalDialog.deletingItem!.id),
+            goalDialog.closeDelete,
+            { successMessage: "Goal deleted" }
+          )
         }
       />
     </>

@@ -6,9 +6,12 @@ import {
   calculateTotalExpense,
   calculateTotalIncome,
   filterTransactionsByMonth,
+  formatCompactNumber,
   formatCurrency,
+  formatCurrencyShort,
   formatDate,
   formatMonthKey,
+  formatMonthLongYear,
   getCurrentMonthKey,
   getBudgetUsage,
   getMonthOptions,
@@ -156,6 +159,32 @@ describe("finance calculations", () => {
     const now = new Date();
     const expected = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
     assert.equal(getCurrentMonthKey(), expected);
+  });
+
+  it("formats compact number with Indonesian abbreviations", () => {
+    assert.equal(formatCompactNumber(0), "0");
+    assert.equal(formatCompactNumber(250), "250");
+    assert.equal(formatCompactNumber(999), "999");
+    assert.equal(formatCompactNumber(1_000), "1rb");
+    assert.equal(formatCompactNumber(1_500), "2rb");
+    assert.equal(formatCompactNumber(1_000_000), "1jt");
+    assert.equal(formatCompactNumber(1_500_000), "1.5jt");
+    assert.equal(formatCompactNumber(26_500_000), "26.5jt");
+    assert.equal(formatCompactNumber(10_200_000), "10.2jt");
+  });
+
+  it("formats short currency with Rp prefix", () => {
+    assert.equal(formatCurrencyShort(0), "Rp 0");
+    assert.equal(formatCurrencyShort(250), "Rp 250");
+    assert.equal(formatCurrencyShort(1_500), "Rp 2rb");
+    assert.equal(formatCurrencyShort(1_500_000), "Rp 1.5jt");
+    assert.equal(formatCurrencyShort(26_500_000), "Rp 26.5jt");
+  });
+
+  it("formats month long year in Indonesian", () => {
+    const result = formatMonthLongYear(new Date(2026, 4, 1));
+    assert.ok(result.includes("2026"));
+    assert.ok(result.includes("Mei") || result.includes("May"));
   });
 });
 

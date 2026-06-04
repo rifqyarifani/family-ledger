@@ -1,6 +1,6 @@
 # FamilyLedger
 
-FamilyLedger is a modern family financial management web app for manually recording and managing household income, expenses, budgets, savings goals, family members, accounts, and reports.
+FamilyLedger is a modern family financial management web and native iOS app for manually recording and managing household income, expenses, budgets, savings goals, family members, accounts, and reports.
 
 This MVP does not connect to banks, payment APIs, or external financial services. Data is entered manually.
 
@@ -23,6 +23,8 @@ Authentication uses Supabase Auth with `/login`, `/signup`, and protected `/app`
 - Polished forms with per-field validation, Indonesian amount formatting, 30-character caps for key names/titles, and custom date picker controls.
 - Header profile menu with quick access to a settings popup and logout confirmation.
 - Settings popup with left navigation for Profile and Household. Profile and household settings save to Supabase.
+- Native SwiftUI iOS app with authentication, household onboarding, dashboard, transaction and transfer management, accounts, budgets, savings goals, reports, category and family management, and settings.
+- Authenticated `/api/mobile/v1` backend-for-frontend routes that keep household financial data access and privileged Supabase operations server-side.
 
 ## Tech Stack
 
@@ -35,6 +37,8 @@ Authentication uses Supabase Auth with `/login`, `/signup`, and protected `/app`
 - Supabase Postgres database
 - Supabase Auth helpers for browser, server, middleware session refresh, and household onboarding
 - Server Actions for Supabase-backed mutations
+- SwiftUI iOS 17 app generated with XcodeGen
+- Native URLSession client using Supabase Auth and the versioned mobile API
 
 ## Design Direction
 
@@ -69,6 +73,28 @@ npm run dev
 
 Open `http://localhost:3000`.
 
+## Run the iOS App
+
+The native project is in [ios/FamilyLedger](/Users/rifqyarifani/Documents/FamilyLedger/ios/FamilyLedger).
+
+1. Install full Xcode and XcodeGen.
+2. Copy the local configuration:
+
+```bash
+cp ios/FamilyLedger/Config/Local.xcconfig.example ios/FamilyLedger/Config/Local.xcconfig
+```
+
+3. Set the deployed or local mobile API URL, Supabase URL, and Supabase publishable key in `Local.xcconfig`. Never put a secret or service-role key in the iOS app.
+4. Generate and open the project:
+
+```bash
+cd ios/FamilyLedger
+xcodegen generate
+open FamilyLedger.xcodeproj
+```
+
+For Simulator development against the local Next.js server, keep `MOBILE_API_BASE_URL` set to `http://localhost:3000/api/mobile/v1` and run `npm run dev` from the repository root.
+
 ## Checks
 
 ```bash
@@ -76,6 +102,8 @@ npm run lint
 npm run test
 npm run build
 npm run start
+swiftc -parse ios/FamilyLedger/App/*.swift ios/FamilyLedger/Core/*.swift ios/FamilyLedger/Features/*.swift
+cd ios/FamilyLedger && xcodegen generate
 ```
 
 ## Future Improvements

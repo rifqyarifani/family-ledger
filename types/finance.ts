@@ -19,12 +19,18 @@ export type Transaction = {
   note?: string;
 };
 
+export type TransactionFormInput = Omit<Transaction, "id" | "createdAt" | "accountName" | "memberName" | "transferAccountName" | "categoryId"> & {
+  categoryId?: string;
+};
+
 export type Budget = {
   id: string;
   category: string;
   limit: number;
   month: string;
 };
+
+export type BudgetFormInput = Omit<Budget, "id">;
 
 export type FamilyMember = {
   id: string;
@@ -34,6 +40,8 @@ export type FamilyMember = {
   note?: string;
 };
 
+export type FamilyMemberFormInput = Omit<FamilyMember, "id">;
+
 export type Account = {
   id: string;
   name: string;
@@ -41,6 +49,10 @@ export type Account = {
   openingBalance: number;
   iconColor?: string;
   ownerMemberId?: string | null;
+  ownerName?: string;
+};
+
+export type AccountFormInput = Omit<Account, "id" | "ownerName"> & {
   ownerName?: string;
 };
 
@@ -64,6 +76,8 @@ export type Category = {
   icon?: string;
 };
 
+export type CategoryFormInput = Omit<Category, "id">;
+
 export type SavingsGoal = {
   id: string;
   name: string;
@@ -71,6 +85,11 @@ export type SavingsGoal = {
   savedAmount: number;
   dueDate: string;
   accountId?: string;
+};
+
+export type SavingsGoalFormInput = Omit<SavingsGoal, "id" | "savedAmount" | "accountId"> & {
+  accountId?: string;
+  savedAmount?: number;
 };
 
 export type SavingsGoalAccountOption = {

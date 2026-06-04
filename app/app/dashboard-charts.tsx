@@ -13,7 +13,7 @@ import {
   YAxis
 } from "recharts";
 import { chartColors } from "@/constants/finance";
-import { formatCurrency } from "@/lib/finance";
+import { formatCompactNumber, formatCurrency } from "@/lib/finance";
 
 type CashflowDatum = {
   month: string;
@@ -34,7 +34,7 @@ export function CashflowTrendChart({ data }: { data: CashflowDatum[] }) {
       <AreaChart data={data}>
         <CartesianGrid strokeDasharray="3 3" stroke="#cfd5ca" />
         <XAxis dataKey="month" stroke="#454745" fontSize={12} />
-        <YAxis stroke="#454745" fontSize={12} tickFormatter={(value: number) => `${value / 1000000}m`} />
+        <YAxis stroke="#454745" fontSize={12} tickFormatter={(value: number) => formatCompactNumber(value)} />
         <Tooltip formatter={(value: number) => formatCurrency(value)} />
         <Area type="monotone" dataKey="income" stroke="#16a34a" fill="#dcfce7" strokeWidth={2} />
         <Area type="monotone" dataKey="expense" stroke="#dc2626" fill="#fee2e2" strokeWidth={2} />

@@ -28,10 +28,12 @@ import { Modal } from "@/components/modal";
 import { PageIntro } from "@/components/page-intro";
 import { useClickOutside } from "@/hooks/use-click-outside";
 import { useCrudDialog } from "@/hooks/use-crud-dialog";
+import { useToast } from "@/components/toast-provider";
+import { createId } from "@/lib/utils";
 import { formatAccountDeleteMessage } from "@/lib/account-delete-utils";
 import { formatCurrency, groupAccountsByOwner } from "@/lib/finance";
 import type { AccountImpact } from "@/src/lib/data/accounts";
-import type { Account, AccountBalanceMap, FamilyMember } from "@/types/finance";
+import type { Account, AccountBalanceMap, AccountFormInput, FamilyMember } from "@/types/finance";
 
 type AccountsState = {
   accounts: Account[];
@@ -42,6 +44,17 @@ type OptimisticAction =
   | { type: "create"; account: Account }
   | { type: "update"; account: Account }
   | { type: "delete"; id: string };
+
+function toOptimisticAccount(input: AccountFormInput, id: string): Account {
+  return {
+    id,
+    name: input.name,
+    type: input.type,
+    openingBalance: input.openingBalance,
+    iconColor: input.iconColor,
+    ownerMemberId: input.ownerMemberId ?? null
+  };
+}
 
 export function AccountsClient({
   accounts,
@@ -56,6 +69,7 @@ export function AccountsClient({
 }) {
   const router = useRouter();
   const accountDialog = useCrudDialog<Account>();
+  const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -108,6 +122,7 @@ export function AccountsClient({
       action: () => Promise<void>,
       optimisticAction: OptimisticAction | null,
       onSuccess?: () => void,
+      successMessage?: string,
     ) => {
       setError("");
       startTransition(async () => {
@@ -116,17 +131,21 @@ export function AccountsClient({
           await action();
           onSuccess?.();
           router.refresh();
+          if (successMessage) {
+            showToast({ tone: "success", title: successMessage });
+          }
         } catch (actionError) {
-          setError(
+          const message =
             actionError instanceof Error
               ? actionError.message
-              : "Something went wrong.",
-          );
+              : "Something went wrong.";
+          setError(message);
+          showToast({ tone: "error", title: "Action failed", description: message });
           router.refresh();
         }
       });
     },
-    [addOptimistic, router],
+    [addOptimistic, router, showToast],
   );
 
   const typeIcon: Record<Account["type"], typeof CreditCard> = {
@@ -302,17 +321,21 @@ export function AccountsClient({
           account={accountDialog.editingItem}
           members={members}
           onCancel={accountDialog.closeForm}
+          pending={isPending}
+          pendingLabel={accountDialog.editingItem ? "Saving..." : "Adding..."}
           onSubmit={(account) => {
-            const optimisticAction: OptimisticAction = accountDialog.editingItem
-              ? { type: "update", account }
-              : { type: "create", account };
+            const editingId = accountDialog.editingItem?.id;
+            const optimisticAction: OptimisticAction = editingId
+              ? { type: "update", account: toOptimisticAccount(account, editingId) }
+              : { type: "create", account: toOptimisticAccount(account, createId("account")) };
             runAction(
               () =>
-                accountDialog.editingItem
-                  ? updateAccountAction(account)
+                editingId
+                  ? updateAccountAction(editingId, account)
                   : createAccountAction(account),
               optimisticAction,
               accountDialog.closeForm,
+              editingId ? "Account updated" : "Account added"
             );
           }}
         />
@@ -345,6 +368,8 @@ export function AccountsClient({
             title="Delete account?"
             message={decision.message}
             confirmLabel={decision.confirmLabel}
+            pending={isPending}
+            pendingLabel="Deleting..."
             onClose={accountDialog.closeDelete}
             onConfirm={() => {
               if (!deleting) {
@@ -355,6 +380,7 @@ export function AccountsClient({
                 () => deleteAccountAction(deleting.id),
                 { type: "delete", id: deleting.id },
                 accountDialog.closeDelete,
+                "Account deleted"
               );
             }}
           />

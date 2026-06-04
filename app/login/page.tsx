@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { login } from "@/app/actions/login";
-import { Button } from "@/components/button";
 import { Field, Input } from "@/components/form-field";
 import { PublicHeader } from "@/components/public-header";
+import { SubmitButton } from "@/components/submit-button";
 
 export default async function LoginPage({
   searchParams,
@@ -76,9 +76,9 @@ export default async function LoginPage({
                   Forgot password?
                 </Link>
               </div>
-              <Button type="submit" className="h-12 w-full">
+              <SubmitButton className="h-12 w-full" pendingLabel="Logging in...">
                 Log in
-              </Button>
+              </SubmitButton>
             </form>
 
             <p className="mt-5 text-center text-sm text-ink-secondary">

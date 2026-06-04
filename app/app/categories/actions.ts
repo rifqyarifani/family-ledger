@@ -8,9 +8,9 @@ import {
   type CategoryInput
 } from "@/src/lib/data/categories";
 import { requireHouseholdId } from "@/lib/household-utils";
-import type { Category } from "@/types/finance";
+import type { CategoryFormInput } from "@/types/finance";
 
-function validateCategory(category: Category): CategoryInput {
+function validateCategory(category: CategoryFormInput): CategoryInput {
   const name = category.name.trim();
 
   if (!name || name.length > 30) {
@@ -38,15 +38,15 @@ function revalidateCategoryViews() {
   revalidatePath("/app/transactions");
 }
 
-export async function createCategoryAction(category: Category) {
+export async function createCategoryAction(category: CategoryFormInput) {
   const householdId = await requireHouseholdId();
   await createCategory(householdId, validateCategory(category));
   revalidateCategoryViews();
 }
 
-export async function updateCategoryAction(category: Category) {
+export async function updateCategoryAction(categoryId: string, category: CategoryFormInput) {
   const householdId = await requireHouseholdId();
-  await updateCategory(householdId, category.id, validateCategory(category));
+  await updateCategory(householdId, categoryId, validateCategory(category));
   revalidateCategoryViews();
 }
 

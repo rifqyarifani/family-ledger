@@ -359,15 +359,21 @@ export function TransactionsClient({
           categories={categories}
           defaultMemberId={currentMemberId}
           onCancel={transactionDialog.closeForm}
-          onSubmit={(transaction) =>
+          pending={isPending}
+          pendingLabel={transactionDialog.editingItem ? "Saving..." : "Adding..."}
+          onSubmit={(transaction) => {
+            const editingId = transactionDialog.editingItem?.id;
             runAction(
               () =>
-                transactionDialog.editingItem
-                  ? updateTransactionAction(transaction)
+                editingId
+                  ? updateTransactionAction(editingId, transaction)
                   : createTransactionAction(transaction),
               transactionDialog.closeForm,
-            )
-          }
+              {
+                successMessage: editingId ? "Transaction updated" : "Transaction added"
+              }
+            );
+          }}
         />
       </Modal>
 
@@ -375,12 +381,15 @@ export function TransactionsClient({
         open={Boolean(transactionDialog.deletingItem)}
         title="Delete transaction?"
         message={`This will remove "${transactionDialog.deletingItem?.title ?? "this transaction"}" from your household ledger.`}
+        pending={isPending}
+        pendingLabel="Deleting..."
         onClose={transactionDialog.closeDelete}
         onConfirm={() =>
           transactionDialog.deletingItem &&
           runAction(
             () => deleteTransactionAction(transactionDialog.deletingItem!.id),
             transactionDialog.closeDelete,
+            { successMessage: "Transaction deleted" }
           )
         }
       />

@@ -6,20 +6,23 @@ import { FormActions } from "@/components/form-actions";
 import { DatePicker } from "@/components/date-picker";
 import { useFormErrors } from "@/hooks/use-form-errors";
 import { formatInputAmount, parseFormattedAmount } from "@/lib/format-utils";
-import { createId } from "@/lib/utils";
 import { mustSelect, positiveAmount, requiredString } from "@/lib/validation";
-import type { SavingsGoal, SavingsGoalAccountOption } from "@/types/finance";
+import type { SavingsGoalFormInput, SavingsGoalAccountOption } from "@/types/finance";
 
 export function SavingsGoalForm({
   goal,
   savingsAccountOptions,
   onSubmit,
   onCancel,
+  pending = false,
+  pendingLabel
 }: {
-  goal?: SavingsGoal;
+  goal?: SavingsGoalFormInput;
   savingsAccountOptions: SavingsGoalAccountOption[];
-  onSubmit: (goal: SavingsGoal) => void | Promise<void>;
+  onSubmit: (goal: SavingsGoalFormInput) => void | Promise<void>;
   onCancel: () => void;
+  pending?: boolean;
+  pendingLabel?: string;
 }) {
   const initialAccountName = savingsAccountOptions.some((account) => account.name === goal?.name)
     ? goal?.name ?? ""
@@ -48,7 +51,6 @@ export function SavingsGoalForm({
     }
 
     onSubmit({
-      id: goal?.id ?? createId("goal"),
       name: selectedAccount!.name,
       targetAmount: parseFormattedAmount(targetAmount),
       savedAmount,
@@ -108,6 +110,8 @@ export function SavingsGoalForm({
       <FormActions
         submitLabel={goal ? "Save changes" : "Add goal"}
         onCancel={onCancel}
+        pending={pending}
+        pendingLabel={pendingLabel}
       />
     </form>
   );

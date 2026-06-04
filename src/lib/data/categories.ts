@@ -153,6 +153,54 @@ export async function getCategoryImpact(
   };
 }
 
+export async function getCategoryImpactMap(
+  householdId: string,
+  categoryIds: string[]
+): Promise<Record<string, CategoryImpact>> {
+  const result: Record<string, CategoryImpact> = {};
+  for (const id of categoryIds) {
+    result[id] = { transactionCount: 0, budgetCount: 0 };
+  }
+
+  if (categoryIds.length === 0) {
+    return result;
+  }
+
+  const supabase = await createClient();
+  const [txnResult, budgetResult] = await Promise.all([
+    supabase
+      .from("transactions")
+      .select("category_id")
+      .eq("household_id", householdId)
+      .in("category_id", categoryIds),
+    supabase
+      .from("budgets")
+      .select("category_id")
+      .eq("household_id", householdId)
+      .in("category_id", categoryIds)
+  ]);
+
+  if (txnResult.error) {
+    throw new Error(txnResult.error.message);
+  }
+  if (budgetResult.error) {
+    throw new Error(budgetResult.error.message);
+  }
+
+  for (const txn of txnResult.data ?? []) {
+    if (txn.category_id && txn.category_id in result) {
+      result[txn.category_id].transactionCount += 1;
+    }
+  }
+  for (const budget of budgetResult.data ?? []) {
+    if (budget.category_id && budget.category_id in result) {
+      result[budget.category_id].budgetCount += 1;
+    }
+  }
+
+  return result;
+}
+
 export async function createDefaultCategories(householdId: string, userId: string) {
   const admin = createAdminClient();
   const { error } = await admin.from("categories").upsert(

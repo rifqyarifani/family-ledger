@@ -9,7 +9,7 @@ import {
 } from "@/src/lib/data/accounts";
 import { requireHouseholdId } from "@/lib/household-utils";
 import { createClient } from "@/src/lib/supabase/server";
-import type { Account } from "@/types/finance";
+import type { AccountFormInput } from "@/types/finance";
 
 async function assertOwnerIsMember(householdId: string, ownerMemberId: string | null | undefined) {
   if (!ownerMemberId) {
@@ -33,7 +33,7 @@ async function assertOwnerIsMember(householdId: string, ownerMemberId: string | 
   }
 }
 
-async function validateAccount(householdId: string, account: Account): Promise<AccountInput> {
+async function validateAccount(householdId: string, account: AccountFormInput): Promise<AccountInput> {
   const name = account.name.trim();
 
   if (!name || name.length > 30) {
@@ -63,16 +63,16 @@ async function validateAccount(householdId: string, account: Account): Promise<A
   };
 }
 
-export async function createAccountAction(account: Account) {
+export async function createAccountAction(account: AccountFormInput) {
   const householdId = await requireHouseholdId();
   await createAccount(householdId, await validateAccount(householdId, account));
   revalidatePath("/app/accounts");
   revalidatePath("/app/goals");
 }
 
-export async function updateAccountAction(account: Account) {
+export async function updateAccountAction(accountId: string, account: AccountFormInput) {
   const householdId = await requireHouseholdId();
-  await updateAccount(householdId, account.id, await validateAccount(householdId, account));
+  await updateAccount(householdId, accountId, await validateAccount(householdId, account));
   revalidatePath("/app/accounts");
   revalidatePath("/app/goals");
 }

@@ -54,12 +54,20 @@ type TransactionMetricRow = {
 };
 
 type ReportTransactionRow = TransactionMetricRow & {
+  title: string;
+  category_id: string | null;
+  member_id: string | null;
+  account_id: string;
+  transfer_account_id: string | null;
   created_at: string;
   categories: {
     name: string;
   } | null;
   household_members: {
     display_name: string;
+  } | null;
+  accounts: {
+    name: string;
   } | null;
 };
 
@@ -115,15 +123,19 @@ function mapTransactionMetric(row: TransactionMetricRow): TransactionMonthMetric
 function mapReportTransaction(row: ReportTransactionRow): Transaction {
   return {
     id: row.id,
-    title: "",
+    title: row.title,
     type: row.type,
     amount: Number(row.amount),
     category: row.type === "transfer" ? "Transfer" : row.categories?.name ?? "Uncategorized",
-    memberId: "",
+    categoryId: row.category_id ?? undefined,
+    memberId: row.member_id ?? "",
     memberName: row.household_members?.display_name ?? undefined,
-    accountId: "",
+    accountId: row.account_id,
+    accountName: row.accounts?.name ?? undefined,
+    transferAccountId: row.transfer_account_id ?? undefined,
     date: row.transaction_date,
-    createdAt: row.transaction_date
+    time: row.transaction_time ?? undefined,
+    createdAt: row.created_at
   };
 }
 
@@ -401,13 +413,19 @@ export async function getReportTransactions(householdId: string, monthsBack = 12
     .select(
       `
         id,
+        title,
         type,
         amount,
+        category_id,
+        member_id,
+        account_id,
+        transfer_account_id,
         transaction_date,
         transaction_time,
         created_at,
         categories(name),
-        household_members(display_name)
+        household_members(display_name),
+        accounts:transactions_account_id_fkey(name)
       `
     )
     .eq("household_id", householdId)

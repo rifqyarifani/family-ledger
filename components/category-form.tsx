@@ -24,9 +24,8 @@ import { FormActions } from "@/components/form-actions";
 import { ColorPicker, type ColorOption } from "@/components/color-picker";
 import { IconPicker, type IconOption } from "@/components/icon-picker";
 import { useFormErrors } from "@/hooks/use-form-errors";
-import { createId } from "@/lib/utils";
 import { MAX_NAME_LENGTH, cappedName, mustSelect } from "@/lib/validation";
-import type { Category } from "@/types/finance";
+import type { CategoryFormInput } from "@/types/finance";
 
 const iconOptions: IconOption[] = [
   { value: "tag", label: "Tag", icon: Tag },
@@ -66,10 +65,14 @@ export function CategoryForm({
   category,
   onSubmit,
   onCancel,
+  pending = false,
+  pendingLabel
 }: {
-  category?: Category;
-  onSubmit: (category: Category) => void | Promise<void>;
+  category?: CategoryFormInput;
+  onSubmit: (category: CategoryFormInput) => void | Promise<void>;
   onCancel: () => void;
+  pending?: boolean;
+  pendingLabel?: string;
 }) {
   const [name, setName] = useState(category?.name ?? "");
   const [type, setType] = useState<"income" | "expense">(
@@ -95,7 +98,6 @@ export function CategoryForm({
     }
 
     onSubmit({
-      id: category?.id ?? createId("category"),
       name: name.trim(),
       type,
       icon,
@@ -151,6 +153,8 @@ export function CategoryForm({
         <FormActions
           submitLabel={category ? "Save changes" : "Add category"}
           onCancel={onCancel}
+          pending={pending}
+          pendingLabel={pendingLabel}
         />
       </div>
     </form>

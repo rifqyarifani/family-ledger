@@ -23,8 +23,33 @@ const monthFormatter = new Intl.DateTimeFormat("id-ID", {
   year: "numeric"
 });
 
+const longMonthYearFormatter = new Intl.DateTimeFormat("id-ID", {
+  month: "long",
+  year: "numeric"
+});
+
 export function formatCurrency(amount: number) {
   return currencyFormatter.format(amount);
+}
+
+export function formatCompactNumber(value: number): string {
+  if (value === 0) return "0";
+  if (Math.abs(value) >= 1_000_000) {
+    const scaled = value / 1_000_000;
+    return `${scaled % 1 === 0 ? scaled.toFixed(0) : scaled.toFixed(1).replace(/\.0$/, "")}jt`;
+  }
+  if (Math.abs(value) >= 1_000) {
+    return `${Math.round(value / 1_000)}rb`;
+  }
+  return `${value}`;
+}
+
+export function formatCurrencyShort(value: number): string {
+  return `Rp ${formatCompactNumber(value)}`;
+}
+
+export function formatMonthLongYear(value: Date): string {
+  return longMonthYearFormatter.format(value);
 }
 
 export function formatDate(value: string) {

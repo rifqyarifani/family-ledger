@@ -15,7 +15,6 @@ import { useFormErrors } from "@/hooks/use-form-errors";
 import { transactionCategories } from "@/constants/finance";
 import { formatInputAmount, parseFormattedAmount } from "@/lib/format-utils";
 import { getCurrentTime, groupAccountsByOwner } from "@/lib/finance";
-import { createId } from "@/lib/utils";
 import {
   MAX_NAME_LENGTH,
   cappedName,
@@ -23,7 +22,7 @@ import {
   positiveAmount,
   requiredString
 } from "@/lib/validation";
-import type { Account, Category, FamilyMember, Transaction, TransactionType } from "@/types/finance";
+import type { Account, Category, FamilyMember, TransactionFormInput, TransactionType } from "@/types/finance";
 
 type FormValues = {
   title: string;
@@ -54,16 +53,20 @@ export function TransactionForm({
   defaultMemberId,
   allowTransfer = true,
   onSubmit,
-  onCancel
+  onCancel,
+  pending = false,
+  pendingLabel
 }: {
-  transaction?: Transaction;
+  transaction?: TransactionFormInput;
   members: FamilyMember[];
   accounts: Account[];
   categories?: Category[];
   defaultMemberId?: string | null;
   allowTransfer?: boolean;
-  onSubmit: (transaction: Transaction) => void | Promise<void>;
+  onSubmit: (transaction: TransactionFormInput) => void | Promise<void>;
   onCancel: () => void;
+  pending?: boolean;
+  pendingLabel?: string;
 }) {
   const categoryOptions = categories?.length
     ? categories
@@ -156,7 +159,6 @@ export function TransactionForm({
     }
 
     onSubmit({
-      id: transaction?.id ?? createId("txn"),
       title: values.title.trim(),
       type: values.type,
       amount,
@@ -166,7 +168,6 @@ export function TransactionForm({
       transferAccountId: values.type === "transfer" ? values.transferAccountId : undefined,
       date: values.date,
       time: values.time,
-      createdAt: transaction?.createdAt ?? new Date().toISOString(),
       note: values.note.trim()
     });
   }
@@ -311,7 +312,12 @@ export function TransactionForm({
       <Field label="Note">
         <Textarea value={values.note} onChange={(event) => updateField("note", event.target.value)} />
       </Field>
-      <FormActions submitLabel={transaction ? "Save changes" : "Add transaction"} onCancel={onCancel} />
+      <FormActions
+        submitLabel={transaction ? "Save changes" : "Add transaction"}
+        onCancel={onCancel}
+        pending={pending}
+        pendingLabel={pendingLabel}
+      />
     </form>
   );
 }

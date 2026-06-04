@@ -1,5 +1,5 @@
 import { GoalsClient } from "@/app/app/goals/goals-client";
-import { EmptyState } from "@/components/empty-state";
+import { NoHouseholdCallout } from "@/components/no-household-callout";
 import { getAccountBalanceMap, getAccounts } from "@/src/lib/data/accounts";
 import { getActiveHousehold } from "@/src/lib/data/households";
 import { getSavingsGoals } from "@/src/lib/data/savings-goals";
@@ -42,7 +42,7 @@ export default async function GoalsPage() {
   const household = await getActiveHousehold();
 
   if (!household) {
-    return <EmptyState title="No household found" message="Create a household before managing savings goals." />;
+    return <NoHouseholdCallout message="Create a household before managing savings goals." />;
   }
 
   const [savingsGoals, accounts] = await Promise.all([

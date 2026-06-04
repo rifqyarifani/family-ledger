@@ -1,5 +1,5 @@
-import { createClient } from "@/src/lib/supabase/server";
-import { generateHouseholdCode } from "@/src/lib/household-code";
+import { cache } from "react";
+import { createClient, getAuthedUser } from "@/src/lib/supabase/server";
 
 export type ActiveHousehold = {
   id: string;
@@ -16,20 +16,18 @@ type HouseholdMemberRow = {
 
 type HouseholdData = {
   name: string;
-  invite_code: string | null;
+  invite_code: string;
   monthly_cycle_day: number;
 };
 
-export async function getActiveHousehold(): Promise<ActiveHousehold | null> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export const getActiveHousehold = cache(async (): Promise<ActiveHousehold | null> => {
+  const user = await getAuthedUser();
 
   if (!user) {
     return null;
   }
 
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("household_members")
     .select("household_id, role")
@@ -60,35 +58,17 @@ export async function getActiveHousehold(): Promise<ActiveHousehold | null> {
     return null;
   }
 
-  let inviteCode = household.invite_code;
-
-  if (!inviteCode) {
-    const code = generateHouseholdCode();
-    const { error: updateError } = await supabase
-      .from("households")
-      .update({ invite_code: code })
-      .eq("id", data.household_id);
-
-    if (updateError) {
-      throw new Error(updateError.message);
-    }
-    inviteCode = code;
-  }
-
   return {
     id: data.household_id,
     name: household.name,
-    inviteCode: inviteCode ?? "",
+    inviteCode: household.invite_code,
     monthlyCycleDay: household.monthly_cycle_day ?? 1,
-    role: data.role === "owner" ? "owner" : "member",
+    role: data.role === "owner" ? "owner" : "member"
   };
-}
+});
 
-export async function getCurrentUserProfile() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export const getCurrentUserProfile = cache(async () => {
+  const user = await getAuthedUser();
 
   if (!user) {
     return null;
@@ -110,6 +90,6 @@ export async function getCurrentUserProfile() {
     email: user.email ?? null,
     firstName,
     lastName,
-    displayName,
+    displayName
   };
-}
+});

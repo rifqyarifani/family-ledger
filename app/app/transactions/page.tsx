@@ -1,4 +1,4 @@
-import { EmptyState } from "@/components/empty-state";
+import { NoHouseholdCallout } from "@/components/no-household-callout";
 import { TransactionsClient } from "@/app/app/transactions/transactions-client";
 import { getAccounts } from "@/src/lib/data/accounts";
 import { getCategories } from "@/src/lib/data/categories";
@@ -10,7 +10,7 @@ export default async function TransactionsPage() {
   const household = await getActiveHousehold();
 
   if (!household) {
-    return <EmptyState title="No household found" message="Create a household before managing transactions." />;
+    return <NoHouseholdCallout message="Create a household before managing transactions." />;
   }
 
   const [transactionsPage, familyMembers, accounts, categories, currentMemberId] = await Promise.all([

@@ -1,4 +1,14 @@
-import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
+import {
+  Children,
+  cloneElement,
+  isValidElement,
+  useId,
+  type InputHTMLAttributes,
+  type ReactElement,
+  type ReactNode,
+  type SelectHTMLAttributes,
+  type TextareaHTMLAttributes
+} from "react";
 import {
   handleBlockedNumberKeys,
   sanitizeFormattedAmount
@@ -10,15 +20,55 @@ type FieldProps = {
   label: string;
   children: ReactNode;
   error?: string | null;
+  hint?: ReactNode;
 };
 
-export function Field({ label, children, error }: FieldProps) {
+export function Field({ label, children, error, hint }: FieldProps) {
+  const generatedId = useId();
+  const errorId = `${generatedId}-error`;
+  const hintId = `${generatedId}-hint`;
+  const describedBy = [
+    hint ? hintId : null,
+    error ? errorId : null
+  ]
+    .filter(Boolean)
+    .join(" ") || undefined;
+
+  const enhancedChildren = Children.map(children, (child) => {
+    if (!isValidElement(child)) {
+      return child;
+    }
+    const element = child as ReactElement<{
+      id?: string;
+      "aria-describedby"?: string;
+      "aria-invalid"?: boolean;
+    }>;
+    const existingDescribedBy = element.props["aria-describedby"];
+    const combined = [existingDescribedBy, describedBy].filter(Boolean).join(" ") || undefined;
+    return cloneElement(element, {
+      id: element.props.id ?? generatedId,
+      "aria-describedby": combined,
+      "aria-invalid": error ? true : undefined
+    });
+  });
+
   return (
-    <label className="block">
-      <span className="text-sm font-semibold text-ink-secondary">{label}</span>
-      <div className="mt-1">{children}</div>
-      {error ? <span className="mt-1 block text-xs text-red-600">{error}</span> : null}
-    </label>
+    <div className="block">
+      <label htmlFor={generatedId} className="block text-sm font-semibold text-ink-secondary">
+        {label}
+      </label>
+      <div className="mt-1">{enhancedChildren}</div>
+      {hint && !error ? (
+        <p id={hintId} className="mt-1 text-xs text-ink-muted">
+          {hint}
+        </p>
+      ) : null}
+      {error ? (
+        <p id={errorId} role="alert" className="mt-1 text-xs text-red-600">
+          {error}
+        </p>
+      ) : null}
+    </div>
   );
 }
 

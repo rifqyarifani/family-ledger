@@ -18,6 +18,22 @@ type AccountMovementRow = {
   transfer_account_id: string | null;
 };
 
+type BalanceRow = {
+  account_id: string;
+  balance: string | number;
+};
+
+function isBalanceRow(value: unknown): value is BalanceRow {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.account_id === "string" &&
+    (typeof candidate.balance === "string" || typeof candidate.balance === "number")
+  );
+}
+
 export type AccountInput = {
   name: string;
   type: Account["type"];
@@ -112,13 +128,11 @@ export async function getAccountBalanceMap(householdId: string, accounts?: Accou
   });
 
   if (!error && data) {
-    return (data as { account_id: string; balance: number }[]).reduce<AccountBalanceMap>(
-      (acc, row) => {
-        acc[row.account_id] = Number(row.balance);
-        return acc;
-      },
-      {},
-    );
+    const rows = Array.isArray(data) ? data.filter(isBalanceRow) : [];
+    return rows.reduce<AccountBalanceMap>((acc, row) => {
+      acc[row.account_id] = Number(row.balance);
+      return acc;
+    }, {});
   }
 
   const resolvedAccounts = accounts ?? (await getAccounts(householdId));
@@ -231,4 +245,56 @@ export async function getAccountImpact(
     transactionCount: txnResult.count ?? 0,
     goalCount: goalResult.count ?? 0
   };
+}
+
+export async function getAccountImpactMap(
+  householdId: string,
+  accountIds: string[]
+): Promise<Record<string, AccountImpact>> {
+  const result: Record<string, AccountImpact> = {};
+  for (const id of accountIds) {
+    result[id] = { transactionCount: 0, goalCount: 0 };
+  }
+
+  if (accountIds.length === 0) {
+    return result;
+  }
+
+  const supabase = await createClient();
+  const accountIdList = `(${accountIds.join(",")})`;
+  const [txnResult, goalResult] = await Promise.all([
+    supabase
+      .from("transactions")
+      .select("account_id, transfer_account_id")
+      .eq("household_id", householdId)
+      .or(`account_id.in.${accountIdList},transfer_account_id.in.${accountIdList}`),
+    supabase
+      .from("savings_goals")
+      .select("account_id")
+      .eq("household_id", householdId)
+      .in("account_id", accountIds)
+  ]);
+
+  if (txnResult.error) {
+    throw new Error(txnResult.error.message);
+  }
+  if (goalResult.error) {
+    throw new Error(goalResult.error.message);
+  }
+
+  for (const txn of txnResult.data ?? []) {
+    if (txn.account_id in result) {
+      result[txn.account_id].transactionCount += 1;
+    }
+    if (txn.transfer_account_id && txn.transfer_account_id in result) {
+      result[txn.transfer_account_id].transactionCount += 1;
+    }
+  }
+  for (const goal of goalResult.data ?? []) {
+    if (goal.account_id in result) {
+      result[goal.account_id].goalCount += 1;
+    }
+  }
+
+  return result;
 }

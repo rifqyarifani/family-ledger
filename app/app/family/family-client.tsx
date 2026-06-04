@@ -109,12 +109,21 @@ export function FamilyClient({
           key={memberDialog.editingItem?.id ?? (memberDialog.isFormOpen ? "new-member" : "closed-member")}
           member={memberDialog.editingItem}
           onCancel={memberDialog.closeForm}
-          onSubmit={(member) =>
+          pending={isPending}
+          pendingLabel={memberDialog.editingItem ? "Saving..." : "Adding..."}
+          onSubmit={(member) => {
+            const editingId = memberDialog.editingItem?.id;
             runAction(
-              () => (memberDialog.editingItem ? updateFamilyMemberAction(member) : createFamilyMemberAction(member)),
-              memberDialog.closeForm
-            )
-          }
+              () =>
+                editingId
+                  ? updateFamilyMemberAction(editingId, member)
+                  : createFamilyMemberAction(member),
+              memberDialog.closeForm,
+              {
+                successMessage: editingId ? "Member updated" : "Member added"
+              }
+            );
+          }}
         />
       </Modal>
 
@@ -122,10 +131,16 @@ export function FamilyClient({
         open={Boolean(memberDialog.deletingItem)}
         title="Delete family member?"
         message={`This will remove ${memberDialog.deletingItem?.name ?? "this member"} from the household. Existing linked transactions will keep their records.`}
+        pending={isPending}
+        pendingLabel="Deleting..."
         onClose={memberDialog.closeDelete}
         onConfirm={() =>
           memberDialog.deletingItem &&
-          runAction(() => deleteFamilyMemberAction(memberDialog.deletingItem!.id), memberDialog.closeDelete)
+          runAction(
+            () => deleteFamilyMemberAction(memberDialog.deletingItem!.id),
+            memberDialog.closeDelete,
+            { successMessage: "Member deleted" }
+          )
         }
       />
     </>

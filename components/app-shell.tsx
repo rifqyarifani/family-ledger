@@ -1,12 +1,21 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { ConfirmDialog } from "@/components/confirm-dialog";
+import dynamic from "next/dynamic";
 import { Header } from "@/components/header";
-import { SettingsDialog } from "@/components/settings-dialog";
 import { Sidebar } from "@/components/sidebar";
 import type { ActiveHousehold } from "@/src/lib/data/households";
 import type { UserProfile } from "@/types/finance";
+
+const SettingsDialog = dynamic(
+  () => import("@/components/settings-dialog").then((mod) => ({ default: mod.SettingsDialog })),
+  { ssr: false }
+);
+
+const ConfirmDialog = dynamic(
+  () => import("@/components/confirm-dialog").then((mod) => ({ default: mod.ConfirmDialog })),
+  { ssr: false }
+);
 
 type AppShellProfile = UserProfile;
 
@@ -92,26 +101,30 @@ function AuthenticatedApp({
         />
         <main id="main-content" className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6">{children}</main>
       </div>
-      <SettingsDialog
-        open={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        profile={profile}
-        householdName={householdName}
-        householdCode={householdCode}
-        monthlyCycleDay={monthlyCycleDay}
-        householdRole={householdRole}
-      />
-      <ConfirmDialog
-        open={isLogoutOpen}
-        title="Logout from FamilyLedger?"
-        message="This will sign out on this browser. Your household data stays saved in Supabase."
-        confirmLabel="Logout"
-        onClose={() => setIsLogoutOpen(false)}
-        onConfirm={() => {
-          setIsLogoutOpen(false);
-          window.location.href = "/logout";
-        }}
-      />
+      {isSettingsOpen ? (
+        <SettingsDialog
+          open={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          profile={profile}
+          householdName={householdName}
+          householdCode={householdCode}
+          monthlyCycleDay={monthlyCycleDay}
+          householdRole={householdRole}
+        />
+      ) : null}
+      {isLogoutOpen ? (
+        <ConfirmDialog
+          open={isLogoutOpen}
+          title="Logout from FamilyLedger?"
+          message="This will sign out on this browser. Your household data stays saved in Supabase."
+          confirmLabel="Logout"
+          onClose={() => setIsLogoutOpen(false)}
+          onConfirm={() => {
+            setIsLogoutOpen(false);
+            window.location.href = "/logout";
+          }}
+        />
+      ) : null}
     </div>
   );
 }

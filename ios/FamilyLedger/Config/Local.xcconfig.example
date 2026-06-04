@@ -1,0 +1,4 @@
+// Copy to Local.xcconfig and fill these values.
+MOBILE_API_BASE_URL = https:/$()/your-domain.example/api/mobile/v1
+SUPABASE_URL = https:/$()/your-project.supabase.co
+SUPABASE_PUBLISHABLE_KEY = sb_publishable_your_key

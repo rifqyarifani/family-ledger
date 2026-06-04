@@ -4,7 +4,6 @@ import { useState, type FormEvent } from "react";
 import { Field, Input, Select, CappedTextInput } from "@/components/form-field";
 import { FormActions } from "@/components/form-actions";
 import { useFormErrors } from "@/hooks/use-form-errors";
-import { createId } from "@/lib/utils";
 import {
   MAX_NAME_LENGTH,
   cappedName,
@@ -12,7 +11,7 @@ import {
   mustSelect,
   requiredString
 } from "@/lib/validation";
-import type { FamilyMember } from "@/types/finance";
+import type { FamilyMemberFormInput } from "@/types/finance";
 
 const roles = [
   { value: "owner", label: "Owner" },
@@ -22,11 +21,15 @@ const roles = [
 export function FamilyForm({
   member,
   onSubmit,
-  onCancel
+  onCancel,
+  pending = false,
+  pendingLabel
 }: {
-  member?: FamilyMember;
-  onSubmit: (member: FamilyMember) => void | Promise<void>;
+  member?: FamilyMemberFormInput;
+  onSubmit: (member: FamilyMemberFormInput) => void | Promise<void>;
   onCancel: () => void;
+  pending?: boolean;
+  pendingLabel?: string;
 }) {
   const [name, setName] = useState(member?.name ?? "");
   const [role, setRole] = useState(member?.role === "owner" ? "owner" : "member");
@@ -51,7 +54,6 @@ export function FamilyForm({
     }
 
     onSubmit({
-      id: member?.id ?? createId("member"),
       name: name.trim(),
       role: role.trim(),
       email: email.trim() || undefined
@@ -91,7 +93,12 @@ export function FamilyForm({
           required={!isEditing}
         />
       </Field>
-      <FormActions submitLabel={member ? "Save changes" : "Add member"} onCancel={onCancel} />
+      <FormActions
+        submitLabel={member ? "Save changes" : "Add member"}
+        onCancel={onCancel}
+        pending={pending}
+        pendingLabel={pendingLabel}
+      />
     </form>
   );
 }

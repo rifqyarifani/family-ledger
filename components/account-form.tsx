@@ -6,13 +6,12 @@ import { FormActions } from "@/components/form-actions";
 import { ColorPicker, type ColorOption } from "@/components/color-picker";
 import { useFormErrors } from "@/hooks/use-form-errors";
 import { formatInputAmount, parseFormattedAmount } from "@/lib/format-utils";
-import { createId } from "@/lib/utils";
 import {
   MAX_NAME_LENGTH,
   cappedName,
   nonNegativeAmount
 } from "@/lib/validation";
-import type { Account, FamilyMember } from "@/types/finance";
+import type { Account, AccountFormInput, FamilyMember } from "@/types/finance";
 
 const colorOptions: ColorOption[] = [
   { value: "#64748b", label: "Slate" },
@@ -34,11 +33,15 @@ export function AccountForm({
   members = [],
   onSubmit,
   onCancel,
+  pending = false,
+  pendingLabel
 }: {
-  account?: Account;
+  account?: AccountFormInput;
   members?: FamilyMember[];
-  onSubmit: (account: Account) => void | Promise<void>;
+  onSubmit: (account: AccountFormInput) => void | Promise<void>;
   onCancel: () => void;
+  pending?: boolean;
+  pendingLabel?: string;
 }) {
   const [name, setName] = useState(account?.name ?? "");
   const [type, setType] = useState<Account["type"]>(account?.type ?? "bank");
@@ -63,7 +66,6 @@ export function AccountForm({
     }
 
     void onSubmit({
-      id: account?.id ?? createId("account"),
       name: name.trim(),
       type,
       openingBalance: parseFormattedAmount(openingBalance),
@@ -130,6 +132,8 @@ export function AccountForm({
       <FormActions
         submitLabel={account ? "Save changes" : "Add account"}
         onCancel={onCancel}
+        pending={pending}
+        pendingLabel={pendingLabel}
       />
     </form>
   );

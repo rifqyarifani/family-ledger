@@ -1,5 +1,5 @@
 import { BudgetClient } from "@/app/app/budget/budget-client";
-import { EmptyState } from "@/components/empty-state";
+import { NoHouseholdCallout } from "@/components/no-household-callout";
 import { getCurrentMonthKey } from "@/lib/finance";
 import { getBudgetsForMonth } from "@/src/lib/data/budgets";
 import { getCategories } from "@/src/lib/data/categories";
@@ -20,7 +20,7 @@ export default async function BudgetPage({
   const household = await getActiveHousehold();
 
   if (!household) {
-    return <EmptyState title="No household found" message="Create a household before managing budgets." />;
+    return <NoHouseholdCallout message="Create a household before managing budgets." />;
   }
 
   const [budgets, transactionsPage, categories] = await Promise.all([

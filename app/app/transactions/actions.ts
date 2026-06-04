@@ -8,9 +8,10 @@ import {
   type TransactionInput
 } from "@/src/lib/data/transactions";
 import { requireHouseholdId } from "@/lib/household-utils";
-import type { Transaction } from "@/types/finance";
+import { isValidISODate, isValidTime, isValidUuid } from "@/lib/validation";
+import type { TransactionFormInput } from "@/types/finance";
 
-function validateTransaction(transaction: Transaction): TransactionInput {
+function validateTransaction(transaction: TransactionFormInput): TransactionInput {
   const title = transaction.title.trim();
   const category = transaction.category.trim();
   const note = transaction.note?.trim();
@@ -28,11 +29,15 @@ function validateTransaction(transaction: Transaction): TransactionInput {
     throw new Error("Amount must be positive.");
   }
 
-  if (!transaction.date) {
-    throw new Error("Date is required.");
+  if (!transaction.date || !isValidISODate(transaction.date)) {
+    throw new Error("Enter a valid date.");
   }
 
-  if (!transaction.accountId) {
+  if (transaction.time && !isValidTime(transaction.time)) {
+    throw new Error("Enter a valid time.");
+  }
+
+  if (!transaction.accountId || !isValidUuid(transaction.accountId)) {
     throw new Error("Choose an account.");
   }
 
@@ -48,7 +53,11 @@ function validateTransaction(transaction: Transaction): TransactionInput {
     throw new Error("Choose a different destination account.");
   }
 
-  if (!transaction.memberId) {
+  if (isTransfer && transaction.transferAccountId && !isValidUuid(transaction.transferAccountId)) {
+    throw new Error("Choose a valid destination account.");
+  }
+
+  if (!transaction.memberId || !isValidUuid(transaction.memberId)) {
     throw new Error("Choose a family member.");
   }
 
@@ -76,15 +85,15 @@ function revalidateTransactionViews() {
   revalidatePath("/app/reports");
 }
 
-export async function createTransactionAction(transaction: Transaction) {
+export async function createTransactionAction(transaction: TransactionFormInput) {
   const householdId = await requireHouseholdId();
   await createTransaction(householdId, validateTransaction(transaction));
   revalidateTransactionViews();
 }
 
-export async function updateTransactionAction(transaction: Transaction) {
+export async function updateTransactionAction(transactionId: string, transaction: TransactionFormInput) {
   const householdId = await requireHouseholdId();
-  await updateTransaction(householdId, transaction.id, validateTransaction(transaction));
+  await updateTransaction(householdId, transactionId, validateTransaction(transaction));
   revalidateTransactionViews();
 }
 

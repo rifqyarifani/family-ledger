@@ -4,12 +4,8 @@ import { useRef, useState } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/button";
 import { useClickOutside } from "@/hooks/use-click-outside";
+import { formatMonthLongYear } from "@/lib/finance";
 import { cn } from "@/lib/utils";
-
-const monthFormatter = new Intl.DateTimeFormat("id-ID", {
-  month: "long",
-  year: "numeric"
-});
 
 const shortMonthFormatter = new Intl.DateTimeFormat("id-ID", {
   month: "short"
@@ -58,7 +54,7 @@ export function MonthPicker({
         aria-label="Choose budget month"
         aria-expanded={isOpen}
       >
-        <span>{monthFormatter.format(fromMonthKey(value))}</span>
+        <span>{formatMonthLongYear(fromMonthKey(value))}</span>
         <CalendarDays className="h-4 w-4 text-[#9ca390]" aria-hidden="true" />
       </button>
 

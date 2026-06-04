@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { PublicHeader } from "@/components/public-header";
 import { LandingFooter } from "@/components/landing-footer";
+import { formatCurrency, formatCurrencyShort } from "@/lib/finance";
 
 const heroFeatures = [
   {
@@ -115,7 +116,7 @@ export default async function LandingPage({
                       This month
                     </p>
                     <p className="mt-1 text-3xl font-black text-ink">
-                      Rp 16.205.000
+                      {formatCurrency(16_205_000)}
                     </p>
                   </div>
                   <div className="rounded-2xl bg-brand-green-pale p-3 text-ink">
@@ -127,13 +128,13 @@ export default async function LandingPage({
                     <p className="text-xs font-semibold text-ink-secondary">
                       Income
                     </p>
-                    <p className="mt-2 text-lg font-black text-ink">Rp 26.5m</p>
+                    <p className="mt-2 text-lg font-black text-ink">{formatCurrencyShort(26_500_000)}</p>
                   </div>
                   <div className="rounded-2xl bg-surface p-4">
                     <p className="text-xs font-semibold text-ink-secondary">
                       Expense
                     </p>
-                    <p className="mt-2 text-lg font-black text-ink">Rp 10.2m</p>
+                    <p className="mt-2 text-lg font-black text-ink">{formatCurrencyShort(10_200_000)}</p>
                   </div>
                   <div className="relative rounded-2xl bg-surface p-4">
                     <span

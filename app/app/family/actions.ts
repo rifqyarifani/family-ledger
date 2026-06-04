@@ -9,9 +9,9 @@ import {
   type HouseholdMemberInput
 } from "@/src/lib/data/household-members";
 import { getActiveHousehold } from "@/src/lib/data/households";
-import type { FamilyMember } from "@/types/finance";
+import type { FamilyMemberFormInput } from "@/types/finance";
 
-function validateFamilyMember(member: FamilyMember, isCreate: boolean): HouseholdMemberInput {
+function validateFamilyMember(member: FamilyMemberFormInput, isCreate: boolean): HouseholdMemberInput {
   const name = member.name.trim();
   const email = member.email?.trim().toLowerCase();
   const role = normalizeHouseholdRole(member.role);
@@ -57,15 +57,15 @@ function revalidateFamily() {
   revalidatePath("/app/reports");
 }
 
-export async function createFamilyMemberAction(member: FamilyMember) {
+export async function createFamilyMemberAction(member: FamilyMemberFormInput) {
   const householdId = await requireManageableHouseholdId();
   await createHouseholdMember(householdId, validateFamilyMember(member, true));
   revalidateFamily();
 }
 
-export async function updateFamilyMemberAction(member: FamilyMember) {
+export async function updateFamilyMemberAction(memberId: string, member: FamilyMemberFormInput) {
   const householdId = await requireManageableHouseholdId();
-  await updateHouseholdMember(householdId, member.id, validateFamilyMember(member, false));
+  await updateHouseholdMember(householdId, memberId, validateFamilyMember(member, false));
   revalidateFamily();
 }
 

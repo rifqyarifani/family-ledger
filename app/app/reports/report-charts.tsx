@@ -15,7 +15,7 @@ import {
   YAxis
 } from "recharts";
 import { chartColors } from "@/constants/finance";
-import { formatCurrency, formatMonthKey } from "@/lib/finance";
+import { formatCompactNumber, formatCurrency, formatMonthKey } from "@/lib/finance";
 
 type MonthlyDatum = {
   month: string;
@@ -35,20 +35,13 @@ type MemberDatum = {
   amount: number;
 };
 
-function formatAxisValue(value: number) {
-  if (value === 0) return "0";
-  if (Math.abs(value) >= 1000000) return `${(value / 1000000).toFixed(1).replace(/\.0$/, "")}jt`;
-  if (Math.abs(value) >= 1000) return `${(value / 1000).toFixed(0)}rb`;
-  return `${value}`;
-}
-
 export function MonthlyIncomeExpenseChart({ data }: { data: MonthlyDatum[] }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data}>
         <CartesianGrid strokeDasharray="3 3" stroke="#cfd5ca" />
         <XAxis dataKey="month" stroke="#454745" fontSize={12} tickFormatter={(value: string) => formatMonthKey(value)} />
-        <YAxis stroke="#454745" fontSize={12} tickFormatter={formatAxisValue} />
+        <YAxis stroke="#454745" fontSize={12} tickFormatter={formatCompactNumber} />
         <Tooltip formatter={(value: number) => formatCurrency(value)} />
         <Bar dataKey="income" fill="#16a34a" radius={[6, 6, 0, 0]} />
         <Bar dataKey="expense" fill="#dc2626" radius={[6, 6, 0, 0]} />
@@ -63,7 +56,7 @@ export function NetCashflowTrendChart({ data }: { data: MonthlyDatum[] }) {
       <AreaChart data={data}>
         <CartesianGrid strokeDasharray="3 3" stroke="#cfd5ca" />
         <XAxis dataKey="month" stroke="#454745" fontSize={12} tickFormatter={(value: string) => formatMonthKey(value)} />
-        <YAxis stroke="#454745" fontSize={12} tickFormatter={formatAxisValue} />
+        <YAxis stroke="#454745" fontSize={12} tickFormatter={formatCompactNumber} />
         <Tooltip formatter={(value: number) => formatCurrency(value)} />
         <Area type="monotone" dataKey="savings" stroke="#9fe870" fill="#e5f7d4" strokeWidth={2} />
       </AreaChart>
@@ -118,7 +111,7 @@ export function ExpenseByMemberChart({ data }: { data: MemberDatum[] }) {
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data} layout="vertical" margin={{ left: 16 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#cfd5ca" />
-        <XAxis type="number" stroke="#454745" fontSize={12} tickFormatter={formatAxisValue} />
+        <XAxis type="number" stroke="#454745" fontSize={12} tickFormatter={formatCompactNumber} />
         <YAxis type="category" dataKey="member" stroke="#454745" fontSize={12} width={90} />
         <Tooltip formatter={(value: number) => formatCurrency(value)} />
         <Bar dataKey="amount" fill="#0f172a" radius={[0, 6, 6, 0]} />

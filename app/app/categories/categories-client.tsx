@@ -255,15 +255,21 @@ export function CategoriesClient({
           }
           category={categoryDialog.editingItem}
           onCancel={categoryDialog.closeForm}
-          onSubmit={(category) =>
+          pending={isPending}
+          pendingLabel={categoryDialog.editingItem ? "Saving..." : "Adding..."}
+          onSubmit={(category) => {
+            const editingId = categoryDialog.editingItem?.id;
             runAction(
               () =>
-                categoryDialog.editingItem
-                  ? updateCategoryAction(category)
+                editingId
+                  ? updateCategoryAction(editingId, category)
                   : createCategoryAction(category),
               categoryDialog.closeForm,
-            )
-          }
+              {
+                successMessage: editingId ? "Category updated" : "Category added"
+              }
+            );
+          }}
         />
       </Modal>
 
@@ -282,12 +288,15 @@ export function CategoriesClient({
             title="Delete category?"
             message={decision.message}
             confirmLabel={decision.confirmLabel}
+            pending={isPending}
+            pendingLabel="Deleting..."
             onClose={categoryDialog.closeDelete}
             onConfirm={() =>
               deleting &&
               runAction(
                 () => deleteCategoryAction(deleting.id),
                 categoryDialog.closeDelete,
+                { successMessage: "Category deleted" }
               )
             }
           />

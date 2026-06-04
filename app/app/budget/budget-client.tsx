@@ -289,15 +289,21 @@ export function BudgetClient({
           expenseCategories={expenseCategories}
           defaultMonth={selectedMonth}
           onCancel={budgetDialog.closeForm}
-          onSubmit={(budget) =>
+          pending={isPending}
+          pendingLabel={budgetDialog.editingItem ? "Saving..." : "Adding..."}
+          onSubmit={(budget) => {
+            const editingId = budgetDialog.editingItem?.id;
             runAction(
               () =>
-                budgetDialog.editingItem
-                  ? updateBudgetAction(budget)
+                editingId
+                  ? updateBudgetAction(editingId, budget)
                   : createBudgetAction(budget),
               budgetDialog.closeForm,
-            )
-          }
+              {
+                successMessage: editingId ? "Budget updated" : "Budget added"
+              }
+            );
+          }}
         />
       </Modal>
 
@@ -305,12 +311,15 @@ export function BudgetClient({
         open={Boolean(budgetDialog.deletingItem)}
         title="Delete budget?"
         message={`This will remove the ${budgetDialog.deletingItem?.category ?? "selected"} budget category.`}
+        pending={isPending}
+        pendingLabel="Deleting..."
         onClose={budgetDialog.closeDelete}
         onConfirm={() =>
           budgetDialog.deletingItem &&
           runAction(
             () => deleteBudgetAction(budgetDialog.deletingItem!.id),
             budgetDialog.closeDelete,
+            { successMessage: "Budget deleted" }
           )
         }
       />

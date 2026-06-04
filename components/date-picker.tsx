@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/button";
 import { useClickOutside } from "@/hooks/use-click-outside";
-import { formatDate } from "@/lib/finance";
+import { formatDate, formatMonthLongYear } from "@/lib/finance";
 import { cn } from "@/lib/utils";
 
 const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -41,7 +41,7 @@ export function DatePicker({
   const [isOpen, setIsOpen] = useState(false);
   const [visibleMonth, setVisibleMonth] = useState(() => fromIsoDate(value));
   const visibleDays = useMemo(() => getMonthDays(visibleMonth), [visibleMonth]);
-  const monthLabel = new Intl.DateTimeFormat("id-ID", { month: "long", year: "numeric" }).format(visibleMonth);
+  const monthLabel = formatMonthLongYear(visibleMonth);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useClickOutside(containerRef, isOpen, () => setIsOpen(false));

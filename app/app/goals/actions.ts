@@ -11,9 +11,10 @@ import {
 } from "@/src/lib/data/savings-goals";
 import { requireHouseholdId } from "@/lib/household-utils";
 import { normalizeGoalName } from "@/lib/format-utils";
-import type { SavingsGoal } from "@/types/finance";
+import { isValidISODate } from "@/lib/validation";
+import type { SavingsGoalFormInput } from "@/types/finance";
 
-async function validateSavingsGoal(householdId: string, goal: SavingsGoal, currentGoalId?: string): Promise<SavingsGoalInput> {
+async function validateSavingsGoal(householdId: string, goal: SavingsGoalFormInput, currentGoalId?: string): Promise<SavingsGoalInput> {
   const name = goal.name.trim();
 
   if (!name || name.length > 30) {
@@ -24,8 +25,8 @@ async function validateSavingsGoal(householdId: string, goal: SavingsGoal, curre
     throw new Error("Target amount must be positive.");
   }
 
-  if (!goal.dueDate) {
-    throw new Error("Due date is required.");
+  if (!goal.dueDate || !isValidISODate(goal.dueDate)) {
+    throw new Error("Enter a valid due date.");
   }
 
   const [accounts, goals] = await Promise.all([
@@ -69,15 +70,15 @@ function revalidateGoals() {
   revalidatePath("/app/goals");
 }
 
-export async function createSavingsGoalAction(goal: SavingsGoal) {
+export async function createSavingsGoalAction(goal: SavingsGoalFormInput) {
   const householdId = await requireHouseholdId();
   await createSavingsGoal(householdId, await validateSavingsGoal(householdId, goal));
   revalidateGoals();
 }
 
-export async function updateSavingsGoalAction(goal: SavingsGoal) {
+export async function updateSavingsGoalAction(goalId: string, goal: SavingsGoalFormInput) {
   const householdId = await requireHouseholdId();
-  await updateSavingsGoal(householdId, goal.id, await validateSavingsGoal(householdId, goal, goal.id));
+  await updateSavingsGoal(householdId, goalId, await validateSavingsGoal(householdId, goal, goalId));
   revalidateGoals();
 }
 

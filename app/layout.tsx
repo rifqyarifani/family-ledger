@@ -13,7 +13,8 @@ export const metadata: Metadata = {
   description:
     "Track income, expenses, accounts, budgets, and savings goals with your family — in IDR, no bank connection required.",
   icons: {
-    icon: "/favicon.png"
+    icon: "/favicon.png",
+    apple: "/apple-touch-icon.png"
   },
   openGraph: {
     title: "FamilyLedger — Household money, clearly handled.",

@@ -7,22 +7,25 @@ import { MonthPicker } from "@/components/month-picker";
 import { useFormErrors } from "@/hooks/use-form-errors";
 import { formatInputAmount, parseFormattedAmount } from "@/lib/format-utils";
 import { getCurrentMonthKey } from "@/lib/finance";
-import { createId } from "@/lib/utils";
 import { mustSelect, positiveAmount } from "@/lib/validation";
-import type { Budget } from "@/types/finance";
+import type { BudgetFormInput } from "@/types/finance";
 
 export function BudgetForm({
   budget,
   expenseCategories,
   defaultMonth,
   onSubmit,
-  onCancel
+  onCancel,
+  pending = false,
+  pendingLabel
 }: {
-  budget?: Budget;
+  budget?: BudgetFormInput;
   expenseCategories: string[];
   defaultMonth?: string;
-  onSubmit: (budget: Budget) => void | Promise<void>;
+  onSubmit: (budget: BudgetFormInput) => void | Promise<void>;
   onCancel: () => void;
+  pending?: boolean;
+  pendingLabel?: string;
 }) {
   const [category, setCategory] = useState(
     budget?.category && expenseCategories.includes(budget.category)
@@ -50,7 +53,6 @@ export function BudgetForm({
     }
 
     onSubmit({
-      id: budget?.id ?? createId("budget"),
       category,
       limit: parseFormattedAmount(limit),
       month
@@ -83,7 +85,12 @@ export function BudgetForm({
           <MonthPicker value={month} onChange={setMonth} />
         </div>
       </div>
-      <FormActions submitLabel={budget ? "Save changes" : "Add budget"} onCancel={onCancel} />
+      <FormActions
+        submitLabel={budget ? "Save changes" : "Add budget"}
+        onCancel={onCancel}
+        pending={pending}
+        pendingLabel={pendingLabel}
+      />
     </form>
   );
 }

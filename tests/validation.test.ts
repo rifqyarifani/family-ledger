@@ -4,6 +4,10 @@ import {
   MAX_NAME_LENGTH,
   cappedName,
   composeValidators,
+  isValidISODate,
+  isValidMonthKey,
+  isValidTime,
+  isValidUuid,
   maxLength,
   mustSelect,
   nonNegativeAmount,
@@ -148,6 +152,91 @@ describe("validation", () => {
     it("returns null when no validators", () => {
       const result = composeValidators();
       assert.equal(result, null);
+    });
+  });
+
+  describe("isValidISODate", () => {
+    it("accepts a real date", () => {
+      assert.equal(isValidISODate("2026-06-04"), true);
+    });
+
+    it("rejects bad format", () => {
+      assert.equal(isValidISODate("2026/06/04"), false);
+      assert.equal(isValidISODate("04-06-2026"), false);
+      assert.equal(isValidISODate("not-a-date"), false);
+      assert.equal(isValidISODate(""), false);
+    });
+
+    it("rejects impossible dates", () => {
+      assert.equal(isValidISODate("2026-02-30"), false);
+      assert.equal(isValidISODate("2026-13-01"), false);
+      assert.equal(isValidISODate("2026-00-10"), false);
+      assert.equal(isValidISODate("2026-04-31"), false);
+    });
+
+    it("accepts leap day in leap year", () => {
+      assert.equal(isValidISODate("2024-02-29"), true);
+    });
+
+    it("rejects leap day in non-leap year", () => {
+      assert.equal(isValidISODate("2025-02-29"), false);
+    });
+  });
+
+  describe("isValidTime", () => {
+    it("accepts HH:MM", () => {
+      assert.equal(isValidTime("09:30"), true);
+      assert.equal(isValidTime("00:00"), true);
+      assert.equal(isValidTime("23:59"), true);
+    });
+
+    it("accepts HH:MM:SS", () => {
+      assert.equal(isValidTime("09:30:45"), true);
+    });
+
+    it("rejects bad format", () => {
+      assert.equal(isValidTime("9:30"), false);
+      assert.equal(isValidTime("09-30"), false);
+      assert.equal(isValidTime(""), false);
+    });
+
+    it("rejects out of range", () => {
+      assert.equal(isValidTime("24:00"), false);
+      assert.equal(isValidTime("12:60"), false);
+    });
+  });
+
+  describe("isValidMonthKey", () => {
+    it("accepts YYYY-MM with month 1-12", () => {
+      assert.equal(isValidMonthKey("2026-01"), true);
+      assert.equal(isValidMonthKey("2026-12"), true);
+    });
+
+    it("rejects bad month", () => {
+      assert.equal(isValidMonthKey("2026-00"), false);
+      assert.equal(isValidMonthKey("2026-13"), false);
+    });
+
+    it("rejects bad format", () => {
+      assert.equal(isValidMonthKey("2026/01"), false);
+      assert.equal(isValidMonthKey("01-2026"), false);
+      assert.equal(isValidMonthKey("2026-1"), false);
+    });
+  });
+
+  describe("isValidUuid", () => {
+    it("accepts a real uuid", () => {
+      assert.equal(isValidUuid("a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"), true);
+    });
+
+    it("is case-insensitive", () => {
+      assert.equal(isValidUuid("A1B2C3D4-E5F6-4A7B-8C9D-0E1F2A3B4C5D"), true);
+    });
+
+    it("rejects malformed values", () => {
+      assert.equal(isValidUuid("not-a-uuid"), false);
+      assert.equal(isValidUuid(""), false);
+      assert.equal(isValidUuid("a1b2c3d4e5f64a7b8c9d0e1f2a3b4c5d"), false);
     });
   });
 });
