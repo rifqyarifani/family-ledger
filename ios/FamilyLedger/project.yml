@@ -24,6 +24,10 @@ targets:
       - Features
     info:
       path: Resources/Info.plist
+      properties:
+        MOBILE_API_BASE_URL: $(MOBILE_API_BASE_URL)
+        SUPABASE_URL: $(SUPABASE_URL)
+        SUPABASE_PUBLISHABLE_KEY: $(SUPABASE_PUBLISHABLE_KEY)
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.familyledger.ios

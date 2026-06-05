@@ -105,6 +105,22 @@ export function DashboardClient({
       return { ...item, color: category?.color };
     });
   }, [monthlyTransactions, categories]);
+  const categoryMap = useMemo(() => {
+    return Object.fromEntries(
+      categories.map((category) => [
+        category.name,
+        { icon: category.icon, color: category.color },
+      ]),
+    );
+  }, [categories]);
+  const accountMap = useMemo(() => {
+    return Object.fromEntries(
+      accounts.map((account) => [
+        account.id,
+        { iconColor: account.iconColor },
+      ]),
+    );
+  }, [accounts]);
   const currentBudgets = useMemo(
     () => budgets.filter((budget) => budget.month === month).slice(0, 2),
     [budgets, month],
@@ -195,6 +211,9 @@ export function DashboardClient({
             transactions={recentTransactions}
             members={familyMembers}
             accounts={accounts}
+            categoryMap={categoryMap}
+            accountMap={accountMap}
+            showMember={false}
           />
         </Card>
       </div>

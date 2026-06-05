@@ -49,10 +49,17 @@ export function SpendingBreakdownChart({ data }: { data: SpendingDatum[] }) {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="min-h-0 flex-1">
+      <div className="h-40 shrink-0 sm:h-44">
         <ResponsiveContainer width="100%" height="100%">
-          <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-            <Pie data={data} dataKey="amount" nameKey="category" innerRadius={52} outerRadius={82} paddingAngle={4}>
+          <PieChart margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
+            <Pie
+              data={data}
+              dataKey="amount"
+              nameKey="category"
+              innerRadius="52%"
+              outerRadius="80%"
+              paddingAngle={4}
+            >
               {data.map((entry, index) => (
                 <Cell
                   key={entry.category}
@@ -64,7 +71,7 @@ export function SpendingBreakdownChart({ data }: { data: SpendingDatum[] }) {
           </PieChart>
         </ResponsiveContainer>
       </div>
-      <div className="mt-3 grid grid-cols-1 gap-2 border-t border-surface pt-3 sm:grid-cols-2">
+      <div className="mt-3 grid min-h-0 grid-cols-1 gap-2 overflow-y-auto border-t border-surface pt-3 sm:grid-cols-2">
         {data.map((item, index) => {
           const percentage = total > 0 ? Math.round((item.amount / total) * 100) : 0;
           return (

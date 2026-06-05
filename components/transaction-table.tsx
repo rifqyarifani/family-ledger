@@ -35,6 +35,7 @@ type TransactionTableProps = {
   accounts: Account[];
   categoryMap?: Record<string, { icon?: string; color?: string }>;
   accountMap?: Record<string, { iconColor?: string }>;
+  showMember?: boolean;
   onEdit?: (transaction: Transaction) => void;
   onDelete?: (transaction: Transaction) => void;
 };
@@ -45,6 +46,7 @@ export function TransactionTable({
   accounts,
   categoryMap = {},
   accountMap = {},
+  showMember = true,
   onEdit,
   onDelete,
 }: TransactionTableProps) {
@@ -54,6 +56,8 @@ export function TransactionTable({
   const memberById = useMemo(() => new Map(members.map((member) => [member.id, member.name])), [members]);
 
   useClickOutside(menuRef, openMenuId !== null, () => setOpenMenuId(null));
+  const hasActions = Boolean(onEdit || onDelete);
+  const tableColumnCount = 5 + (showMember ? 1 : 0) + (hasActions ? 1 : 0);
 
   const groupedTransactions = useMemo(() => {
     const groups = new Map<string, Transaction[]>();
@@ -115,11 +119,13 @@ export function TransactionTable({
             <tr>
               <th scope="col" className="px-4 py-3">Transaction</th>
               <th scope="col" className="px-4 py-3">Category</th>
-              <th scope="col" className="px-4 py-3">Member</th>
+              {showMember ? (
+                <th scope="col" className="px-4 py-3">Member</th>
+              ) : null}
               <th scope="col" className="px-4 py-3">Account</th>
               <th scope="col" className="px-4 py-3">Time</th>
               <th scope="col" className="px-4 py-3 text-right">Amount</th>
-              <th scope="col" className="px-4 py-3" />
+              {hasActions ? <th scope="col" className="px-4 py-3" /> : null}
             </tr>
           </thead>
           <tbody className="divide-y divide-surface-border bg-white">
@@ -127,7 +133,7 @@ export function TransactionTable({
               <Fragment key={dateKey}>
                 <tr key={`date-${dateKey}`}>
                   <td
-                    colSpan={(onEdit || onDelete) ? 7 : 6}
+                    colSpan={tableColumnCount}
                     className="bg-surface-subtle px-4 py-2 text-xs font-semibold text-ink-secondary"
                   >
                     {formatDate(dateKey)}
@@ -164,9 +170,11 @@ export function TransactionTable({
                           <span className="text-ink-secondary">{transaction.category}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-ink-secondary">
-                        {getFirstName(getMemberLabel(transaction))}
-                      </td>
+                      {showMember ? (
+                        <td className="px-4 py-3 text-ink-secondary">
+                          {getFirstName(getMemberLabel(transaction))}
+                        </td>
+                      ) : null}
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <span
@@ -186,7 +194,7 @@ export function TransactionTable({
                         {getAmountPrefix(transaction.type)}
                         {formatCurrency(transaction.amount)}
                       </td>
-                      {(onEdit || onDelete) && (
+                      {hasActions && (
                         <td className="px-4 py-3">
                           <div className="relative flex justify-end">
                             <Button
@@ -290,8 +298,12 @@ export function TransactionTable({
                           <CategoryIcon className="h-3 w-3" aria-hidden="true" />
                         </div>
                         <span>{transaction.category}</span>
-                        <span>·</span>
-                        <span>{getFirstName(getMemberLabel(transaction))}</span>
+                        {showMember ? (
+                          <>
+                            <span>·</span>
+                            <span>{getFirstName(getMemberLabel(transaction))}</span>
+                          </>
+                        ) : null}
                         <span>·</span>
                         <span
                           className="inline-block h-2 w-2 shrink-0 rounded-full"
@@ -301,7 +313,7 @@ export function TransactionTable({
                         <span>·</span>
                         <span>{formatTime(transaction.time ?? "")}</span>
                       </div>
-                      {(onEdit || onDelete) && (
+                      {hasActions && (
                         <div className="relative">
                           <Button
                             variant="ghost"
