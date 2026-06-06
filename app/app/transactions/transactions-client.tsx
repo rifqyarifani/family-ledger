@@ -44,7 +44,8 @@ export function TransactionsClient({
   accountMap?: Record<string, { iconColor?: string }>;
 }) {
   const transactionDialog = useCrudDialog<Transaction>();
-  const { isPending, error, runAction } = useRunAction();
+  const { isPending, isRunning, error, runAction } = useRunAction();
+  const actionPending = isPending || isRunning;
   const [showFilters, setShowFilters] = useState(false);
   const [visibleCount, setVisibleCount] = useState(50);
   const [filters, setFilters] = useState({
@@ -149,7 +150,7 @@ export function TransactionsClient({
       <PageIntro
         title="Transactions"
         action={
-          <Button onClick={transactionDialog.openCreate} disabled={isPending}>
+          <Button onClick={transactionDialog.openCreate} disabled={actionPending}>
             <Plus className="h-4 w-4" aria-hidden="true" />
             Add transaction
           </Button>
@@ -359,7 +360,7 @@ export function TransactionsClient({
           categories={categories}
           defaultMemberId={currentMemberId}
           onCancel={transactionDialog.closeForm}
-          pending={isPending}
+          pending={actionPending}
           pendingLabel={transactionDialog.editingItem ? "Saving..." : "Adding..."}
           onSubmit={(transaction) => {
             const editingId = transactionDialog.editingItem?.id;
@@ -381,7 +382,7 @@ export function TransactionsClient({
         open={Boolean(transactionDialog.deletingItem)}
         title="Delete transaction?"
         message={`This will remove "${transactionDialog.deletingItem?.title ?? "this transaction"}" from your household ledger.`}
-        pending={isPending}
+        pending={actionPending}
         pendingLabel="Deleting..."
         onClose={transactionDialog.closeDelete}
         onConfirm={() =>

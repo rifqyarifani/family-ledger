@@ -8,11 +8,12 @@ import {
   type FormEvent,
 } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Copy, Home, UserRound, X } from "lucide-react";
+import { Check, Copy, Home, Monitor, Moon, Sun, UserRound, X } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import { Button } from "@/components/button";
 import { Field, Input } from "@/components/form-field";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
+import { themePreferenceEvent, type ThemePreference } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import type { Settings } from "@/types/finance";
 import {
@@ -20,7 +21,7 @@ import {
   updateProfileAction,
 } from "@/app/app/profile-actions";
 
-type SettingsSection = "profile" | "household";
+type SettingsSection = "profile" | "appearance" | "household";
 
 const settingsNavItems: Array<{
   id: SettingsSection;
@@ -28,7 +29,34 @@ const settingsNavItems: Array<{
   icon: typeof UserRound;
 }> = [
   { id: "profile", label: "Profile", icon: UserRound },
+  { id: "appearance", label: "Appearance", icon: Moon },
   { id: "household", label: "Household", icon: Home },
+];
+
+const themeOptions: Array<{
+  value: ThemePreference;
+  label: string;
+  description: string;
+  icon: typeof Monitor;
+}> = [
+  {
+    value: "system",
+    label: "System",
+    description: "Follow your device setting.",
+    icon: Monitor,
+  },
+  {
+    value: "light",
+    label: "Light",
+    description: "Use the original light workspace.",
+    icon: Sun,
+  },
+  {
+    value: "dark",
+    label: "Dark",
+    description: "Use darker surfaces and soft contrast.",
+    icon: Moon,
+  },
 ];
 
 export function SettingsDialog({
@@ -47,6 +75,7 @@ export function SettingsDialog({
     firstName: string;
     lastName: string;
     displayName: string;
+    themePreference: ThemePreference;
   } | null;
   householdName: string;
   householdCode: string;
@@ -65,14 +94,17 @@ export function SettingsDialog({
     profilePlan: "Family",
     currency: "IDR",
     monthlyCycleDay,
-    themePreference: "system",
+    themePreference: profile?.themePreference ?? "system",
   });
   const [message, setMessage] = useState("");
   const [copiedCode, setCopiedCode] = useState(false);
   const [isPending, startTransition] = useTransition();
   const householdCodeRef = useRef<HTMLParagraphElement>(null);
+  const savedThemePreferenceRef = useRef<ThemePreference>(
+    profile?.themePreference ?? "system",
+  );
 
-  useFocusTrap(dialogRef, open, onClose);
+  useFocusTrap(dialogRef, open, closeSettings);
 
   useEffect(() => {
     if (!open) return;
@@ -84,28 +116,52 @@ export function SettingsDialog({
       profileEmail: profile?.email ?? "",
       profilePlan: "Family",
       currency: "IDR",
-      themePreference: "system",
+      themePreference: profile?.themePreference ?? "system",
     });
     setMessage("");
     setCopiedCode(false);
     setActiveSection("profile");
+    savedThemePreferenceRef.current = profile?.themePreference ?? "system";
   }, [open, profile, householdName, householdCode, monthlyCycleDay]);
 
   if (!open) {
     return null;
   }
 
+  function closeSettings() {
+    window.dispatchEvent(
+      new CustomEvent(themePreferenceEvent, {
+        detail: {
+          preference: savedThemePreferenceRef.current,
+          persist: false,
+        },
+      }),
+    );
+    onClose();
+  }
+
   function saveSettings(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (activeSection === "profile") {
+    if (activeSection === "profile" || activeSection === "appearance") {
       startTransition(async () => {
         const result = await updateProfileAction({
           firstName: formValues.profileFirstName,
           lastName: formValues.profileLastName,
+          themePreference: formValues.themePreference,
         });
-        setMessage(result.message);
+        setMessage(
+          result.ok && activeSection === "appearance"
+            ? "Appearance saved."
+            : result.message,
+        );
         if (result.ok) {
+          savedThemePreferenceRef.current = formValues.themePreference;
+          window.dispatchEvent(
+            new CustomEvent(themePreferenceEvent, {
+              detail: { preference: formValues.themePreference },
+            }),
+          );
           router.refresh();
         }
       });
@@ -126,6 +182,18 @@ export function SettingsDialog({
     }
 
     setMessage("Choose a settings section to update.");
+  }
+
+  function updateThemePreference(themePreference: ThemePreference) {
+    setFormValues((current) => ({
+      ...current,
+      themePreference,
+    }));
+    window.dispatchEvent(
+      new CustomEvent(themePreferenceEvent, {
+        detail: { preference: themePreference, persist: false },
+      }),
+    );
   }
 
   async function copyHouseholdCode() {
@@ -161,7 +229,7 @@ export function SettingsDialog({
       aria-modal="true"
       aria-label="Settings"
     >
-      <div ref={dialogRef} className="my-4 grid w-full max-w-5xl overflow-hidden rounded-[2rem] bg-white shadow-xl sm:my-0 md:grid-cols-[240px_1fr]">
+      <div ref={dialogRef} className="my-4 grid w-full max-w-5xl overflow-hidden rounded-[2rem] bg-canvas shadow-xl sm:my-0 md:grid-cols-[240px_1fr]">
         <aside className="border-b border-surface bg-surface-subtle p-4 md:border-b-0 md:border-r">
           <div className="flex items-center justify-between gap-3 md:block">
             <div>
@@ -174,7 +242,7 @@ export function SettingsDialog({
               variant="ghost"
               size="icon"
               className="md:hidden"
-              onClick={onClose}
+              onClick={closeSettings}
               aria-label="Close settings"
             >
               <X className="h-4 w-4" aria-hidden="true" />
@@ -192,7 +260,7 @@ export function SettingsDialog({
                     "flex shrink-0 items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition md:w-full",
                     activeSection === item.id
                       ? "bg-brand text-white"
-                      : "text-ink-secondary hover:bg-white hover:text-ink",
+                      : "text-ink-secondary hover:bg-canvas hover:text-ink",
                   )}
                 >
                   <Icon className="h-4 w-4" aria-hidden="true" />
@@ -216,7 +284,7 @@ export function SettingsDialog({
             <Button
               variant="ghost"
               size="icon"
-              onClick={onClose}
+              onClick={closeSettings}
               aria-label="Close settings"
             >
               <X className="h-4 w-4" aria-hidden="true" />
@@ -285,6 +353,49 @@ export function SettingsDialog({
               </div>
             ) : null}
 
+            {activeSection === "appearance" ? (
+              <div className="grid gap-4">
+                <div
+                  className="grid gap-3 sm:grid-cols-3"
+                  role="radiogroup"
+                  aria-label="Theme preference"
+                >
+                  {themeOptions.map((option) => {
+                    const Icon = option.icon;
+                    const selected = formValues.themePreference === option.value;
+
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        onClick={() => updateThemePreference(option.value)}
+                        className={cn(
+                          "flex min-h-[132px] flex-col items-start justify-between rounded-2xl border p-4 text-left transition",
+                          selected
+                            ? "border-brand-green bg-brand-green-pale text-ink"
+                            : "border-surface-border bg-surface-subtle text-ink-secondary hover:border-brand-green hover:bg-canvas hover:text-ink",
+                        )}
+                      >
+                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-canvas text-ink">
+                          <Icon className="h-4 w-4" aria-hidden="true" />
+                        </span>
+                        <span>
+                          <span className="block text-sm font-semibold">
+                            {option.label}
+                          </span>
+                          <span className="mt-1 block text-xs leading-5 text-ink-secondary">
+                            {option.description}
+                          </span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+
             {activeSection === "household" ? (
               <div className="grid gap-4">
                 <div className="rounded-2xl border border-surface-border bg-surface-subtle p-4">
@@ -335,7 +446,7 @@ export function SettingsDialog({
             ) : null}
 
             <div className="flex flex-col-reverse gap-2 border-t border-surface pt-5 sm:flex-row sm:justify-end">
-              <Button variant="secondary" onClick={onClose}>
+              <Button variant="secondary" onClick={closeSettings}>
                 Cancel
               </Button>
               <Button type="submit" disabled={isPending}>

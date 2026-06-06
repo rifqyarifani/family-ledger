@@ -37,7 +37,7 @@ export function TimePicker({
       <button
         type="button"
         className={cn(
-          "flex h-10 w-full items-center justify-between rounded-xl border border-surface-border bg-white px-3 text-left text-sm text-ink transition hover:border-[#b0b8a8]",
+          "flex h-10 w-full items-center justify-between rounded-xl border border-surface-border bg-canvas px-3 text-left text-sm text-ink transition hover:border-[#b0b8a8]",
           !displayValue && "text-[#9ca390]"
         )}
         onClick={() => setIsOpen((current) => !current)}
@@ -49,7 +49,7 @@ export function TimePicker({
       </button>
 
       {isOpen ? (
-        <div className="absolute left-0 right-0 z-50 mt-2 rounded-2xl border border-surface-border bg-white p-3 shadow-xl sm:right-auto sm:w-64">
+        <div className="absolute left-0 right-0 z-50 mt-2 rounded-2xl border border-surface-border bg-canvas p-3 shadow-xl sm:right-auto sm:w-64">
           <div className="flex items-center gap-2">
             <select
               value={selectedHour}
@@ -58,7 +58,7 @@ export function TimePicker({
                 setSelectedHour(newHour);
                 onChange(`${newHour}:${selectedMinute}`);
               }}
-              className="h-10 flex-1 rounded-xl border border-surface-border bg-white px-2 text-center text-sm text-ink focus:border-brand focus:outline-none"
+              className="h-10 flex-1 rounded-xl border border-surface-border bg-canvas px-2 text-center text-sm text-ink focus:border-brand focus:outline-none"
             >
               {hours.map((h) => (
                 <option key={h} value={h}>
@@ -75,7 +75,7 @@ export function TimePicker({
                 onChange(`${selectedHour}:${newMinute}`);
                 setIsOpen(false);
               }}
-              className="h-10 flex-1 rounded-xl border border-surface-border bg-white px-2 text-center text-sm text-ink focus:border-brand focus:outline-none"
+              className="h-10 flex-1 rounded-xl border border-surface-border bg-canvas px-2 text-center text-sm text-ink focus:border-brand focus:outline-none"
             >
               {minutes.map((m) => (
                 <option key={m} value={m}>

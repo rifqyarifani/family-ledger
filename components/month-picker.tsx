@@ -47,7 +47,7 @@ export function MonthPicker({
       <button
         type="button"
         className={cn(
-          "flex h-10 w-full items-center justify-between rounded-xl border border-surface-border bg-white px-3 text-left text-sm text-ink transition hover:border-[#b0b8a8]",
+          "flex h-10 w-full items-center justify-between rounded-xl border border-surface-border bg-canvas px-3 text-left text-sm text-ink transition hover:border-[#b0b8a8]",
           !value && "text-[#9ca390]"
         )}
         onClick={() => setIsOpen((current) => !current)}
@@ -59,7 +59,7 @@ export function MonthPicker({
       </button>
 
       {isOpen ? (
-        <div className="absolute left-0 right-0 z-50 mt-2 rounded-2xl border border-surface-border bg-white p-3 shadow-xl sm:right-auto sm:w-80">
+        <div className="absolute left-0 right-0 z-50 mt-2 rounded-2xl border border-surface-border bg-canvas p-3 shadow-xl sm:right-auto sm:w-80">
           <div className="mb-3 flex items-center justify-between">
             <Button variant="ghost" size="icon" onClick={() => moveYear(-1)} aria-label="Previous year">
               <ChevronLeft className="h-4 w-4" aria-hidden="true" />

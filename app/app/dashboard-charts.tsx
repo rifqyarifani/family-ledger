@@ -15,6 +15,17 @@ import {
 import { chartColors } from "@/constants/finance";
 import { formatCompactNumber, formatCurrency } from "@/lib/finance";
 
+const tooltipStyle = {
+  backgroundColor: "var(--chart-tooltip-bg)",
+  border: "1px solid var(--chart-tooltip-border)",
+  borderRadius: "12px",
+  color: "var(--chart-tooltip-text)",
+} as const;
+
+const tooltipTextStyle = {
+  color: "var(--chart-tooltip-text)",
+} as const;
+
 type CashflowDatum = {
   month: string;
   income: number;
@@ -32,13 +43,13 @@ export function CashflowTrendChart({ data }: { data: CashflowDatum[] }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#cfd5ca" />
-        <XAxis dataKey="month" stroke="#454745" fontSize={12} />
-        <YAxis stroke="#454745" fontSize={12} tickFormatter={(value: number) => formatCompactNumber(value)} />
-        <Tooltip formatter={(value: number) => formatCurrency(value)} />
-        <Area type="monotone" dataKey="income" stroke="#16a34a" fill="#dcfce7" strokeWidth={2} />
-        <Area type="monotone" dataKey="expense" stroke="#dc2626" fill="#fee2e2" strokeWidth={2} />
-        <Area type="monotone" dataKey="savings" stroke="#2563eb" fill="#dbeafe" strokeWidth={2} />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
+        <XAxis dataKey="month" stroke="var(--chart-axis)" fontSize={12} />
+        <YAxis stroke="var(--chart-axis)" fontSize={12} tickFormatter={(value: number) => formatCompactNumber(value)} />
+        <Tooltip contentStyle={tooltipStyle} labelStyle={tooltipTextStyle} itemStyle={tooltipTextStyle} formatter={(value: number) => formatCurrency(value)} />
+        <Area type="monotone" dataKey="income" stroke="#16a34a" fill="#16a34a" fillOpacity={0.18} strokeWidth={2} />
+        <Area type="monotone" dataKey="expense" stroke="#dc2626" fill="#dc2626" fillOpacity={0.16} strokeWidth={2} />
+        <Area type="monotone" dataKey="savings" stroke="#2563eb" fill="#2563eb" fillOpacity={0.14} strokeWidth={2} />
       </AreaChart>
     </ResponsiveContainer>
   );
@@ -67,7 +78,7 @@ export function SpendingBreakdownChart({ data }: { data: SpendingDatum[] }) {
                 />
               ))}
             </Pie>
-            <Tooltip formatter={(value: number) => formatCurrency(value)} />
+            <Tooltip contentStyle={tooltipStyle} labelStyle={tooltipTextStyle} itemStyle={tooltipTextStyle} formatter={(value: number) => formatCurrency(value)} />
           </PieChart>
         </ResponsiveContainer>
       </div>

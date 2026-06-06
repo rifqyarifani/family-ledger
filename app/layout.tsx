@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AnalyticsProvider } from "@/components/analytics-provider";
+import { themeStorageKey } from "@/lib/theme";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -31,11 +32,32 @@ export const metadata: Metadata = {
   }
 };
 
+const themeScript = `
+(function () {
+  try {
+    var storedPreference = window.localStorage.getItem("${themeStorageKey}");
+    var preference = storedPreference === "light" || storedPreference === "dark" || storedPreference === "system"
+      ? storedPreference
+      : "system";
+    var systemDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    var theme = preference === "system" ? (systemDark ? "dark" : "light") : preference;
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.dataset.themePreference = preference;
+  } catch (error) {
+    document.documentElement.dataset.theme = "light";
+    document.documentElement.dataset.themePreference = "system";
+  }
+})();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body>
         {children}
         <AnalyticsProvider />

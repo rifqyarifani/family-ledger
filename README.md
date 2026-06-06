@@ -22,7 +22,7 @@ Authentication uses Supabase Auth with `/login`, `/signup`, and protected `/app`
 - Savings Goals page loaded from Supabase with create, edit, delete, target amount, due date, and progress tracked from a selected savings account.
 - Polished forms with per-field validation, Indonesian amount formatting, 30-character caps for key names/titles, and custom date picker controls.
 - Header profile menu with quick access to a settings popup and logout confirmation.
-- Settings popup with left navigation for Profile and Household. Profile and household settings save to Supabase.
+- Settings popup with left navigation for Profile, Appearance, and Household. Profile and household settings save to Supabase, and each user can choose System, Light, or Dark theme preference.
 - Native SwiftUI iOS app with authentication, household onboarding, dashboard, transaction and transfer management, accounts, budgets, savings goals, reports, category and family management, and settings.
 - Authenticated `/api/mobile/v1` backend-for-frontend routes that keep household financial data access and privileged Supabase operations server-side.
 
@@ -114,5 +114,4 @@ cd ios/FamilyLedger && xcodegen generate
 - Recurring transactions.
 - CSV import and export templates.
 - More report filters and printable summaries.
-- Dark theme implementation.
 - Optional real-time household collaboration with Supabase Realtime.

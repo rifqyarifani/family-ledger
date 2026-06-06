@@ -38,7 +38,7 @@ export function InfoDialog({
         }
       }}
     >
-      <div ref={dialogRef} className="w-full max-w-md rounded-[2rem] bg-white p-6 shadow-xl">
+      <div ref={dialogRef} className="w-full max-w-md rounded-[2rem] bg-canvas p-6 shadow-xl">
         <div className="flex items-start gap-3">
           <div className="rounded-full bg-brand-light p-2 text-brand">
             <Info className="h-5 w-5" aria-hidden="true" />

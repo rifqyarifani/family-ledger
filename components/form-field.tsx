@@ -76,7 +76,7 @@ export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElem
   return (
     <input
       className={cn(
-        "h-10 w-full rounded-xl border border-surface-border bg-white px-3 text-sm text-ink placeholder:text-ink-muted disabled:cursor-not-allowed disabled:bg-surface disabled:text-ink-muted",
+        "h-10 w-full rounded-xl border border-surface-border bg-canvas px-3 text-sm text-ink placeholder:text-ink-muted disabled:cursor-not-allowed disabled:bg-surface disabled:text-ink-muted",
         className
       )}
       {...props}
@@ -88,7 +88,7 @@ export function Select({ className, ...props }: SelectHTMLAttributes<HTMLSelectE
   return (
     <select
       className={cn(
-        "h-10 w-full rounded-xl border border-surface-border bg-white px-3 text-sm text-ink disabled:cursor-not-allowed disabled:bg-surface disabled:text-ink-muted",
+        "h-10 w-full rounded-xl border border-surface-border bg-canvas px-3 text-sm text-ink disabled:cursor-not-allowed disabled:bg-surface disabled:text-ink-muted",
         className
       )}
       {...props}
@@ -100,7 +100,7 @@ export function Textarea({ className, ...props }: TextareaHTMLAttributes<HTMLTex
   return (
     <textarea
       className={cn(
-        "min-h-24 w-full rounded-xl border border-surface-border bg-white px-3 py-2 text-sm text-ink placeholder:text-ink-muted disabled:cursor-not-allowed disabled:bg-surface disabled:text-ink-muted",
+        "min-h-24 w-full rounded-xl border border-surface-border bg-canvas px-3 py-2 text-sm text-ink placeholder:text-ink-muted disabled:cursor-not-allowed disabled:bg-surface disabled:text-ink-muted",
         className
       )}
       {...props}

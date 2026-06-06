@@ -28,7 +28,7 @@ export function PublicHeaderMobileMenu() {
     <>
       <button
         type="button"
-        className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-surface-border bg-white text-ink md:hidden"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-surface-border bg-canvas text-ink md:hidden"
         aria-label={menuOpen ? "Close navigation" : "Open navigation"}
         aria-expanded={menuOpen}
         onClick={() => setMenuOpen((open) => !open)}
@@ -36,7 +36,7 @@ export function PublicHeaderMobileMenu() {
         {menuOpen ? <X className="h-4 w-4" aria-hidden="true" /> : <Menu className="h-4 w-4" aria-hidden="true" />}
       </button>
       {menuOpen ? (
-        <div className="absolute left-0 right-0 top-16 border-t border-surface-border bg-white md:hidden">
+        <div className="absolute left-0 right-0 top-16 border-t border-surface-border bg-canvas md:hidden">
           <nav
             aria-label="Mobile primary"
             className="mx-auto flex w-full max-w-7xl flex-col gap-1 px-4 py-3 sm:px-6"

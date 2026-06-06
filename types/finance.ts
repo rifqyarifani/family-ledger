@@ -1,3 +1,5 @@
+import type { ThemePreference } from "@/lib/theme";
+
 export type TransactionType = "income" | "expense" | "transfer";
 
 export type Transaction = {
@@ -105,7 +107,7 @@ export type Settings = {
   profilePlan: "Family" | "Premium";
   currency: "IDR";
   monthlyCycleDay: number;
-  themePreference: "system" | "light";
+  themePreference: ThemePreference;
 };
 
 export type UserProfile = {
@@ -114,5 +116,5 @@ export type UserProfile = {
   firstName: string;
   lastName: string;
   displayName: string;
+  themePreference: ThemePreference;
 } | null;
-

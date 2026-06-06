@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition, useCallback } from "react";
+import { useCallback, useRef, useState, useTransition } from "react";
 import { useToast } from "@/components/toast-provider";
 import { useAnnounce } from "@/hooks/use-announce";
 
@@ -15,10 +15,18 @@ export function useRunAction() {
   const { showToast } = useToast();
   const announce = useAnnounce();
   const [isPending, startTransition] = useTransition();
+  const runningRef = useRef(false);
+  const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState("");
 
   const runAction = useCallback(
     (action: () => Promise<void>, onSuccess?: () => void, options?: RunActionOptions) => {
+      if (runningRef.current) {
+        return;
+      }
+
+      runningRef.current = true;
+      setIsRunning(true);
       setError("");
       startTransition(async () => {
         try {
@@ -38,11 +46,14 @@ export function useRunAction() {
             description: message
           });
           announce(`${options?.errorMessage ?? "Action failed"}. ${message}`);
+        } finally {
+          runningRef.current = false;
+          setIsRunning(false);
         }
       });
     },
     [router, showToast, announce]
   );
 
-  return { isPending, error, runAction, setError };
+  return { isPending, isRunning, error, runAction, setError };
 }

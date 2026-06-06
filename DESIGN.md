@@ -338,6 +338,61 @@ Cards are universally pill-rounded — `{rounded.xl}` 24 px is the brand's signa
 - **Accent Orange** (`{colors.accent-orange}` — `#ffc091`): Bright peach used inside illustrative content / pricing cards.
 - **Accent Cyan** (`{colors.accent-cyan}` — `#38c8ff`): Bright sky-blue used as a tertiary illustration accent.
 
+## Dark Mode
+
+Dark mode is a full re-skin via the `[data-theme="dark"]` selector in `app/globals.css`. The brand's *brand colors* (primary lime green, semantic red, semantic yellow) stay constant — only the surface/ink/chrome family is re-laddered for dark. Token names do not change, so component code that already references the light tokens automatically picks up dark values.
+
+### Lightness Ladder (the core principle)
+
+Dark mode contrast comes from a strict lightness ladder — every step is 2-3% L apart so cards actually feel elevated:
+
+| Tier | L | Token | Role |
+|---|---|---|---|
+| Base | 6% | `--background` | Page canvas, the deepest fill |
+| Soft | 9% | `--color-canvas-soft` | Sage-equivalent gentle band background |
+| Subtle | 11% | `--color-surface-subtle` | Quiet raised tier (form rows, table headers) |
+| Card | 14% | `--card` / `--color-canvas` | Default card surface |
+| Muted | 16% | `--muted` / `--color-surface` | Stronger raised tier (chips, alert strips) |
+| Border | 26% | `--border` / `--color-surface-border` | Hairline divider |
+
+> Polarity note: in light mode the ladder ascends from white → sage → white-card. In dark mode it descends from near-black → soft → card. The relationship `canvas-soft` < `canvas` is preserved in **both** directions.
+
+### Text Ramp (WCAG AA on all surfaces)
+
+| Token | RGB | Use | AA on `--card`? |
+|---|---|---|---|
+| `--color-ink` | `240 250 235` | Primary headings, body | yes (15:1) |
+| `--color-ink-secondary` | `200 210 195` | Secondary body, nav links | yes (10:1) |
+| `--color-ink-muted` | `148 162 142` | Captions, placeholders | yes (5.4:1) |
+| `--muted-foreground` | derived from `100 14% 78%` HSL | Tailwind `text-muted-foreground` | yes (7:1) |
+
+All four text tiers pass WCAG AA (4.5:1) against every background tier from `canvas-soft` upward.
+
+### Brand Green — Polarity Flip
+
+- `--color-brand-green` (`#9fe870`) and `--color-brand-green-light` (`#cdffad`) are **unchanged** — lime green pops on dark.
+- `--color-brand-green-pale` flips from a pale sage (`rgb(226,246,213)`) to a **vivid mint chip** (`rgb(60,90,70)`) so the "selected" state in Settings → Appearance, and any other accent surface, is clearly visible.
+- `--color-brand-green-dark` flips to a deep saturated green (`hsl(110, 70%, 30%)`) for pressed/strong states.
+
+### Semantic Surfaces
+
+The danger family flips to brighter on-fills and a coral `--color-danger` for AA contrast on the new dark card surface:
+- `--color-danger`: `255 130 138` (coral)
+- `--color-danger-light`: `72 30 32` (visible error fill)
+- `--color-danger-border`: `130 50 56` (visible error outline)
+- `--color-danger-deep`: `255 215 220` (text on light error surface)
+
+### Chart & Shadow
+
+- Chart grid / axis / tooltip tokens are bumped one tier up to match the new canvas-soft / canvas values, so charts don't draw on a near-invisible grid.
+- `--shadow-soft` is darkened to `0 18px 46px rgba(0, 0, 0, 0.45)` to keep perceived elevation against the brighter `--card` surface.
+
+### What's Intentionally NOT Changed
+
+- Brand primary green (lime) and primary-foreground (near-black) — the CTA stays the brand's conversion signature.
+- Token names — zero component code changes.
+- The `[data-theme="dark"]` Tailwind compatibility shim (`app/globals.css:117-174`) — it remaps raw utilities to the same token names, so it picks up the new values automatically.
+
 ## Typography
 
 ### Font Family

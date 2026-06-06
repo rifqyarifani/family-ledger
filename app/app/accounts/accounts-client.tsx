@@ -71,6 +71,9 @@ export function AccountsClient({
   const accountDialog = useCrudDialog<Account>();
   const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
+  const runningRef = useRef(false);
+  const [isRunning, setIsRunning] = useState(false);
+  const actionPending = isPending || isRunning;
   const [error, setError] = useState("");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -124,6 +127,12 @@ export function AccountsClient({
       onSuccess?: () => void,
       successMessage?: string,
     ) => {
+      if (runningRef.current) {
+        return;
+      }
+
+      runningRef.current = true;
+      setIsRunning(true);
       setError("");
       startTransition(async () => {
         if (optimisticAction) addOptimistic(optimisticAction);
@@ -142,6 +151,9 @@ export function AccountsClient({
           setError(message);
           showToast({ tone: "error", title: "Action failed", description: message });
           router.refresh();
+        } finally {
+          runningRef.current = false;
+          setIsRunning(false);
         }
       });
     },
@@ -257,7 +269,7 @@ export function AccountsClient({
       <PageIntro
         title="Accounts"
         action={
-          <Button onClick={accountDialog.openCreate} disabled={isPending}>
+          <Button onClick={accountDialog.openCreate} disabled={actionPending}>
             <Plus className="h-4 w-4" aria-hidden="true" />
             Add account
           </Button>
@@ -321,7 +333,7 @@ export function AccountsClient({
           account={accountDialog.editingItem}
           members={members}
           onCancel={accountDialog.closeForm}
-          pending={isPending}
+          pending={actionPending}
           pendingLabel={accountDialog.editingItem ? "Saving..." : "Adding..."}
           onSubmit={(account) => {
             const editingId = accountDialog.editingItem?.id;
@@ -368,7 +380,7 @@ export function AccountsClient({
             title="Delete account?"
             message={decision.message}
             confirmLabel={decision.confirmLabel}
-            pending={isPending}
+            pending={actionPending}
             pendingLabel="Deleting..."
             onClose={accountDialog.closeDelete}
             onConfirm={() => {

@@ -25,6 +25,14 @@ function getAmountColor(type: TransactionType) {
   return "text-blue-600";
 }
 
+function getMobileAmountPrefix(type: TransactionType) {
+  return type === "expense" ? "-" : "";
+}
+
+function getTintedBackground(color: string) {
+  return color.startsWith("#") && color.length === 7 ? `${color}1A` : "#f1f5f9";
+}
+
 function getFirstName(fullName: string) {
   return fullName.split(" ")[0] ?? fullName;
 }
@@ -112,7 +120,7 @@ export function TransactionTable({
   }
 
   return (
-    <div className="rounded-2xl border border-surface-border">
+    <div className="overflow-hidden rounded-2xl border border-surface-border">
       <div className="hidden overflow-x-auto md:block">
         <table className="w-full text-left text-sm">
           <thead className="bg-surface-subtle text-xs uppercase tracking-wide text-ink-secondary">
@@ -274,100 +282,104 @@ export function TransactionTable({
                 const accColor = accInfo?.iconColor ?? "#64748b";
 
                 return (
-                  <article key={transaction.id} className="p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <h3 className="font-medium text-ink">
+                  <article key={transaction.id} className="p-3">
+                    <div className="flex items-center gap-3">
+                      <div className="shrink-0">
+                        <div
+                          className="flex h-10 w-10 items-center justify-center rounded-xl"
+                          style={{ backgroundColor: getTintedBackground(catColor), color: catColor }}
+                        >
+                          <CategoryIcon className="h-4 w-4" aria-hidden="true" />
+                        </div>
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <h3 className="truncate text-sm font-medium text-ink">
                           {transaction.title}
                         </h3>
-                      </div>
-                      <p className={cn(
-                        "shrink-0 text-right font-semibold",
-                        getAmountColor(transaction.type)
-                      )}>
-                        {getAmountPrefix(transaction.type)}
-                        {formatCurrency(transaction.amount)}
-                      </p>
-                    </div>
-                    <div className="mt-2 flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-xs text-ink-secondary">
-                        <div
-                          className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-white"
-                          style={{ backgroundColor: catColor }}
-                        >
-                          <CategoryIcon className="h-3 w-3" aria-hidden="true" />
+                        <div className="mt-1 flex min-w-0 items-center gap-1.5 text-xs text-ink-secondary">
+                          <span
+                            className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+                            style={{ backgroundColor: accColor }}
+                          />
+                          <span className="truncate">{getAccountLabel(transaction)}</span>
                         </div>
-                        <span>{transaction.category}</span>
-                        {showMember ? (
-                          <>
-                            <span>·</span>
-                            <span>{getFirstName(getMemberLabel(transaction))}</span>
-                          </>
-                        ) : null}
-                        <span>·</span>
-                        <span
-                          className="inline-block h-2 w-2 shrink-0 rounded-full"
-                          style={{ backgroundColor: accColor }}
-                        />
-                        <span>{getAccountLabel(transaction)}</span>
-                        <span>·</span>
-                        <span>{formatTime(transaction.time ?? "")}</span>
                       </div>
-                      {hasActions && (
-                        <div className="relative">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setOpenMenuId(menuOpen ? null : transaction.id)}
-                            aria-expanded={menuOpen}
-                            aria-haspopup="true"
-                            aria-label={`Actions for ${transaction.title}`}
-                          >
-                            <MoreVertical className="h-4 w-4" aria-hidden="true" />
-                          </Button>
-                          {menuOpen ? (
-                            <div
-                              ref={menuRef}
-                              role="menu"
+
+                      <div className="flex shrink-0 items-center gap-1">
+                        <div className="text-right">
+                          <p className={cn(
+                            "text-sm font-medium",
+                            getAmountColor(transaction.type)
+                          )}>
+                            {getMobileAmountPrefix(transaction.type)}
+                            {formatCurrency(transaction.amount)}
+                          </p>
+                          <p className="mt-1 whitespace-nowrap text-xs text-ink-secondary">
+                            {formatTime(transaction.time ?? "")}
+                          </p>
+                        </div>
+                        {hasActions && (
+                          <div className="relative">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setOpenMenuId(menuOpen ? null : transaction.id)}
+                              aria-expanded={menuOpen}
+                              aria-haspopup="true"
                               aria-label={`Actions for ${transaction.title}`}
-                              onKeyDown={(event) => {
-                                if (event.key === "Escape") {
-                                  setOpenMenuId(null);
-                                }
-                              }}
-                              className="absolute right-0 top-full z-50 mt-1 w-36 overflow-hidden rounded-xl border border-surface-border bg-white shadow-lg"
                             >
-                              {onEdit ? (
-                                <button
-                                  type="button"
-                                  role="menuitem"
-                                  className="flex w-full items-center px-4 py-2 text-left text-sm text-ink transition hover:bg-surface-subtle"
-                                  onClick={() => {
+                              <MoreVertical className="h-4 w-4" aria-hidden="true" />
+                            </Button>
+                            {menuOpen ? (
+                              <div
+                                ref={menuRef}
+                                role="menu"
+                                aria-label={`Actions for ${transaction.title}`}
+                                onKeyDown={(event) => {
+                                  if (event.key === "Escape") {
                                     setOpenMenuId(null);
-                                    onEdit(transaction);
-                                  }}
-                                >
-                                  Edit
-                                </button>
-                              ) : null}
-                              {onDelete ? (
-                                <button
-                                  type="button"
-                                  role="menuitem"
-                                  className="flex w-full items-center px-4 py-2 text-left text-sm text-danger transition hover:bg-danger-light"
-                                  onClick={() => {
-                                    setOpenMenuId(null);
-                                    onDelete(transaction);
-                                  }}
-                                >
-                                  Delete
-                                </button>
-                              ) : null}
-                            </div>
-                          ) : null}
-                        </div>
-                      )}
+                                  }
+                                }}
+                                className="absolute right-0 top-full z-50 mt-1 w-36 overflow-hidden rounded-xl border border-surface-border bg-white shadow-lg"
+                              >
+                                {onEdit ? (
+                                  <button
+                                    type="button"
+                                    role="menuitem"
+                                    className="flex w-full items-center px-4 py-2 text-left text-sm text-ink transition hover:bg-surface-subtle"
+                                    onClick={() => {
+                                      setOpenMenuId(null);
+                                      onEdit(transaction);
+                                    }}
+                                  >
+                                    Edit
+                                  </button>
+                                ) : null}
+                                {onDelete ? (
+                                  <button
+                                    type="button"
+                                    role="menuitem"
+                                    className="flex w-full items-center px-4 py-2 text-left text-sm text-danger transition hover:bg-danger-light"
+                                    onClick={() => {
+                                      setOpenMenuId(null);
+                                      onDelete(transaction);
+                                    }}
+                                  >
+                                    Delete
+                                  </button>
+                                ) : null}
+                              </div>
+                            ) : null}
+                          </div>
+                        )}
+                      </div>
                     </div>
+                    {transaction.note ? (
+                      <p className="mt-2 truncate pl-[3.25rem] text-xs text-ink-secondary">
+                        {transaction.note}
+                      </p>
+                    ) : null}
                   </article>
                 );
               })}

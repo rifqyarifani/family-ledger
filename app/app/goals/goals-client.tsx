@@ -36,7 +36,8 @@ export function GoalsClient({
   accountNameById?: Record<string, string>;
 }) {
   const goalDialog = useCrudDialog<SavingsGoal>();
-  const { isPending, error, runAction, setError } = useRunAction();
+  const { isPending, isRunning, error, runAction, setError } = useRunAction();
+  const actionPending = isPending || isRunning;
 
   const availableSavingsAccounts = useMemo(() => {
     const usedGoalNames = new Set(
@@ -65,7 +66,7 @@ export function GoalsClient({
       <PageIntro
         title="Savings Goals"
         action={
-          <Button onClick={goalDialog.openCreate} disabled={isPending || !canCreateGoal}>
+          <Button onClick={goalDialog.openCreate} disabled={actionPending || !canCreateGoal}>
             <Plus className="h-4 w-4" aria-hidden="true" />
             Add goal
           </Button>
@@ -155,7 +156,7 @@ export function GoalsClient({
           goal={goalDialog.editingItem}
           savingsAccountOptions={availableSavingsAccounts}
           onCancel={goalDialog.closeForm}
-          pending={isPending}
+          pending={actionPending}
           pendingLabel={goalDialog.editingItem ? "Saving..." : "Adding..."}
           onSubmit={(goal) => {
             const editingId = goalDialog.editingItem?.id;
@@ -182,7 +183,7 @@ export function GoalsClient({
             ? accountNameById[goalDialog.deletingItem.accountId] ?? null
             : null
         )}
-        pending={isPending}
+        pending={actionPending}
         pendingLabel="Deleting..."
         onClose={goalDialog.closeDelete}
         onConfirm={() =>

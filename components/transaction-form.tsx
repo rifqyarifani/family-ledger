@@ -133,6 +133,11 @@ export function TransactionForm({
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (pending) {
+      return;
+    }
+
     const amount = parseFormattedAmount(values.amount);
     const isTransfer = values.type === "transfer";
     const sameAccount = values.accountId === values.transferAccountId;

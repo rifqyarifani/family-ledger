@@ -35,7 +35,7 @@ export function Modal({
         }
       }}
     >
-      <div ref={dialogRef} className="my-4 w-full max-w-2xl rounded-3xl bg-white p-5 shadow-xl sm:my-0">
+      <div ref={dialogRef} className="my-4 w-full max-w-2xl rounded-3xl bg-canvas p-5 shadow-xl sm:my-0">
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-ink">{title}</h2>
           <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close modal">

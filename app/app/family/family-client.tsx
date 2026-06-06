@@ -31,14 +31,15 @@ export function FamilyClient({
   transactionTotals: FamilyMemberTransactionTotals;
 }) {
   const memberDialog = useCrudDialog<FamilyMember>();
-  const { isPending, error, runAction } = useRunAction();
+  const { isPending, isRunning, error, runAction } = useRunAction();
+  const actionPending = isPending || isRunning;
 
   return (
     <>
       <PageIntro
         title="Family"
         action={
-          <Button onClick={memberDialog.openCreate} disabled={isPending}>
+          <Button onClick={memberDialog.openCreate} disabled={actionPending}>
             <Plus className="h-4 w-4" aria-hidden="true" />
             Add member
           </Button>
@@ -109,7 +110,7 @@ export function FamilyClient({
           key={memberDialog.editingItem?.id ?? (memberDialog.isFormOpen ? "new-member" : "closed-member")}
           member={memberDialog.editingItem}
           onCancel={memberDialog.closeForm}
-          pending={isPending}
+          pending={actionPending}
           pendingLabel={memberDialog.editingItem ? "Saving..." : "Adding..."}
           onSubmit={(member) => {
             const editingId = memberDialog.editingItem?.id;
@@ -131,7 +132,7 @@ export function FamilyClient({
         open={Boolean(memberDialog.deletingItem)}
         title="Delete family member?"
         message={`This will remove ${memberDialog.deletingItem?.name ?? "this member"} from the household. Existing linked transactions will keep their records.`}
-        pending={isPending}
+        pending={actionPending}
         pendingLabel="Deleting..."
         onClose={memberDialog.closeDelete}
         onConfirm={() =>

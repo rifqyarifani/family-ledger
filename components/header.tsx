@@ -29,7 +29,7 @@ export function Header({
   const roleLabel = householdRole === "owner" ? "Owner" : "Member";
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-surface-border bg-white/90 px-4 backdrop-blur md:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-surface-border bg-canvas/90 px-4 backdrop-blur md:px-6">
       <div className="min-w-0">
         <p className="truncate text-sm font-semibold text-ink">{householdName}</p>
       </div>

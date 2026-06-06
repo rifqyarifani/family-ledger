@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { isThemePreference } from "@/lib/theme";
 import { createClient, getAuthedUser } from "@/src/lib/supabase/server";
 
 export type ActiveHousehold = {
@@ -84,12 +85,16 @@ export const getCurrentUserProfile = cache(async () => {
       : "";
   const displayName =
     `${firstName} ${lastName}`.trim() || user.email || "Family member";
+  const themePreference = isThemePreference(user.user_metadata.theme_preference)
+    ? user.user_metadata.theme_preference
+    : "system";
 
   return {
     id: user.id,
     email: user.email ?? null,
     firstName,
     lastName,
-    displayName
+    displayName,
+    themePreference
   };
 });

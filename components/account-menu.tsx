@@ -55,7 +55,7 @@ export function AccountMenu({
       </button>
 
       {isOpen ? (
-        <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-2xl border border-surface-border bg-white p-2 shadow-xl">
+        <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-2xl border border-surface-border bg-canvas p-2 shadow-xl">
           <div className="border-b border-surface px-3 py-2 md:hidden">
             <p className="truncate text-sm font-semibold text-ink">{profileName}</p>
             <p className="text-xs text-ink-secondary">{roleLabel}</p>

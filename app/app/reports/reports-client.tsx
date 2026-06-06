@@ -1,7 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useMemo } from "react";
 import {
   BarChart3,
   ChevronLeft,
@@ -11,12 +13,10 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
-import { Button } from "@/components/button";
 import { Card, CardHeader } from "@/components/card";
 import { ChartCard } from "@/components/chart-card";
 import { EmptyState } from "@/components/empty-state";
 import { MonthPicker } from "@/components/month-picker";
-import { PageIntro } from "@/components/page-intro";
 import { StatCard } from "@/components/stat-card";
 import {
   calculateTotalExpense,
@@ -24,11 +24,11 @@ import {
   filterTransactionsByMonth,
   formatCurrency,
   getAdjacentMonth,
-  getMonthOptions,
   groupTransactionsByCategory,
   groupTransactionsByMember,
   groupTransactionsByMonth,
 } from "@/lib/finance";
+import { cn } from "@/lib/utils";
 import type { Category, Transaction } from "@/types/finance";
 
 const MonthlyIncomeExpenseChart = dynamic(
@@ -70,21 +70,21 @@ function ChartLoading() {
 export function ReportsClient({
   transactions,
   categories = [],
+  selectedMonth,
 }: {
   transactions: Transaction[];
   categories?: Category[];
+  selectedMonth: string;
 }) {
-  const monthOptions = useMemo(
-    () => getMonthOptions(transactions),
-    [transactions],
-  );
-  const [selectedMonth, setSelectedMonth] = useState(monthOptions[0]);
+  const router = useRouter();
 
-  useEffect(() => {
-    if (!monthOptions.includes(selectedMonth)) {
-      setSelectedMonth(monthOptions[0]);
-    }
-  }, [monthOptions, selectedMonth]);
+  function changeMonth(month: string) {
+    router.push(`/app/reports?month=${month}`);
+  }
+
+  const monthNavClassName = cn(
+    "inline-flex h-10 w-10 items-center justify-center gap-2 rounded-full font-semibold text-ink-secondary transition hover:bg-surface hover:text-ink"
+  );
 
   const monthlyTransactions = useMemo(
     () => filterTransactionsByMonth(transactions, selectedMonth),
@@ -116,38 +116,58 @@ export function ReportsClient({
   const topCategory = useMemo(() => spending[0], [spending]);
   const topMember = useMemo(() => spendingByMember[0], [spendingByMember]);
   const monthlyData = useMemo(
-    () => groupTransactionsByMonth(transactions),
-    [transactions],
+    () => groupTransactionsByMonth(monthlyTransactions),
+    [monthlyTransactions],
   );
 
   return (
     <>
-      <PageIntro
-        title="Reports"
-        action={
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSelectedMonth(getAdjacentMonth(selectedMonth, -1))}
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <h1 className="shrink-0 text-3xl font-black tracking-normal text-ink sm:text-4xl">
+            Reports
+          </h1>
+          <div className="flex min-w-0 flex-1 items-center gap-1 sm:hidden">
+            <Link
+              href={`/app/reports?month=${getAdjacentMonth(selectedMonth, -1)}`}
+              className={cn(monthNavClassName, "h-9 w-9 shrink-0")}
               aria-label="Previous month"
             >
               <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-            </Button>
-            <div className="w-48">
-              <MonthPicker value={selectedMonth} onChange={setSelectedMonth} />
+            </Link>
+            <div className="min-w-0 flex-1">
+              <MonthPicker value={selectedMonth} onChange={changeMonth} />
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSelectedMonth(getAdjacentMonth(selectedMonth, 1))}
+            <Link
+              href={`/app/reports?month=${getAdjacentMonth(selectedMonth, 1)}`}
+              className={cn(monthNavClassName, "h-9 w-9 shrink-0")}
               aria-label="Next month"
             >
               <ChevronRight className="h-4 w-4" aria-hidden="true" />
-            </Button>
+            </Link>
           </div>
-        }
-      />
+        </div>
+
+        <div className="hidden items-center gap-2 sm:flex">
+          <Link
+            href={`/app/reports?month=${getAdjacentMonth(selectedMonth, -1)}`}
+            className={monthNavClassName}
+            aria-label="Previous month"
+          >
+            <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+          </Link>
+          <div className="w-48">
+            <MonthPicker value={selectedMonth} onChange={changeMonth} />
+          </div>
+          <Link
+            href={`/app/reports?month=${getAdjacentMonth(selectedMonth, 1)}`}
+            className={monthNavClassName}
+            aria-label="Next month"
+          >
+            <ChevronRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
+        </div>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
         <StatCard
@@ -198,7 +218,7 @@ export function ReportsClient({
       </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
-        <ChartCard title="Spending by Category">
+        <ChartCard title="Spending by Category" contentClassName="h-[30rem] sm:h-72">
           {spending.length > 0 ? (
             <SpendingByCategoryChart data={spending} />
           ) : (

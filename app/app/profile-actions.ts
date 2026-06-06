@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { isThemePreference, type ThemePreference } from "@/lib/theme";
 import { getActiveHousehold } from "@/src/lib/data/households";
 import { createClient } from "@/src/lib/supabase/server";
 
@@ -12,19 +13,26 @@ export type ProfileActionState = {
 export async function updateProfileAction(input: {
   firstName: string;
   lastName: string;
+  themePreference: ThemePreference;
 }): Promise<ProfileActionState> {
   const firstName = input.firstName.trim();
   const lastName = input.lastName.trim();
+  const themePreference = input.themePreference;
 
   if (!firstName) {
     return { ok: false, message: "First name is required." };
+  }
+
+  if (!isThemePreference(themePreference)) {
+    return { ok: false, message: "Choose a valid theme preference." };
   }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({
     data: {
       first_name: firstName,
-      last_name: lastName
+      last_name: lastName,
+      theme_preference: themePreference
     }
   });
 

@@ -20,36 +20,37 @@ const config: Config = {
         card: "hsl(var(--card))",
         "card-foreground": "hsl(var(--card-foreground))",
         brand: {
-          DEFAULT: "#0e0f0c",
-          green: "#9fe870",
-          "green-light": "#cdffad",
-          "green-pale": "#e2f6d5",
-          "green-dark": "#054d28"
+          DEFAULT: "rgb(var(--color-brand) / <alpha-value>)",
+          green: "rgb(var(--color-brand-green) / <alpha-value>)",
+          "green-light": "rgb(var(--color-brand-green-light) / <alpha-value>)",
+          "green-pale": "rgb(var(--color-brand-green-pale) / <alpha-value>)",
+          "green-dark": "rgb(var(--color-brand-green-dark) / <alpha-value>)"
         },
         surface: {
-          DEFAULT: "#e8ebe6",
-          subtle: "#f4f6f1",
-          border: "#cfd5ca",
-          divider: "#e8ebe6"
+          DEFAULT: "rgb(var(--color-surface) / <alpha-value>)",
+          subtle: "rgb(var(--color-surface-subtle) / <alpha-value>)",
+          border: "rgb(var(--color-surface-border) / <alpha-value>)",
+          divider: "rgb(var(--color-surface-divider) / <alpha-value>)"
         },
         canvas: {
-          DEFAULT: "#ffffff",
-          soft: "#e8ebe6"
+          DEFAULT: "rgb(var(--color-canvas) / <alpha-value>)",
+          soft: "rgb(var(--color-canvas-soft) / <alpha-value>)"
         },
         ink: {
-          DEFAULT: "#0e0f0c",
-          secondary: "#454745",
-          muted: "#868685"
+          DEFAULT: "rgb(var(--color-ink) / <alpha-value>)",
+          secondary: "rgb(var(--color-ink-secondary) / <alpha-value>)",
+          muted: "rgb(var(--color-ink-muted) / <alpha-value>)"
         },
         danger: {
-          DEFAULT: "#a72027",
-          light: "#fff1f2",
-          lighter: "#fef2f2",
-          border: "#fecaca"
+          DEFAULT: "rgb(var(--color-danger) / <alpha-value>)",
+          light: "rgb(var(--color-danger-light) / <alpha-value>)",
+          lighter: "rgb(var(--color-danger-lighter) / <alpha-value>)",
+          border: "rgb(var(--color-danger-border) / <alpha-value>)",
+          deep: "rgb(var(--color-danger-deep) / <alpha-value>)"
         }
       },
       boxShadow: {
-        soft: "0 10px 28px rgba(15, 23, 42, 0.08)"
+        soft: "var(--shadow-soft)"
       }
     }
   },

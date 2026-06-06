@@ -174,7 +174,8 @@ export function CategoriesClient({
   categoryImpacts?: Record<string, CategoryImpact>;
 }) {
   const categoryDialog = useCrudDialog<Category>();
-  const { isPending, error, runAction } = useRunAction();
+  const { isPending, isRunning, error, runAction } = useRunAction();
+  const actionPending = isPending || isRunning;
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
@@ -188,7 +189,7 @@ export function CategoriesClient({
       <PageIntro
         title="Categories"
         action={
-          <Button onClick={categoryDialog.openCreate} disabled={isPending}>
+          <Button onClick={categoryDialog.openCreate} disabled={actionPending}>
             <Plus className="h-4 w-4" aria-hidden="true" />
             Add category
           </Button>
@@ -255,7 +256,7 @@ export function CategoriesClient({
           }
           category={categoryDialog.editingItem}
           onCancel={categoryDialog.closeForm}
-          pending={isPending}
+          pending={actionPending}
           pendingLabel={categoryDialog.editingItem ? "Saving..." : "Adding..."}
           onSubmit={(category) => {
             const editingId = categoryDialog.editingItem?.id;
@@ -288,7 +289,7 @@ export function CategoriesClient({
             title="Delete category?"
             message={decision.message}
             confirmLabel={decision.confirmLabel}
-            pending={isPending}
+            pending={actionPending}
             pendingLabel="Deleting..."
             onClose={categoryDialog.closeDelete}
             onConfirm={() =>

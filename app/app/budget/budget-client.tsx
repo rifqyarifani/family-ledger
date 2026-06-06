@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   MoreVertical,
@@ -24,7 +25,6 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 import { EmptyState } from "@/components/empty-state";
 import { MonthPicker } from "@/components/month-picker";
 import { Modal } from "@/components/modal";
-import { PageIntro } from "@/components/page-intro";
 import { Progress } from "@/components/progress";
 import { StatCard } from "@/components/stat-card";
 import { useCrudDialog } from "@/hooks/use-crud-dialog";
@@ -47,7 +47,8 @@ export function BudgetClient({
   categoryMap: Record<string, { icon?: string; color?: string }>;
 }) {
   const budgetDialog = useCrudDialog<Budget>();
-  const { isPending, error, runAction } = useRunAction();
+  const { isPending, isRunning, error, runAction } = useRunAction();
+  const actionPending = isPending || isRunning;
   const router = useRouter();
 
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -83,43 +84,68 @@ export function BudgetClient({
     router.push(`/app/budget?month=${month}`);
   }
 
+  const monthNavClassName = cn(
+    "inline-flex h-10 w-10 items-center justify-center gap-2 rounded-full font-semibold text-ink-secondary transition hover:bg-surface hover:text-ink"
+  );
+
   return (
     <>
-      <PageIntro
-        title="Budget"
-        action={
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <div className="flex items-center">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => changeMonth(getAdjacentMonth(selectedMonth, -1))}
-                aria-label="Previous month"
-              >
-                <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-              </Button>
-              <div className="w-48">
-                <MonthPicker value={selectedMonth} onChange={changeMonth} />
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => changeMonth(getAdjacentMonth(selectedMonth, 1))}
-                aria-label="Next month"
-              >
-                <ChevronRight className="h-4 w-4" aria-hidden="true" />
-              </Button>
-            </div>
-            <Button
-              onClick={budgetDialog.openCreate}
-              disabled={isPending || !hasExpenseCategories}
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <h1 className="shrink-0 text-3xl font-black tracking-normal text-ink sm:text-4xl">
+            Budget
+          </h1>
+          <div className="flex min-w-0 flex-1 items-center gap-1 sm:hidden">
+            <Link
+              href={`/app/budget?month=${getAdjacentMonth(selectedMonth, -1)}`}
+              className={cn(monthNavClassName, "h-9 w-9 shrink-0")}
+              aria-label="Previous month"
             >
-              <Plus className="h-4 w-4" aria-hidden="true" />
-              Add budget
-            </Button>
+              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+            </Link>
+            <div className="min-w-0 flex-1">
+              <MonthPicker value={selectedMonth} onChange={changeMonth} />
+            </div>
+            <Link
+              href={`/app/budget?month=${getAdjacentMonth(selectedMonth, 1)}`}
+              className={cn(monthNavClassName, "h-9 w-9 shrink-0")}
+              aria-label="Next month"
+            >
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
           </div>
-        }
-      />
+        </div>
+
+        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+          <div className="hidden w-full items-center gap-1 sm:flex sm:w-auto sm:gap-0">
+            <Link
+              href={`/app/budget?month=${getAdjacentMonth(selectedMonth, -1)}`}
+              className={cn(monthNavClassName, "shrink-0")}
+              aria-label="Previous month"
+            >
+              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+            </Link>
+            <div className="min-w-0 flex-1 sm:w-48 sm:flex-none">
+              <MonthPicker value={selectedMonth} onChange={changeMonth} />
+            </div>
+            <Link
+              href={`/app/budget?month=${getAdjacentMonth(selectedMonth, 1)}`}
+              className={cn(monthNavClassName, "shrink-0")}
+              aria-label="Next month"
+            >
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          </div>
+          <Button
+            onClick={budgetDialog.openCreate}
+            disabled={actionPending || !hasExpenseCategories}
+            className="w-full sm:w-auto"
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Add budget
+          </Button>
+        </div>
+      </div>
 
       {error ? (
         <p className="mb-4 rounded-2xl border border-surface-border bg-surface-subtle p-3 text-sm text-ink-secondary">
@@ -165,45 +191,43 @@ export function BudgetClient({
             return (
               <div
                 key={budget.id}
-                className="rounded-2xl border border-surface-border bg-white px-3 py-2 transition hover:bg-surface-subtle"
+                className="rounded-2xl border border-surface-border bg-white p-3 transition hover:bg-surface-subtle sm:px-3 sm:py-2"
               >
-                <div className="flex items-center gap-2">
-                  {/* Icon - Fixed 32px */}
+                <div className="flex items-start gap-3 sm:items-center sm:gap-2">
                   <div
-                    className="shrink-0 flex h-8 w-8 items-center justify-center rounded-lg text-white"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white sm:h-8 sm:w-8 sm:rounded-lg"
                     style={{ backgroundColor: iconColor }}
                   >
                     <BudgetIcon className="h-4 w-4" aria-hidden="true" />
                   </div>
 
-                  {/* Budget name - Fixed 140px */}
-                  <span className="shrink-0 w-[200px] truncate text-sm font-semibold text-ink">
-                    {budget.category}
-                  </span>
+                  <div className="min-w-0 flex-1 sm:contents">
+                    <div className="flex min-w-0 items-start justify-between gap-3 sm:contents">
+                      <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink sm:w-[200px] sm:shrink-0 sm:flex-none">
+                        {budget.category}
+                      </span>
 
-                  {/* Progress bar - Flexible, takes remaining */}
-                  <div className="flex-1 min-w-0">
-                    <Progress value={usage.percentage} />
+                      <span
+                        className={cn(
+                          "shrink-0 text-sm font-bold sm:w-16 sm:text-center",
+                          isOver ? "text-danger" : "text-ink",
+                        )}
+                      >
+                        {usage.percentage}%
+                      </span>
+                    </div>
+
+                    <div className="mt-3 min-w-0 sm:mt-0 sm:flex-1">
+                      <Progress value={usage.percentage} />
+                    </div>
+
+                    <span className="mt-2 block truncate text-sm text-ink-secondary sm:mt-0 sm:w-48 sm:shrink-0 sm:text-left">
+                      {formatCurrency(usage.spent)} /{" "}
+                      {formatCurrency(budget.limit)}
+                    </span>
                   </div>
 
-                  {/* Percentage - Fixed 48px */}
-                  <span
-                    className={cn(
-                      "shrink-0 w-16 text-center text-sm font-bold",
-                      isOver ? "text-danger" : "text-ink",
-                    )}
-                  >
-                    {usage.percentage}%
-                  </span>
-
-                  {/* Balance - Auto */}
-                  <span className="shrink-0 w-48 text-left text-sm text-ink-secondary">
-                    {formatCurrency(usage.spent)} /{" "}
-                    {formatCurrency(budget.limit)}
-                  </span>
-
-                  {/* Three-dot menu - Fixed 32px */}
-                  <div className="relative shrink-0 w-8 flex justify-end">
+                  <div className="relative flex w-8 shrink-0 justify-end">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -289,7 +313,7 @@ export function BudgetClient({
           expenseCategories={expenseCategories}
           defaultMonth={selectedMonth}
           onCancel={budgetDialog.closeForm}
-          pending={isPending}
+          pending={actionPending}
           pendingLabel={budgetDialog.editingItem ? "Saving..." : "Adding..."}
           onSubmit={(budget) => {
             const editingId = budgetDialog.editingItem?.id;
@@ -311,7 +335,7 @@ export function BudgetClient({
         open={Boolean(budgetDialog.deletingItem)}
         title="Delete budget?"
         message={`This will remove the ${budgetDialog.deletingItem?.category ?? "selected"} budget category.`}
-        pending={isPending}
+        pending={actionPending}
         pendingLabel="Deleting..."
         onClose={budgetDialog.closeDelete}
         onConfirm={() =>

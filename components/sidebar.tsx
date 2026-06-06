@@ -30,7 +30,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
 
   return (
-    <aside className="flex h-full flex-col border-r border-surface-border bg-white">
+    <aside className="flex h-full flex-col border-r border-surface-border bg-canvas">
       <div className="flex h-16 items-center gap-3 border-b border-surface-border px-5">
         <div className="rounded-2xl bg-brand p-2 text-brand-green">
           <PiggyBank className="h-5 w-5" aria-hidden="true" />
